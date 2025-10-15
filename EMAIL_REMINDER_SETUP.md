@@ -5,6 +5,7 @@ This guide will help you set up automated email reminders for expiring employee 
 ## 🎯 Overview
 
 The email reminder system consists of:
+
 1. **Edge Function** - Checks for expiring documents and sends emails
 2. **Resend API** - Email delivery service
 3. **Database Triggers** - Logs all reminder activity
@@ -15,6 +16,7 @@ The email reminder system consists of:
 ## 📋 Prerequisites
 
 ✅ You already have:
+
 - Supabase project: `lydqwukaryqghovxbcqg`
 - Resend API key: `re_JPm8m1vU_GchkvBsobRtawyCvEGyTFqek`
 - Edge Function code: `supabase/functions/send-reminders/index.ts`
@@ -149,11 +151,13 @@ https://supabase.com/dashboard/project/lydqwukaryqghovxbcqg/settings/api
 #### Option B: Using External Cron Service (Alternative)
 
 Use services like:
+
 - **Cron-job.org** - Free, web-based
 - **EasyCron** - Free tier available
 - **GitHub Actions** - If your project is on GitHub
 
 Configure them to POST to:
+
 ```
 https://lydqwukaryqghovxbcqg.supabase.co/functions/v1/send-reminders
 ```
@@ -189,8 +193,8 @@ Edit `supabase/functions/send-reminders/index.ts`:
 
 ```typescript
 // Change from 30 days to 45 days notice
-const thirtyDaysFromNow = new Date()
-thirtyDaysFromNow.setDate(today.getDate() + 45) // Change here
+const thirtyDaysFromNow = new Date();
+thirtyDaysFromNow.setDate(today.getDate() + 45); // Change here
 ```
 
 ### Customize Email Template
@@ -202,7 +206,7 @@ html: `
   <h2>🔔 Document Expiry Reminder</h2>
   <p>Dear ${employee.name_en},</p>
   <!-- Customize your email content here -->
-`
+`;
 ```
 
 ### Change Email Sender
@@ -275,6 +279,7 @@ SELECT * FROM cron.job;
 ### No Reminders in Database
 
 Check if:
+
 1. Database migration was run (reminders table exists)
 2. Edge Function has correct SUPABASE_SERVICE_ROLE_KEY
 3. Function is successfully inserting records (check logs)
@@ -323,6 +328,7 @@ After completing all steps, verify:
 ## 🎉 You're All Set!
 
 Your email reminder system is now:
+
 - ✅ Automatically checking for expiring documents
 - ✅ Sending email notifications
 - ✅ Logging all activity

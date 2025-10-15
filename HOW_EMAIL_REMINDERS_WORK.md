@@ -237,7 +237,7 @@ Result:
 
 ```sql
 -- View all sent reminders (last 7 days)
-SELECT 
+SELECT
   e.name_en,
   r.type as document,
   r.target_date as expires_on,
@@ -253,7 +253,7 @@ ORDER BY r.sent_at DESC;
 
 ```sql
 -- View last 5 cron job executions
-SELECT 
+SELECT
   jobname,
   status,
   return_message,
@@ -269,11 +269,13 @@ LIMIT 5;
 ### Edge Function Logs
 
 Access logs at:
+
 ```
 https://supabase.com/dashboard/project/lydqwukaryqghovxbcqg/logs/edge-functions
 ```
 
 Filter by:
+
 - Function: `send-reminders`
 - Time range: Last 24 hours
 - Status: Errors only
@@ -285,23 +287,11 @@ Filter by:
 The email sent to employees looks like this:
 
 ```html
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📧 Document Expiry Reminder
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Dear Ahmed Hassan,
-
-This is a reminder that your passport is 
-expiring soon.
-
-📅 Expiry Date: December 15, 2025
-
-⚠️ Please take necessary action to renew 
-   your document before it expires.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Best regards,
-HR Management Team
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 📧 Document Expiry Reminder
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Dear Ahmed Hassan, This is a reminder that
+your passport is expiring soon. 📅 Expiry Date: December 15, 2025 ⚠️ Please take
+necessary action to renew your document before it expires.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Best regards, HR Management Team
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -316,20 +306,20 @@ html: `
     <p>Dear ${employee.name_en},</p>
     <!-- Add your custom styling here -->
   </div>
-`
+`;
 ```
 
 ---
 
 ## 🚨 Common Issues & Solutions
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| No emails received | Resend API key invalid | Check key in Supabase secrets |
-| Duplicate emails | Reminder check failed | Verify reminders table RLS policies |
-| Cron not running | pg_cron not enabled | Run: `CREATE EXTENSION pg_cron;` |
-| Function timeout | Too many employees | Add batching logic (process 50 at a time) |
-| Wrong email sender | Domain not verified | Verify domain in Resend dashboard |
+| Issue              | Cause                  | Solution                                  |
+| ------------------ | ---------------------- | ----------------------------------------- |
+| No emails received | Resend API key invalid | Check key in Supabase secrets             |
+| Duplicate emails   | Reminder check failed  | Verify reminders table RLS policies       |
+| Cron not running   | pg_cron not enabled    | Run: `CREATE EXTENSION pg_cron;`          |
+| Function timeout   | Too many employees     | Add batching logic (process 50 at a time) |
+| Wrong email sender | Domain not verified    | Verify domain in Resend dashboard         |
 
 ---
 

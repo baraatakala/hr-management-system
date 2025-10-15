@@ -1,175 +1,538 @@
-import React, { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Card } from '@/components/ui/card'
-import { Plus, Edit, Trash2, Search } from 'lucide-react'
-import dayjs from 'dayjs'
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Search, 
+  Download, 
+  Grid3x3, 
+  List, 
+  Filter,
+  X 
+} from "lucide-react";
+import dayjs from "dayjs";
+import * as XLSX from "xlsx";
 
 interface Employee {
-  id: string
-  employee_no: string
-  name_en: string
-  name_ar: string
-  nationality: string
-  company_id: string
-  department_id: string
-  job_id: string
-  passport_no: string | null
-  passport_expiry: string | null
-  card_no: string | null
-  card_expiry: string | null
-  emirates_id: string | null
-  emirates_id_expiry: string | null
-  residence_no: string | null
-  residence_expiry: string | null
-  email: string | null
-  phone: string | null
+  id: string;
+  employee_no: string;
+  name_en: string;
+  name_ar: string;
+  nationality: string;
+  company_id: string;
+  department_id: string;
+  job_id: string;
+  passport_no: string | null;
+  passport_expiry: string | null;
+  card_no: string | null;
+  card_expiry: string | null;
+  emirates_id: string | null;
+  emirates_id_expiry: string | null;
+  residence_no: string | null;
+  residence_expiry: string | null;
+  email: string | null;
+  phone: string | null;
 }
 
+type ViewMode = "grid" | "table";
+type StatusFilter = "all" | "valid" | "expiring" | "expired";
+
 export function EmployeesPage() {
-  const { t, i18n } = useTranslation()
-  const queryClient = useQueryClient()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
+  const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  
+  // Filter states
+  const [nationalityFilter, setNationalityFilter] = useState<string>("all");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [jobFilter, setJobFilter] = useState<string>("all");
+  const [passportStatusFilter, setPassportStatusFilter] = useState<StatusFilter>("all");
+  const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter>("all");
+  const [emiratesIdStatusFilter, setEmiratesIdStatusFilter] = useState<StatusFilter>("all");
+  const [residenceStatusFilter, setResidenceStatusFilter] = useState<StatusFilter>("all");
+  
+  // View mode
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [showFilters, setShowFilters] = useState(true);
 
   const { data: employees, isLoading } = useQuery({
-    queryKey: ['employees'],
+    queryKey: ["employees"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('employees')
-        .select('*, companies(name_en, name_ar), departments(name_en, name_ar), jobs(name_en, name_ar)')
-        .order('employee_no')
-      if (error) throw error
-      return data
+        .from("employees")
+        .select(
+          "*, companies(name_en, name_ar), departments(name_en, name_ar), jobs(name_en, name_ar)"
+        )
+        .order("employee_no");
+      if (error) throw error;
+      return data;
     },
-  })
+  });
 
   const { data: companies } = useQuery({
-    queryKey: ['companies'],
+    queryKey: ["companies"],
     queryFn: async () => {
-      const { data } = await supabase.from('companies').select('*').order('name_en')
-      return data || []
+      const { data } = await supabase
+        .from("companies")
+        .select("*")
+        .order("name_en");
+      return data || [];
     },
-  })
+  });
 
   const { data: departments } = useQuery({
-    queryKey: ['departments'],
+    queryKey: ["departments"],
     queryFn: async () => {
-      const { data } = await supabase.from('departments').select('*').order('name_en')
-      return data || []
+      const { data } = await supabase
+        .from("departments")
+        .select("*")
+        .order("name_en");
+      return data || [];
     },
-  })
+  });
 
   const { data: jobs } = useQuery({
-    queryKey: ['jobs'],
+    queryKey: ["jobs"],
     queryFn: async () => {
-      const { data } = await supabase.from('jobs').select('*').order('name_en')
-      return data || []
+      const { data } = await supabase.from("jobs").select("*").order("name_en");
+      return data || [];
     },
-  })
+  });
+
+  const { data: nationalities } = useQuery({
+    queryKey: ["nationalities"],
+    queryFn: async () => {
+      const { data } = await supabase.from("nationalities").select("*").order("name_en");
+      return data || [];
+    },
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('employees').delete().eq('id', id)
-      if (error) throw error
+      const { error } = await supabase.from("employees").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
-  })
+  });
 
-  const filteredEmployees = employees?.filter((emp: any) =>
-    emp.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.name_ar.includes(searchTerm) ||
-    emp.employee_no.includes(searchTerm) ||
-    emp.passport_no?.includes(searchTerm) ||
-    emp.emirates_id?.includes(searchTerm)
-  )
+  // Helper function to check document status
+  const getDocumentStatus = (expiryDate: string | null): StatusFilter => {
+    if (!expiryDate) return "expired";
+    const daysUntilExpiry = dayjs(expiryDate).diff(dayjs(), "day");
+    if (daysUntilExpiry < 0) return "expired";
+    if (daysUntilExpiry <= 30) return "expiring";
+    return "valid";
+  };
+
+  // Comprehensive filtering
+  const filteredEmployees = useMemo(() => {
+    return employees?.filter((emp: any) => {
+      // Search filter
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = !searchTerm || 
+        emp.name_en.toLowerCase().includes(searchLower) ||
+        emp.name_ar.includes(searchTerm) ||
+        emp.employee_no.toLowerCase().includes(searchLower) ||
+        emp.passport_no?.toLowerCase().includes(searchLower) ||
+        emp.emirates_id?.toLowerCase().includes(searchLower) ||
+        emp.residence_no?.toLowerCase().includes(searchLower);
+
+      // Nationality filter
+      const matchesNationality = nationalityFilter === "all" || emp.nationality === nationalityFilter;
+
+      // Company filter
+      const matchesCompany = companyFilter === "all" || emp.company_id === companyFilter;
+
+      // Department filter
+      const matchesDepartment = departmentFilter === "all" || emp.department_id === departmentFilter;
+
+      // Job filter
+      const matchesJob = jobFilter === "all" || emp.job_id === jobFilter;
+
+      // Passport status filter
+      const passportStatus = getDocumentStatus(emp.passport_expiry);
+      const matchesPassport = passportStatusFilter === "all" || passportStatus === passportStatusFilter;
+
+      // Card status filter
+      const cardStatus = getDocumentStatus(emp.card_expiry);
+      const matchesCard = cardStatusFilter === "all" || cardStatus === cardStatusFilter;
+
+      // Emirates ID status filter
+      const emiratesIdStatus = getDocumentStatus(emp.emirates_id_expiry);
+      const matchesEmiratesId = emiratesIdStatusFilter === "all" || emiratesIdStatus === emiratesIdStatusFilter;
+
+      // Residence status filter
+      const residenceStatus = getDocumentStatus(emp.residence_expiry);
+      const matchesResidence = residenceStatusFilter === "all" || residenceStatus === residenceStatusFilter;
+
+      return matchesSearch && matchesNationality && matchesCompany && 
+             matchesDepartment && matchesJob && matchesPassport && 
+             matchesCard && matchesEmiratesId && matchesResidence;
+    });
+  }, [employees, searchTerm, nationalityFilter, companyFilter, departmentFilter, 
+      jobFilter, passportStatusFilter, cardStatusFilter, emiratesIdStatusFilter, residenceStatusFilter]);
 
   const handleEdit = (employee: any) => {
-    setEditingEmployee(employee)
-    setIsDialogOpen(true)
-  }
+    setEditingEmployee(employee);
+    setIsDialogOpen(true);
+  };
 
   const handleAdd = () => {
-    setEditingEmployee(null)
-    setIsDialogOpen(true)
-  }
+    setEditingEmployee(null);
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = (id: string) => {
-    if (confirm(t('employees.deleteConfirm'))) {
-      deleteMutation.mutate(id)
+    if (confirm(t("employees.deleteConfirm"))) {
+      deleteMutation.mutate(id);
     }
-  }
+  };
 
   const getExpiryStatus = (expiryDate: string | null) => {
-    if (!expiryDate) return 'text-gray-500'
-    const daysUntilExpiry = dayjs(expiryDate).diff(dayjs(), 'day')
-    if (daysUntilExpiry < 0) return 'text-red-600 font-bold'
-    if (daysUntilExpiry <= 30) return 'text-yellow-600 font-bold'
-    return 'text-green-600'
-  }
+    if (!expiryDate) return "text-gray-500";
+    const daysUntilExpiry = dayjs(expiryDate).diff(dayjs(), "day");
+    if (daysUntilExpiry < 0) return "text-red-600 font-bold";
+    if (daysUntilExpiry <= 30) return "text-yellow-600 font-bold";
+    return "text-green-600";
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setNationalityFilter("all");
+    setCompanyFilter("all");
+    setDepartmentFilter("all");
+    setJobFilter("all");
+    setPassportStatusFilter("all");
+    setCardStatusFilter("all");
+    setEmiratesIdStatusFilter("all");
+    setResidenceStatusFilter("all");
+  };
+
+  const exportToExcel = () => {
+    if (!filteredEmployees || filteredEmployees.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const exportData = filteredEmployees.map((emp: any) => ({
+      "Employee No": emp.employee_no,
+      "Name (English)": emp.name_en,
+      "Name (Arabic)": emp.name_ar,
+      "Nationality": emp.nationality,
+      "Company": i18n.language === "ar" ? emp.companies?.name_ar : emp.companies?.name_en,
+      "Department": i18n.language === "ar" ? emp.departments?.name_ar : emp.departments?.name_en,
+      "Job": i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
+      "Passport No": emp.passport_no || "",
+      "Passport Expiry": emp.passport_expiry ? dayjs(emp.passport_expiry).format("DD/MM/YYYY") : "",
+      "Card No": emp.card_no || "",
+      "Card Expiry": emp.card_expiry ? dayjs(emp.card_expiry).format("DD/MM/YYYY") : "",
+      "Emirates ID": emp.emirates_id || "",
+      "Emirates ID Expiry": emp.emirates_id_expiry ? dayjs(emp.emirates_id_expiry).format("DD/MM/YYYY") : "",
+      "Residence No": emp.residence_no || "",
+      "Residence Expiry": emp.residence_expiry ? dayjs(emp.residence_expiry).format("DD/MM/YYYY") : "",
+      "Email": emp.email || "",
+      "Phone": emp.phone || "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employees");
+    
+    // Auto-size columns
+    const maxWidth = 50;
+    const colWidths = Object.keys(exportData[0]).map(key => ({
+      wch: Math.min(
+        maxWidth,
+        Math.max(
+          key.length,
+          ...exportData.map(row => String(row[key as keyof typeof row] || "").length)
+        )
+      )
+    }));
+    ws['!cols'] = colWidths;
+
+    XLSX.writeFile(wb, `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`);
+  };
 
   if (isLoading) {
-    return <div>{t('common.loading')}</div>
+    return <div>{t("common.loading")}</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">{t('employees.title')}</h1>
-        <Button onClick={handleAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t('employees.addEmployee')}
-        </Button>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">{t("employees.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {filteredEmployees?.length || 0} {t("employees.title").toLowerCase()} {filteredEmployees?.length !== employees?.length && `(filtered from ${employees?.length})`}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleAdd} className="gap-2">
+            <Plus className="w-4 h-4" />
+            {t("employees.addEmployee")}
+          </Button>
+          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <Download className="w-4 h-4" />
+            Export Excel
+          </Button>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-2">
-        <Search className="w-5 h-5 text-gray-400" />
-        <Input
-          placeholder={t('common.search')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-      </div>
+      {/* Filters & Controls */}
+      <Card className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Filters & Control</h2>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowFilters(!showFilters)} 
+              variant="ghost" 
+              size="sm"
+            >
+              {showFilters ? "Hide Filters" : "Show Filters"}
+            </Button>
+            <Button onClick={clearAllFilters} variant="ghost" size="sm" className="gap-2">
+              <X className="w-4 h-4" />
+              Clear All
+            </Button>
+            <div className="flex gap-1 border rounded-md">
+              <Button
+                onClick={() => setViewMode("grid")}
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                className="rounded-r-none"
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => setViewMode("table")}
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="sm"
+                className="rounded-l-none"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
 
-      {/* Employee Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredEmployees?.map((employee: any) => (
+        {showFilters && (
+          <div className="space-y-4">
+            {/* Quick Search */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">
+                Quick Search (Name, Employee No., Passport No., Emirates ID, Residence No.)
+              </Label>
+              <div className="flex items-center gap-2">
+                <Search className="w-5 h-5 text-gray-400" />
+                <Input
+                  placeholder="Start typing to search automatically..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+            </div>
+
+            {/* Filter Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Nationality Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Nationality</Label>
+                <Select value={nationalityFilter} onValueChange={setNationalityFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="جميع الجنسيات / All Nationalities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الجنسيات / All</SelectItem>
+                    {nationalities?.map((nat: any) => (
+                      <SelectItem key={nat.id} value={nat.name_en}>
+                        {nat.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Company Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Company</Label>
+                <Select value={companyFilter} onValueChange={setCompanyFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="جميع الشركات / All Companies" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الشركات / All</SelectItem>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {i18n.language === "ar" ? company.name_ar : company.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Job Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Job</Label>
+                <Select value={jobFilter} onValueChange={setJobFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="جميع الوظائف / All Jobs" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الوظائف / All</SelectItem>
+                    {jobs?.map((job) => (
+                      <SelectItem key={job.id} value={job.id}>
+                        {i18n.language === "ar" ? job.name_ar : job.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Department Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Department</Label>
+                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="جميع الأقسام / All Departments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الأقسام / All</SelectItem>
+                    {departments?.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {i18n.language === "ar" ? dept.name_ar : dept.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Passport Status Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Passport Status</Label>
+                <Select value={passportStatusFilter} onValueChange={(value) => setPassportStatusFilter(value as StatusFilter)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Card Status Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Card Status</Label>
+                <Select value={cardStatusFilter} onValueChange={(value) => setCardStatusFilter(value as StatusFilter)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Emirates ID Status Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Emirates ID Status</Label>
+                <Select value={emiratesIdStatusFilter} onValueChange={(value) => setEmiratesIdStatusFilter(value as StatusFilter)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Residence Status Filter */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Residence Status</Label>
+                <Select value={residenceStatusFilter} onValueChange={(value) => setResidenceStatusFilter(value as StatusFilter)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Employee Cards/Table */}
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredEmployees?.map((employee: any) => (
           <Card key={employee.id} className="p-4 space-y-3">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-bold text-lg">
-                  {i18n.language === 'ar' ? employee.name_ar : employee.name_en}
+                  {i18n.language === "ar" ? employee.name_ar : employee.name_en}
                 </h3>
-                <p className="text-sm text-muted-foreground">{employee.employee_no}</p>
+                <p className="text-sm text-muted-foreground">
+                  {employee.employee_no}
+                </p>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" onClick={() => handleEdit(employee)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleEdit(employee)}
+                >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(employee.id)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDelete(employee.id)}
+                >
                   <Trash2 className="w-4 h-4 text-red-600" />
                 </Button>
               </div>
@@ -177,37 +540,163 @@ export function EmployeesPage() {
 
             <div className="space-y-1 text-sm">
               <p>
-                <span className="font-medium">{t('employees.company')}:</span>{' '}
-                {i18n.language === 'ar' ? employee.companies?.name_ar : employee.companies?.name_en}
+                <span className="font-medium">{t("employees.company")}:</span>{" "}
+                {i18n.language === "ar"
+                  ? employee.companies?.name_ar
+                  : employee.companies?.name_en}
               </p>
               <p>
-                <span className="font-medium">{t('employees.department')}:</span>{' '}
-                {i18n.language === 'ar' ? employee.departments?.name_ar : employee.departments?.name_en}
+                <span className="font-medium">
+                  {t("employees.department")}:
+                </span>{" "}
+                {i18n.language === "ar"
+                  ? employee.departments?.name_ar
+                  : employee.departments?.name_en}
               </p>
               <p>
-                <span className="font-medium">{t('employees.job')}:</span>{' '}
-                {i18n.language === 'ar' ? employee.jobs?.name_ar : employee.jobs?.name_en}
+                <span className="font-medium">{t("employees.job")}:</span>{" "}
+                {i18n.language === "ar"
+                  ? employee.jobs?.name_ar
+                  : employee.jobs?.name_en}
               </p>
               <p>
-                <span className="font-medium">{t('employees.passportNo')}:</span>{' '}
-                {employee.passport_no || 'N/A'}
+                <span className="font-medium">
+                  {t("employees.passportNo")}:
+                </span>{" "}
+                {employee.passport_no || "N/A"}
               </p>
               <p>
-                <span className="font-medium">{t('employees.cardExpiry')}:</span>{' '}
+                <span className="font-medium">
+                  {t("employees.cardExpiry")}:
+                </span>{" "}
                 <span className={getExpiryStatus(employee.card_expiry)}>
-                  {employee.card_expiry ? dayjs(employee.card_expiry).format('DD/MM/YYYY') : 'N/A'}
+                  {employee.card_expiry
+                    ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
+                    : "N/A"}
                 </span>
               </p>
               <p>
-                <span className="font-medium">{t('employees.emiratesIdExpiry')}:</span>{' '}
+                <span className="font-medium">
+                  {t("employees.emiratesIdExpiry")}:
+                </span>{" "}
                 <span className={getExpiryStatus(employee.emirates_id_expiry)}>
-                  {employee.emirates_id_expiry ? dayjs(employee.emirates_id_expiry).format('DD/MM/YYYY') : 'N/A'}
+                  {employee.emirates_id_expiry
+                    ? dayjs(employee.emirates_id_expiry).format("DD/MM/YYYY")
+                    : "N/A"}
                 </span>
               </p>
             </div>
           </Card>
         ))}
-      </div>
+        </div>
+      ) : (
+        /* Table View */
+        <Card className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr className="border-b">
+                <th className="text-left p-3 font-semibold">Employee No</th>
+                <th className="text-left p-3 font-semibold">Name</th>
+                <th className="text-left p-3 font-semibold">Nationality</th>
+                <th className="text-left p-3 font-semibold">Company</th>
+                <th className="text-left p-3 font-semibold">Department</th>
+                <th className="text-left p-3 font-semibold">Job</th>
+                <th className="text-left p-3 font-semibold">Passport</th>
+                <th className="text-left p-3 font-semibold">Card Expiry</th>
+                <th className="text-left p-3 font-semibold">Emirates ID</th>
+                <th className="text-left p-3 font-semibold">Residence</th>
+                <th className="text-right p-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEmployees?.map((employee: any) => (
+                <tr key={employee.id} className="border-b hover:bg-muted/30">
+                  <td className="p-3 font-medium">{employee.employee_no}</td>
+                  <td className="p-3">
+                    {i18n.language === "ar" ? employee.name_ar : employee.name_en}
+                  </td>
+                  <td className="p-3">{employee.nationality}</td>
+                  <td className="p-3">
+                    {i18n.language === "ar"
+                      ? employee.companies?.name_ar
+                      : employee.companies?.name_en}
+                  </td>
+                  <td className="p-3">
+                    {i18n.language === "ar"
+                      ? employee.departments?.name_ar
+                      : employee.departments?.name_en}
+                  </td>
+                  <td className="p-3">
+                    {i18n.language === "ar"
+                      ? employee.jobs?.name_ar
+                      : employee.jobs?.name_en}
+                  </td>
+                  <td className="p-3">
+                    <div className="text-xs">
+                      <div>{employee.passport_no || "N/A"}</div>
+                      <div className={getExpiryStatus(employee.passport_expiry)}>
+                        {employee.passport_expiry
+                          ? dayjs(employee.passport_expiry).format("DD/MM/YYYY")
+                          : "N/A"}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <span className={getExpiryStatus(employee.card_expiry)}>
+                      {employee.card_expiry
+                        ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
+                        : "N/A"}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <div className="text-xs">
+                      <div>{employee.emirates_id || "N/A"}</div>
+                      <div className={getExpiryStatus(employee.emirates_id_expiry)}>
+                        {employee.emirates_id_expiry
+                          ? dayjs(employee.emirates_id_expiry).format("DD/MM/YYYY")
+                          : "N/A"}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <div className="text-xs">
+                      <div>{employee.residence_no || "N/A"}</div>
+                      <div className={getExpiryStatus(employee.residence_expiry)}>
+                        {employee.residence_expiry
+                          ? dayjs(employee.residence_expiry).format("DD/MM/YYYY")
+                          : "N/A"}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(employee)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(employee.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {(!filteredEmployees || filteredEmployees.length === 0) && (
+            <div className="text-center py-12 text-muted-foreground">
+              No employees found
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Employee Dialog */}
       <EmployeeDialog
@@ -217,34 +706,44 @@ export function EmployeesPage() {
         companies={companies || []}
         departments={departments || []}
         jobs={jobs || []}
+        nationalities={nationalities || []}
       />
     </div>
-  )
+  );
 }
 
 interface EmployeeDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  employee: Employee | null
-  companies: any[]
-  departments: any[]
-  jobs: any[]
+  isOpen: boolean;
+  onClose: () => void;
+  employee: Employee | null;
+  companies: any[];
+  departments: any[];
+  jobs: any[];
+  nationalities: any[];
 }
 
-function EmployeeDialog({ isOpen, onClose, employee, companies, departments, jobs }: EmployeeDialogProps) {
-  const { t } = useTranslation()
-  const queryClient = useQueryClient()
-  const [formData, setFormData] = useState<any>(employee || {})
+function EmployeeDialog({
+  isOpen,
+  onClose,
+  employee,
+  companies,
+  departments,
+  jobs,
+  nationalities,
+}: EmployeeDialogProps) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState<any>(employee || {});
 
   React.useEffect(() => {
-    setFormData(employee || {})
-  }, [employee])
+    setFormData(employee || {});
+  }, [employee]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       // Validate required fields
       if (!data.company_id || !data.department_id || !data.job_id) {
-        throw new Error('Company, Department, and Job are required fields')
+        throw new Error("Company, Department, and Job are required fields");
       }
 
       // Clean data: remove nested objects and keep only valid columns
@@ -266,80 +765,107 @@ function EmployeeDialog({ isOpen, onClose, employee, companies, departments, job
         residence_expiry: data.residence_expiry || null,
         email: data.email || null,
         phone: data.phone || null,
-      }
+      };
 
       if (employee) {
         const { error } = await supabase
-          .from('employees')
+          .from("employees")
           .update(cleanData)
-          .eq('id', employee.id)
-        if (error) throw error
+          .eq("id", employee.id);
+        if (error) throw error;
       } else {
-        const { error } = await supabase.from('employees').insert([cleanData])
-        if (error) throw error
+        const { error } = await supabase.from("employees").insert([cleanData]);
+        if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
-      onClose()
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      onClose();
     },
     onError: (error: any) => {
-      alert(error.message || 'An error occurred while saving the employee')
+      alert(error.message || "An error occurred while saving the employee");
     },
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    saveMutation.mutate(formData)
-  }
+    e.preventDefault();
+    saveMutation.mutate(formData);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {employee ? t('employees.editEmployee') : t('employees.addEmployee')}
+            {employee
+              ? t("employees.editEmployee")
+              : t("employees.addEmployee")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>{t('employees.employeeNo')}</Label>
+              <Label>{t("employees.employeeNo")}</Label>
               <Input
-                value={formData.employee_no || ''}
-                onChange={(e) => setFormData({ ...formData, employee_no: e.target.value })}
+                value={formData.employee_no || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, employee_no: e.target.value })
+                }
                 required
               />
             </div>
             <div>
-              <Label>{t('employees.nameEn')}</Label>
+              <Label>{t("employees.nameEn")}</Label>
               <Input
-                value={formData.name_en || ''}
-                onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                value={formData.name_en || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, name_en: e.target.value })
+                }
                 required
               />
             </div>
             <div>
-              <Label>{t('employees.nameAr')}</Label>
+              <Label>{t("employees.nameAr")}</Label>
               <Input
-                value={formData.name_ar || ''}
-                onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                value={formData.name_ar || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, name_ar: e.target.value })
+                }
                 required
               />
             </div>
             <div>
-              <Label>{t('employees.nationality')}</Label>
-              <Input
-                value={formData.nationality || ''}
-                onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label>{t('employees.company')} <span className="text-red-500">*</span></Label>
+              <Label>
+                {t("employees.nationality")} <span className="text-red-500">*</span>
+              </Label>
               <Select
-                value={formData.company_id || ''}
-                onValueChange={(value) => setFormData({ ...formData, company_id: value })}
+                value={formData.nationality || ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, nationality: value })
+                }
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a nationality..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {nationalities.map((nat) => (
+                    <SelectItem key={nat.id} value={nat.name_en}>
+                      {nat.name_en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>
+                {t("employees.company")} <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.company_id || ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, company_id: value })
+                }
                 required
               >
                 <SelectTrigger>
@@ -355,10 +881,15 @@ function EmployeeDialog({ isOpen, onClose, employee, companies, departments, job
               </Select>
             </div>
             <div>
-              <Label>{t('employees.department')} <span className="text-red-500">*</span></Label>
+              <Label>
+                {t("employees.department")}{" "}
+                <span className="text-red-500">*</span>
+              </Label>
               <Select
-                value={formData.department_id || ''}
-                onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                value={formData.department_id || ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, department_id: value })
+                }
                 required
               >
                 <SelectTrigger>
@@ -374,10 +905,14 @@ function EmployeeDialog({ isOpen, onClose, employee, companies, departments, job
               </Select>
             </div>
             <div>
-              <Label>{t('employees.job')} <span className="text-red-500">*</span></Label>
+              <Label>
+                {t("employees.job")} <span className="text-red-500">*</span>
+              </Label>
               <Select
-                value={formData.job_id || ''}
-                onValueChange={(value) => setFormData({ ...formData, job_id: value })}
+                value={formData.job_id || ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, job_id: value })
+                }
                 required
               >
                 <SelectTrigger>
@@ -393,91 +928,114 @@ function EmployeeDialog({ isOpen, onClose, employee, companies, departments, job
               </Select>
             </div>
             <div>
-              <Label>{t('employees.passportNo')}</Label>
+              <Label>{t("employees.passportNo")}</Label>
               <Input
-                value={formData.passport_no || ''}
-                onChange={(e) => setFormData({ ...formData, passport_no: e.target.value })}
+                value={formData.passport_no || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, passport_no: e.target.value })
+                }
               />
             </div>
             <div>
-              <Label>{t('employees.passportExpiry')}</Label>
-              <Input
-                type="date"
-                value={formData.passport_expiry || ''}
-                onChange={(e) => setFormData({ ...formData, passport_expiry: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>{t('employees.cardNo')}</Label>
-              <Input
-                value={formData.card_no || ''}
-                onChange={(e) => setFormData({ ...formData, card_no: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>{t('employees.cardExpiry')}</Label>
+              <Label>{t("employees.passportExpiry")}</Label>
               <Input
                 type="date"
-                value={formData.card_expiry || ''}
-                onChange={(e) => setFormData({ ...formData, card_expiry: e.target.value })}
+                value={formData.passport_expiry || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, passport_expiry: e.target.value })
+                }
               />
             </div>
             <div>
-              <Label>{t('employees.emiratesId')}</Label>
+              <Label>{t("employees.cardNo")}</Label>
               <Input
-                value={formData.emirates_id || ''}
-                onChange={(e) => setFormData({ ...formData, emirates_id: e.target.value })}
+                value={formData.card_no || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, card_no: e.target.value })
+                }
               />
             </div>
             <div>
-              <Label>{t('employees.emiratesIdExpiry')}</Label>
-              <Input
-                type="date"
-                value={formData.emirates_id_expiry || ''}
-                onChange={(e) => setFormData({ ...formData, emirates_id_expiry: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>{t('employees.residenceNo')}</Label>
-              <Input
-                value={formData.residence_no || ''}
-                onChange={(e) => setFormData({ ...formData, residence_no: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>{t('employees.residenceExpiry')}</Label>
+              <Label>{t("employees.cardExpiry")}</Label>
               <Input
                 type="date"
-                value={formData.residence_expiry || ''}
-                onChange={(e) => setFormData({ ...formData, residence_expiry: e.target.value })}
+                value={formData.card_expiry || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, card_expiry: e.target.value })
+                }
               />
             </div>
             <div>
-              <Label>{t('employees.email')}</Label>
+              <Label>{t("employees.emiratesId")}</Label>
+              <Input
+                value={formData.emirates_id || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, emirates_id: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("employees.emiratesIdExpiry")}</Label>
+              <Input
+                type="date"
+                value={formData.emirates_id_expiry || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    emirates_id_expiry: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("employees.residenceNo")}</Label>
+              <Input
+                value={formData.residence_no || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, residence_no: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("employees.residenceExpiry")}</Label>
+              <Input
+                type="date"
+                value={formData.residence_expiry || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, residence_expiry: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("employees.email")}</Label>
               <Input
                 type="email"
-                value={formData.email || ''}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={formData.email || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
             </div>
             <div>
-              <Label>{t('employees.phone')}</Label>
+              <Label>{t("employees.phone")}</Label>
               <Input
-                value={formData.phone || ''}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                value={formData.phone || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
               />
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              {t('common.cancel')}
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? t('common.loading') : t('common.save')}
+              {saveMutation.isPending ? t("common.loading") : t("common.save")}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

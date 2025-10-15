@@ -1,5 +1,5 @@
-import i18n from 'i18next'
-import { initReactI18next } from 'react-i18next'
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
 const resources = {
   en: {
@@ -20,7 +20,7 @@ const resources = {
       "common.confirm": "Confirm",
       "common.yes": "Yes",
       "common.no": "No",
-      
+
       // Auth
       "auth.login": "Login",
       "auth.logout": "Logout",
@@ -29,7 +29,7 @@ const resources = {
       "auth.signIn": "Sign In",
       "auth.signUp": "Sign Up",
       "auth.forgotPassword": "Forgot Password?",
-      
+
       // Navigation
       "nav.dashboard": "Dashboard",
       "nav.employees": "Employees",
@@ -38,7 +38,7 @@ const resources = {
       "nav.jobs": "Jobs",
       "nav.reminders": "Email Reminders",
       "nav.settings": "Settings",
-      
+
       // Dashboard
       "dashboard.title": "Dashboard",
       "dashboard.totalEmployees": "Total Employees",
@@ -46,7 +46,7 @@ const resources = {
       "dashboard.expiredCards": "Expired Cards",
       "dashboard.expiringDocuments": "Expiring Soon",
       "dashboard.recentActivity": "Recent Activity",
-      
+
       // Employees
       "employees.title": "Employees",
       "employees.addEmployee": "Add Employee",
@@ -68,23 +68,24 @@ const resources = {
       "employees.residenceExpiry": "Residence Expiry",
       "employees.email": "Email",
       "employees.phone": "Phone",
-      "employees.deleteConfirm": "Are you sure you want to delete this employee?",
-      
+      "employees.deleteConfirm":
+        "Are you sure you want to delete this employee?",
+
       // Companies
       "companies.title": "Companies",
       "companies.addCompany": "Add Company",
       "companies.code": "Code",
       "companies.nameEn": "Name (English)",
       "companies.nameAr": "Name (Arabic)",
-      
+
       // Departments
       "departments.title": "Departments",
       "departments.addDepartment": "Add Department",
-      
+
       // Jobs
       "jobs.title": "Job Titles",
       "jobs.addJob": "Add Job Title",
-      
+
       // Reminders
       "reminders.title": "Email Reminders",
       "reminders.employee": "Employee",
@@ -95,14 +96,14 @@ const resources = {
       "reminders.pending": "Pending",
       "reminders.sent": "Sent",
       "reminders.failed": "Failed",
-      
+
       // Settings
       "settings.title": "Settings",
       "settings.language": "Language",
       "settings.theme": "Theme",
       "settings.light": "Light",
       "settings.dark": "Dark",
-    }
+    },
   },
   ar: {
     translation: {
@@ -122,7 +123,7 @@ const resources = {
       "common.confirm": "تأكيد",
       "common.yes": "نعم",
       "common.no": "لا",
-      
+
       // Auth
       "auth.login": "تسجيل الدخول",
       "auth.logout": "تسجيل الخروج",
@@ -131,7 +132,7 @@ const resources = {
       "auth.signIn": "تسجيل الدخول",
       "auth.signUp": "إنشاء حساب",
       "auth.forgotPassword": "نسيت كلمة المرور؟",
-      
+
       // Navigation
       "nav.dashboard": "لوحة التحكم",
       "nav.employees": "الموظفين",
@@ -140,7 +141,7 @@ const resources = {
       "nav.jobs": "المسميات الوظيفية",
       "nav.reminders": "تذكيرات البريد الإلكتروني",
       "nav.settings": "الإعدادات",
-      
+
       // Dashboard
       "dashboard.title": "لوحة التحكم",
       "dashboard.totalEmployees": "إجمالي الموظفين",
@@ -148,7 +149,7 @@ const resources = {
       "dashboard.expiredCards": "البطاقات منتهية الصلاحية",
       "dashboard.expiringDocuments": "منتهية قريباً",
       "dashboard.recentActivity": "النشاط الأخير",
-      
+
       // Employees
       "employees.title": "الموظفين",
       "employees.addEmployee": "إضافة موظف",
@@ -171,22 +172,22 @@ const resources = {
       "employees.email": "البريد الإلكتروني",
       "employees.phone": "الهاتف",
       "employees.deleteConfirm": "هل أنت متأكد من حذف هذا الموظف؟",
-      
+
       // Companies
       "companies.title": "الشركات",
       "companies.addCompany": "إضافة شركة",
       "companies.code": "الرمز",
       "companies.nameEn": "الاسم (إنجليزي)",
       "companies.nameAr": "الاسم (عربي)",
-      
+
       // Departments
       "departments.title": "الأقسام",
       "departments.addDepartment": "إضافة قسم",
-      
+
       // Jobs
       "jobs.title": "المسميات الوظيفية",
       "jobs.addJob": "إضافة مسمى وظيفي",
-      
+
       // Reminders
       "reminders.title": "تذكيرات البريد الإلكتروني",
       "reminders.employee": "الموظف",
@@ -197,26 +198,24 @@ const resources = {
       "reminders.pending": "قيد الانتظار",
       "reminders.sent": "تم الإرسال",
       "reminders.failed": "فشل",
-      
+
       // Settings
       "settings.title": "الإعدادات",
       "settings.language": "اللغة",
       "settings.theme": "المظهر",
       "settings.light": "فاتح",
       "settings.dark": "داكن",
-    }
-  }
-}
+    },
+  },
+};
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false
-    }
-  })
+i18n.use(initReactI18next).init({
+  resources,
+  lng: "en",
+  fallbackLng: "en",
+  interpolation: {
+    escapeValue: false,
+  },
+});
 
-export default i18n
+export default i18n;

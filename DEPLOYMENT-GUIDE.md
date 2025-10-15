@@ -1,6 +1,7 @@
 # 🚀 Free Deployment Guide
 
 ## Current Status
+
 ✅ Database: Deployed on Supabase  
 ✅ Edge Functions: Deployed on Supabase  
 ✅ Email System: Working with Resend API  
@@ -11,10 +12,12 @@
 ## Option 1: Vercel (RECOMMENDED - 100% Free)
 
 ### Prerequisites
+
 - GitHub account
 - Your code in a GitHub repository
 
 ### Step 1: Push to GitHub
+
 ```bash
 # Initialize git (if not already done)
 git init
@@ -29,6 +32,7 @@ git push -u origin main
 ```
 
 ### Step 2: Deploy to Vercel
+
 1. Go to https://vercel.com/signup
 2. Sign up with GitHub (free)
 3. Click "Import Project"
@@ -40,6 +44,7 @@ git push -u origin main
    - **Output Directory**: `dist`
 
 ### Step 3: Add Environment Variables
+
 In Vercel Dashboard → Project → Settings → Environment Variables:
 
 ```
@@ -48,11 +53,13 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 ```
 
 ### Step 4: Deploy!
+
 - Click "Deploy"
 - Wait 2-3 minutes
 - Your app will be live at: `https://your-project.vercel.app`
 
 ### ✅ What Works After Deployment:
+
 - ✅ All CRUD operations (employees, companies, departments, jobs)
 - ✅ Email reminders button
 - ✅ Automatic daily emails (if you set up cron job)
@@ -68,6 +75,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 ### Step 1: Push to GitHub (same as above)
 
 ### Step 2: Deploy to Netlify
+
 1. Go to https://netlify.com
 2. Sign up with GitHub (free)
 3. Click "Add new site" → "Import from Git"
@@ -77,13 +85,16 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
    - **Publish directory**: `dist`
 
 ### Step 3: Add Environment Variables
+
 In Netlify Dashboard → Site → Settings → Environment Variables:
+
 ```
 VITE_SUPABASE_URL=https://lydqwukaryqghovxbcqg.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5ZHF3dWthcnlxZ2hvdnhiY3FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwODkyODEsImV4cCI6MjA2NzY2NTI4MX0.eDVGF_kZzU5ZMVI81KKSZfxQ4jgSwPpP4m_0lx0kq4M
 ```
 
 ### Step 4: Deploy!
+
 - Click "Deploy site"
 - Your app will be live at: `https://random-name.netlify.app`
 
@@ -92,6 +103,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 ## Option 3: Cloudflare Pages (Advanced)
 
 Similar to Vercel/Netlify, also completely free with:
+
 - Unlimited bandwidth
 - Free SSL
 - Custom domains
@@ -103,26 +115,29 @@ Steps: https://pages.cloudflare.com/
 ## 🔒 Security for Production
 
 ### Before Going Public:
+
 1. **Enable Supabase Auth** (currently disabled for testing)
 2. **Update RLS Policies** in Supabase Dashboard:
+
    ```sql
    -- Enable RLS on all tables
    ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
    ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
    ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
    ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
-   
+
    -- Create policies for authenticated users
    CREATE POLICY "Users can read all employees" ON employees
      FOR SELECT USING (auth.role() = 'authenticated');
-   
+
    CREATE POLICY "Users can insert employees" ON employees
      FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-   
+
    -- Repeat for other tables...
    ```
 
 3. **Protect Edge Function** (add API key check):
+
    - Update `send-reminders/index.ts` to require authentication
    - Add API key validation
 
@@ -136,18 +151,21 @@ Steps: https://pages.cloudflare.com/
 ## 📊 Free Tier Limits
 
 ### Supabase (Current)
+
 - ✅ 500MB Database (you're using ~10MB)
 - ✅ 2GB Bandwidth/month (plenty for small team)
 - ✅ 500K Edge Function calls/month
 - ✅ No credit card required
 
 ### Vercel
+
 - ✅ 100GB Bandwidth/month
 - ✅ Unlimited requests
 - ✅ 100 deployments/day
 - ✅ No credit card required
 
 ### Resend Email
+
 - ✅ 100 emails/day (FREE tier)
 - ✅ 3,000 emails/month (FREE tier)
 - ⚠️ Currently using test domain `onboarding@resend.dev`
@@ -169,14 +187,17 @@ Frontend (Vercel)  →  Backend (Supabase)  →  Email (Resend)
 ## 🚨 Important Notes
 
 1. **Email Limits**: Free tier is 100 emails/day
+
    - If you have 50 employees with expiring docs = 50 emails/day ✅
    - For more, upgrade Resend ($10/month = 10K emails)
 
 2. **Database Size**: 500MB free
+
    - Your current schema = ~10MB
    - Estimated capacity: 10,000+ employees ✅
 
-3. **Environment Variables**: 
+3. **Environment Variables**:
+
    - NEVER commit `.env` files to GitHub
    - Always use platform environment variable settings
 
@@ -203,16 +224,19 @@ Frontend (Vercel)  →  Backend (Supabase)  →  Email (Resend)
 ## 🆘 Troubleshooting
 
 ### Emails Not Sending After Deployment
+
 1. Check Supabase Edge Function logs
 2. Verify `RESEND_API_KEY` secret in Supabase
 3. Test function directly: `curl https://lydqwukaryqghovxbcqg.supabase.co/functions/v1/send-reminders`
 
 ### Build Fails on Vercel
+
 1. Check `package.json` has all dependencies
 2. Verify `vite.config.ts` is correct
 3. Check build logs in Vercel dashboard
 
 ### CORS Errors
+
 - ✅ Already fixed! CORS headers in Edge Function
 
 ---

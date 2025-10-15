@@ -5,6 +5,7 @@
 A **complete, production-ready Employee Management System** for HR Group with the following features:
 
 ### 🏗️ Technology Stack
+
 - **Frontend**: Vite + React 18 + TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui components
 - **Backend**: Supabase (PostgreSQL database)
@@ -83,12 +84,14 @@ hr-management-system/
 ## 🎯 Features Implemented
 
 ### 1. **Authentication System** ✅
+
 - Email/password login
 - Session management
 - Protected routes
 - Auto-redirect on login/logout
 
 ### 2. **Dashboard** ✅
+
 - Total employees count
 - Missing passports count
 - Expired cards count
@@ -99,6 +102,7 @@ hr-management-system/
 - Real-time statistics
 
 ### 3. **Employee Management** ✅
+
 - **Full CRUD operations** (Create, Read, Update, Delete)
 - **Bilingual fields**: English and Arabic names
 - **Document tracking**:
@@ -115,24 +119,28 @@ hr-management-system/
 - **Modal forms**: Clean add/edit interface
 
 ### 4. **Company Management** ✅
+
 - Add/edit/delete companies
 - Bilingual names (English/Arabic)
 - Unique company codes
 - Card-based UI
 
 ### 5. **Department Management** ✅
+
 - Add/edit/delete departments
 - Bilingual names
 - Department codes
 - Linked to employees
 
 ### 6. **Job Title Management** ✅
+
 - Add/edit/delete job titles
 - Bilingual names
 - Job codes
 - Position tracking
 
 ### 7. **Email Reminder System** ✅
+
 - **Automated daily checks** for expiring documents
 - **Email notifications** via Resend API
 - **Reminder types**:
@@ -146,6 +154,7 @@ hr-management-system/
 - **Cron job ready**: Daily scheduled execution
 
 ### 8. **Email Reminder Log** ✅
+
 - View all sent reminders
 - Filter by status
 - See timestamps
@@ -153,6 +162,7 @@ hr-management-system/
 - Document type tracking
 
 ### 9. **Internationalization (i18n)** ✅
+
 - **English** (default)
 - **Arabic** with full RTL support
 - Language toggle in UI
@@ -160,12 +170,14 @@ hr-management-system/
 - Date formatting per locale
 
 ### 10. **Dark Mode** ✅
+
 - Light/dark theme toggle
 - Persisted preference (localStorage)
 - Smooth transitions
 - Tailwind CSS dark mode classes
 
 ### 11. **Responsive Design** ✅
+
 - Mobile-friendly layout
 - Tablet optimization
 - Desktop-first approach
@@ -176,6 +188,7 @@ hr-management-system/
 ## 📊 Database Schema
 
 ### Tables Created:
+
 1. **companies** - Company master data
 2. **departments** - Department master data
 3. **jobs** - Job title master data
@@ -184,6 +197,7 @@ hr-management-system/
 6. **reminders** - Email reminder history
 
 ### Features:
+
 - UUID primary keys
 - Foreign key constraints
 - Indexes for performance
@@ -196,6 +210,7 @@ hr-management-system/
 ## 🚀 What's Ready to Use
 
 ### Immediately Available:
+
 1. ✅ Full authentication system
 2. ✅ Complete employee database
 3. ✅ All CRUD operations working
@@ -206,6 +221,7 @@ hr-management-system/
 8. ✅ Responsive design
 
 ### Requires Setup (5-10 minutes):
+
 1. ⚙️ Install npm packages (`npm install`)
 2. ⚙️ Create Supabase project
 3. ⚙️ Run database migration
@@ -218,12 +234,15 @@ hr-management-system/
 ## 📝 Next Steps to Launch
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Set Up Environment
+
 Create `.env` file with:
+
 ```
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_key
@@ -231,20 +250,24 @@ VITE_RESEND_API_KEY=your_resend_key
 ```
 
 ### 3. Run Database Migration
+
 - Copy SQL from `supabase/migrations/20250101000000_initial_schema.sql`
 - Paste in Supabase SQL Editor
 - Run it
 
 ### 4. Create Admin User
+
 - Go to Supabase → Authentication → Users
 - Add user with email/password
 
 ### 5. Start Development Server
+
 ```bash
 npm run dev
 ```
 
 ### 6. Deploy Email Function (Optional)
+
 ```bash
 supabase functions deploy send-reminders
 ```
@@ -254,6 +277,7 @@ supabase functions deploy send-reminders
 ## 🎨 UI/UX Features
 
 ### Design System:
+
 - **Colors**: Primary blue, semantic colors (red/yellow/green for statuses)
 - **Typography**: System fonts with Arabic support
 - **Spacing**: Consistent 8px grid system
@@ -262,6 +286,7 @@ supabase functions deploy send-reminders
 - **Animations**: Smooth transitions
 
 ### User Experience:
+
 - **Intuitive navigation**: Sidebar with clear sections
 - **Fast search**: Real-time filtering
 - **Visual feedback**: Loading states, success/error messages
@@ -294,6 +319,7 @@ supabase functions deploy send-reminders
 ## 🧪 Testing Checklist
 
 ### Manual Testing To-Do:
+
 - [ ] Login/logout flow
 - [ ] Add employee with all fields
 - [ ] Edit employee details
@@ -312,17 +338,20 @@ supabase functions deploy send-reminders
 ## 🛠️ Customization Guide
 
 ### Change Company Branding:
+
 1. Update `app.title` in `src/i18n/config.ts`
 2. Replace logo/favicon in `public/`
 3. Modify color scheme in `tailwind.config.js`
 
 ### Add New Document Type:
+
 1. Add column in database migration
 2. Update TypeScript types
 3. Add form fields in `EmployeesPage.tsx`
 4. Update reminder function
 
 ### Add New Feature Page:
+
 1. Create component in `src/pages/`
 2. Add route in `App.tsx`
 3. Add navigation item in `Layout.tsx`

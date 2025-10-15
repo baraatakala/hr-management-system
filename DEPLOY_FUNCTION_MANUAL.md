@@ -31,11 +31,13 @@ You should see "Function deployed successfully" message
 ## Step 6: Test the Function
 
 Option A - Via Dashboard:
+
 1. Click "Invoke" button in the function page
 2. Use empty body: `{}`
 3. Click "Send request"
 
 Option B - Via PowerShell:
+
 ```powershell
 $headers = @{
     "Authorization" = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5ZHF3dWthcnlxZ2hvdnhiY3FnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjA4OTI4MSwiZXhwIjoyMDY3NjY1MjgxfQ.CQiqU_StpnAgvYDdcgdsfk9hn9-AkCXyiDsWP13UTgA"
@@ -48,6 +50,7 @@ Invoke-RestMethod -Uri "https://lydqwukaryqghovxbcqg.supabase.co/functions/v1/se
 ## Expected Response
 
 If no employees with expiring documents:
+
 ```json
 {
   "success": true,
@@ -69,6 +72,7 @@ After successful deployment:
 **Alternative: Deploy via CLI (if Docker is running)**
 
 If you start Docker Desktop:
+
 ```powershell
 supabase functions deploy send-reminders
 ```

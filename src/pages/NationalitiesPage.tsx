@@ -15,7 +15,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
-export function DepartmentsPage() {
+export function NationalitiesPage() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -27,12 +27,12 @@ export function DepartmentsPage() {
   });
 
   const { data: items, isLoading } = useQuery({
-    queryKey: ["departments"],
+    queryKey: ["nationalities"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("departments")
+        .from("nationalities")
         .select("*")
-        .order("code");
+        .order("name_en");
       if (error) throw error;
       return data;
     },
@@ -42,32 +42,30 @@ export function DepartmentsPage() {
     mutationFn: async (data: any) => {
       if (editingItem) {
         const { error } = await supabase
-          .from("departments")
+          .from("nationalities")
           .update(data)
           .eq("id", editingItem.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("departments").insert([data]);
+        const { error } = await supabase.from("nationalities").insert([data]);
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: ["nationalities"] });
       setIsDialogOpen(false);
       setFormData({ code: "", name_en: "", name_ar: "" });
+      setEditingItem(null);
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("departments")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("nationalities").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: ["nationalities"] });
     },
   });
 
@@ -92,42 +90,57 @@ export function DepartmentsPage() {
     saveMutation.mutate(formData);
   };
 
-  if (isLoading) return <div>{t("common.loading")}</div>;
+  const handleDelete = (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  if (isLoading) return <div className="flex items-center justify-center h-64">Loading...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">{t("departments.title")}</h1>
-        <Button onClick={handleAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t("departments.addDepartment")}
+        <div>
+          <h1 className="text-3xl font-bold">
+            {i18n.language === "ar" ? "الجنسيات" : "Nationalities"}
+          </h1>
+          <p className="text-gray-500 mt-1">
+            {i18n.language === "ar" 
+              ? `${items?.length || 0} جنسية` 
+              : `${items?.length || 0} nationalities`}
+          </p>
+        </div>
+        <Button onClick={handleAdd} className="gap-2">
+          <Plus className="w-4 h-4" />
+          {i18n.language === "ar" ? "إضافة جنسية" : "Add Nationality"}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items?.map((item: any) => (
-          <Card key={item.id} className="p-4 space-y-2">
+          <Card key={item.id} className="p-4 hover:shadow-lg transition-shadow">
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold text-lg">
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">
                   {i18n.language === "ar" ? item.name_ar : item.name_en}
                 </h3>
-                <p className="text-sm text-muted-foreground">{item.code}</p>
+                <p className="text-sm text-gray-500 mt-1">{item.code}</p>
               </div>
               <div className="flex gap-2">
                 <Button
+                  variant="outline"
                   size="sm"
-                  variant="ghost"
                   onClick={() => handleEdit(item)}
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
                 <Button
+                  variant="destructive"
                   size="sm"
-                  variant="ghost"
-                  onClick={() => deleteMutation.mutate(item.id)}
+                  onClick={() => handleDelete(item.id, i18n.language === "ar" ? item.name_ar : item.name_en)}
                 >
-                  <Trash2 className="w-4 h-4 text-red-600" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -135,42 +148,67 @@ export function DepartmentsPage() {
         ))}
       </div>
 
+      {items?.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">
+            {i18n.language === "ar" 
+              ? "لا توجد جنسيات. اضغط على 'إضافة جنسية' للبدء." 
+              : "No nationalities found. Click 'Add Nationality' to get started."}
+          </p>
+        </div>
+      )}
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? t("common.edit") : t("departments.addDepartment")}
+              {editingItem
+                ? i18n.language === "ar" ? "تعديل الجنسية" : "Edit Nationality"
+                : i18n.language === "ar" ? "إضافة جنسية" : "Add Nationality"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label>{t("companies.code")}</Label>
+              <Label htmlFor="code">
+                {i18n.language === "ar" ? "الرمز" : "Code"}
+              </Label>
               <Input
+                id="code"
                 value={formData.code}
                 onChange={(e) =>
                   setFormData({ ...formData, code: e.target.value })
                 }
+                placeholder={i18n.language === "ar" ? "مثال: UAE" : "e.g., UAE"}
                 required
               />
             </div>
             <div>
-              <Label>{t("companies.nameEn")}</Label>
+              <Label htmlFor="name_en">
+                {i18n.language === "ar" ? "الاسم بالإنجليزية" : "English Name"}
+              </Label>
               <Input
+                id="name_en"
                 value={formData.name_en}
                 onChange={(e) =>
                   setFormData({ ...formData, name_en: e.target.value })
                 }
+                placeholder={i18n.language === "ar" ? "الإمارات العربية المتحدة" : "United Arab Emirates"}
                 required
               />
             </div>
             <div>
-              <Label>{t("companies.nameAr")}</Label>
+              <Label htmlFor="name_ar">
+                {i18n.language === "ar" ? "الاسم بالعربية" : "Arabic Name"}
+              </Label>
               <Input
+                id="name_ar"
                 value={formData.name_ar}
                 onChange={(e) =>
                   setFormData({ ...formData, name_ar: e.target.value })
                 }
+                placeholder={i18n.language === "ar" ? "الإمارات العربية المتحدة" : "الإمارات العربية المتحدة"}
                 required
+                dir="rtl"
               />
             </div>
             <DialogFooter>
@@ -179,12 +217,12 @@ export function DepartmentsPage() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
-                {t("common.cancel")}
+                {i18n.language === "ar" ? "إلغاء" : "Cancel"}
               </Button>
               <Button type="submit" disabled={saveMutation.isPending}>
                 {saveMutation.isPending
-                  ? t("common.loading")
-                  : t("common.save")}
+                  ? i18n.language === "ar" ? "جاري الحفظ..." : "Saving..."
+                  : i18n.language === "ar" ? "حفظ" : "Save"}
               </Button>
             </DialogFooter>
           </form>

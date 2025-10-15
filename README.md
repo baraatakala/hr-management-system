@@ -23,21 +23,25 @@ VITE_RESEND_API_KEY=your_resend_api_key
 ### 3. Run Database Migration
 
 1. Install Supabase CLI:
+
 ```bash
 npm install -g supabase
 ```
 
 2. Login to Supabase:
+
 ```bash
 supabase login
 ```
 
 3. Link your project:
+
 ```bash
 supabase link --project-ref your_project_ref
 ```
 
 4. Run the migration:
+
 ```bash
 supabase db push
 ```
@@ -59,6 +63,7 @@ supabase functions deploy send-reminders --no-verify-jwt
 ### 6. Set Up Cron Job
 
 In Supabase Dashboard:
+
 1. Go to Database → Cron Jobs
 2. Create a new cron job:
    - Name: `send-daily-reminders`
@@ -83,6 +88,7 @@ Visit `http://localhost:5173`
 ## 📝 Default Credentials
 
 After running migrations, create a user in Supabase Auth:
+
 - Go to Authentication → Users → Add User
 - Email: `admin@hrgroup.com`
 - Password: (choose a secure password)
@@ -125,6 +131,7 @@ hr-management-system/
 ## 🎨 Features
 
 ### Implemented
+
 - ✅ Authentication (Supabase Auth)
 - ✅ Dashboard with analytics and charts
 - ✅ Employee management (CRUD)
@@ -140,6 +147,7 @@ hr-management-system/
 - ✅ Search and filters
 
 ### Advanced Features (Optional)
+
 - 📊 Bulk import/export (CSV)
 - 📄 PDF report generation
 - 👥 Multi-tenant support
@@ -153,41 +161,44 @@ hr-management-system/
 If you prefer not to use Resend, you can modify the `send-reminders` Edge Function to use:
 
 #### SendGrid
+
 ```typescript
-await fetch('https://api.sendgrid.com/v3/mail/send', {
-  method: 'POST',
+await fetch("https://api.sendgrid.com/v3/mail/send", {
+  method: "POST",
   headers: {
-    'Authorization': `Bearer ${SENDGRID_API_KEY}`,
-    'Content-Type': 'application/json',
+    Authorization: `Bearer ${SENDGRID_API_KEY}`,
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
     personalizations: [{ to: [{ email: employee.email }] }],
-    from: { email: 'noreply@yourcompany.com' },
+    from: { email: "noreply@yourcompany.com" },
     subject: `Document Expiry Reminder`,
-    content: [{ type: 'text/html', value: htmlContent }],
+    content: [{ type: "text/html", value: htmlContent }],
   }),
-})
+});
 ```
 
 #### Mailgun
+
 ```typescript
 await fetch(`https://api.mailgun.net/v3/${MAILGUN_DOMAIN}/messages`, {
-  method: 'POST',
+  method: "POST",
   headers: {
-    'Authorization': `Basic ${btoa(`api:${MAILGUN_API_KEY}`)}`,
+    Authorization: `Basic ${btoa(`api:${MAILGUN_API_KEY}`)}`,
   },
   body: new URLSearchParams({
-    from: 'noreply@yourcompany.com',
+    from: "noreply@yourcompany.com",
     to: employee.email,
-    subject: 'Document Expiry Reminder',
+    subject: "Document Expiry Reminder",
     html: htmlContent,
   }),
-})
+});
 ```
 
 ## 🐛 Troubleshooting
 
 ### Build Errors
+
 ```bash
 # Clear node_modules and reinstall
 rm -rf node_modules package-lock.json
@@ -195,11 +206,13 @@ npm install
 ```
 
 ### Supabase Connection Issues
+
 - Verify your `.env` file has correct credentials
 - Check Supabase project is active
 - Ensure RLS policies are set correctly
 
 ### Email Not Sending
+
 - Verify Resend API key is valid
 - Check Edge Function logs: `supabase functions logs send-reminders`
 - Ensure employee email addresses are valid
