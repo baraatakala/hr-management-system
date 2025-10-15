@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
@@ -138,6 +139,9 @@ export function JobsPage() {
             <DialogTitle>
               {editingItem ? t("common.edit") : t("jobs.addJob")}
             </DialogTitle>
+            <DialogDescription>
+              {editingItem ? "Edit job position information" : "Add a new job position to the system"}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

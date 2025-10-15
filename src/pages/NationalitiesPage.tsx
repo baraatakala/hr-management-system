@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
@@ -166,6 +167,11 @@ export function NationalitiesPage() {
                 ? i18n.language === "ar" ? "تعديل الجنسية" : "Edit Nationality"
                 : i18n.language === "ar" ? "إضافة جنسية" : "Add Nationality"}
             </DialogTitle>
+            <DialogDescription>
+              {editingItem 
+                ? i18n.language === "ar" ? "تعديل معلومات الجنسية" : "Edit nationality information"
+                : i18n.language === "ar" ? "إضافة جنسية جديدة للنظام" : "Add a new nationality to the system"}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
@@ -141,6 +142,9 @@ export function DepartmentsPage() {
             <DialogTitle>
               {editingItem ? t("common.edit") : t("departments.addDepartment")}
             </DialogTitle>
+            <DialogDescription>
+              {editingItem ? "Edit department information" : "Add a new department to the system"}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

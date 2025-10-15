@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
@@ -138,6 +139,9 @@ export function CompaniesPage() {
             <DialogTitle>
               {editingItem ? t("common.edit") : t("companies.addCompany")}
             </DialogTitle>
+            <DialogDescription>
+              {editingItem ? "Edit company information" : "Add a new company to the system"}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -801,6 +802,11 @@ function EmployeeDialog({
               ? t("employees.editEmployee")
               : t("employees.addEmployee")}
           </DialogTitle>
+          <DialogDescription>
+            {employee 
+              ? "Edit employee information and document details" 
+              : "Add a new employee to the system with all required information"}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
