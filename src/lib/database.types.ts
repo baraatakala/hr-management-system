@@ -31,6 +31,7 @@ export interface Database {
           name_ar?: string
           created_at?: string
         }
+        Relationships: []
       }
       departments: {
         Row: {
@@ -54,6 +55,7 @@ export interface Database {
           name_ar?: string
           created_at?: string
         }
+        Relationships: []
       }
       jobs: {
         Row: {
@@ -77,6 +79,7 @@ export interface Database {
           name_ar?: string
           created_at?: string
         }
+        Relationships: []
       }
       employees: {
         Row: {
@@ -145,6 +148,7 @@ export interface Database {
           added_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       activity_log: {
         Row: {
@@ -171,6 +175,7 @@ export interface Database {
           timestamp?: string
           user_id?: string | null
         }
+        Relationships: []
       }
       reminders: {
         Row: {
@@ -200,6 +205,7 @@ export interface Database {
           sent_at?: string | null
           created_at?: string
         }
+        Relationships: []
       }
     }
     Views: {
@@ -209,6 +215,9 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }
