@@ -16,6 +16,8 @@ import {
   Moon,
   Sun,
   Languages,
+  Menu,
+  X,
 } from "lucide-react";
 
 export function Layout() {
@@ -23,6 +25,7 @@ export function Layout() {
   const { signOut } = useAuth();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Set initial direction and lang on mount and whenever language changes
   React.useEffect(() => {
@@ -52,11 +55,46 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} z-50 w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700`}>
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
+        </button>
+        <h1 className="ml-4 text-lg font-bold text-primary">{t("app.title")}</h1>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive */}
+      <div className={`fixed inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} z-50 w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
+        mobileMenuOpen ? 'translate-x-0' : isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'
+      } ${isRTL ? 'lg:right-0' : 'lg:left-0'}`}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-xl font-bold text-primary">{t("app.title")}</h1>
+            <h1 className="text-xl font-bold text-primary hidden lg:block">{t("app.title")}</h1>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden absolute right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -67,6 +105,7 @@ export function Layout() {
                 <Link
                   key={item.href}
                   to={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
@@ -116,9 +155,9 @@ export function Layout() {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className={isRTL ? 'pr-64' : 'pl-64'}>
-        <main className="p-8">
+      {/* Main content - Responsive padding */}
+      <div className={`${isRTL ? 'lg:pr-64' : 'lg:pl-64'} pt-16 lg:pt-0`}>
+        <main className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

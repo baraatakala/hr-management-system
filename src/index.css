@@ -49,6 +49,38 @@
   }
 }
 
+/* Mobile Optimizations */
+@layer utilities {
+  /* Smooth scrolling on mobile */
+  @media (max-width: 1024px) {
+    html {
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Better tap targets */
+    button, a, input, select, textarea {
+      min-height: 44px;
+    }
+    
+    /* Prevent text size adjustment on iOS */
+    body {
+      -webkit-text-size-adjust: 100%;
+    }
+    
+    /* Prevent horizontal scroll */
+    body {
+      overflow-x: hidden;
+    }
+  }
+  
+  /* Touch-friendly spacing */
+  @media (max-width: 640px) {
+    .card {
+      @apply mx-auto;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
