@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VoiceInput } from "@/components/ui/voice-input";
 import {
   Dialog,
   DialogContent,
@@ -1112,34 +1113,40 @@ function EmployeeDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>{t("employees.employeeNo")}</Label>
-              <Input
+              <Label>{t("employees.employeeNo")} 🎤</Label>
+              <VoiceInput
                 value={formData.employee_no || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, employee_no: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Type or say numbers"
                 required
               />
             </div>
             <div>
-              <Label>{t("employees.nameEn")}</Label>
-              <Input
+              <Label>{t("employees.nameEn")} 🎤</Label>
+              <VoiceInput
                 value={formData.name_en || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, name_en: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Type or click mic to speak"
                 required
               />
             </div>
             <div>
-              <Label>{t("employees.nameAr")}</Label>
-              <Input
+              <Label>{t("employees.nameAr")} 🎤</Label>
+              <VoiceInput
                 value={formData.name_ar || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, name_ar: e.target.value })
                 }
+                voiceLanguage="ar-SA"
+                placeholder="اكتب أو انقر على الميكروفون للتحدث"
                 required
               />
             </div>
@@ -1238,12 +1245,14 @@ function EmployeeDialog({
               </Select>
             </div>
             <div>
-              <Label>{t("employees.passportNo")}</Label>
-              <Input
+              <Label>{t("employees.passportNo")} 🎤</Label>
+              <VoiceInput
                 value={formData.passport_no || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, passport_no: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Speak passport number"
               />
             </div>
             <div>
@@ -1257,12 +1266,14 @@ function EmployeeDialog({
               />
             </div>
             <div>
-              <Label>{t("employees.cardNo")}</Label>
-              <Input
+              <Label>{t("employees.cardNo")} 🎤</Label>
+              <VoiceInput
                 value={formData.card_no || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, card_no: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Speak card number"
               />
             </div>
             <div>
@@ -1276,12 +1287,14 @@ function EmployeeDialog({
               />
             </div>
             <div>
-              <Label>{t("employees.emiratesId")}</Label>
-              <Input
+              <Label>{t("employees.emiratesId")} 🎤</Label>
+              <VoiceInput
                 value={formData.emirates_id || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, emirates_id: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Speak Emirates ID"
               />
             </div>
             <div>
@@ -1298,12 +1311,14 @@ function EmployeeDialog({
               />
             </div>
             <div>
-              <Label>{t("employees.residenceNo")}</Label>
-              <Input
+              <Label>{t("employees.residenceNo")} 🎤</Label>
+              <VoiceInput
                 value={formData.residence_no || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, residence_no: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Speak residence number"
               />
             </div>
             <div>
@@ -1317,22 +1332,27 @@ function EmployeeDialog({
               />
             </div>
             <div>
-              <Label>{t("employees.email")}</Label>
-              <Input
+              <Label>{t("employees.email")} 🎤</Label>
+              <VoiceInput
                 type="email"
                 value={formData.email || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Speak email address"
               />
             </div>
             <div>
-              <Label>{t("employees.phone")}</Label>
-              <Input
+              <Label>{t("employees.phone")} 🎤</Label>
+              <VoiceInput
                 value={formData.phone || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
+                voiceLanguage="en-US"
+                placeholder="Speak phone number"
+                type="tel"
               />
             </div>
           </div>
