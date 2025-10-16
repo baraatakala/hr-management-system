@@ -31,6 +31,10 @@ import {
   List,
   Filter,
   X,
+  CheckSquare,
+  Square,
+  Trash,
+  FileSpreadsheet,
 } from "lucide-react";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
@@ -82,6 +86,10 @@ export function EmployeesPage() {
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showFilters, setShowFilters] = useState(true);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ["employees"],
@@ -145,6 +153,19 @@ export function EmployeesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+  });
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("employees").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setSelectedIds([]);
+      setShowBulkActions(false);
     },
   });
 
@@ -248,6 +269,70 @@ export function EmployeesPage() {
     if (confirm(t("employees.deleteConfirm"))) {
       deleteMutation.mutate(id);
     }
+  };
+
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectedIds.length === filteredEmployees?.length) {
+      setSelectedIds([]);
+      setShowBulkActions(false);
+    } else {
+      const allIds = filteredEmployees?.map((emp: any) => emp.id) || [];
+      setSelectedIds(allIds);
+      setShowBulkActions(true);
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    const newSelected = selectedIds.includes(id)
+      ? selectedIds.filter((selectedId) => selectedId !== id)
+      : [...selectedIds, id];
+    
+    setSelectedIds(newSelected);
+    setShowBulkActions(newSelected.length > 0);
+  };
+
+  const handleBulkDelete = () => {
+    if (
+      confirm(
+        `Are you sure you want to delete ${selectedIds.length} selected employee(s)?`
+      )
+    ) {
+      bulkDeleteMutation.mutate(selectedIds);
+    }
+  };
+
+  const handleBulkExport = () => {
+    const selectedEmployees = filteredEmployees?.filter((emp: any) =>
+      selectedIds.includes(emp.id)
+    );
+
+    if (!selectedEmployees || selectedEmployees.length === 0) return;
+
+    const exportData = selectedEmployees.map((emp: any) => ({
+      "Employee No": emp.employee_no,
+      "Name (EN)": emp.name_en,
+      "Name (AR)": emp.name_ar,
+      Nationality: emp.nationality,
+      Company: i18n.language === "ar" ? emp.companies?.name_ar : emp.companies?.name_en,
+      Department: i18n.language === "ar" ? emp.departments?.name_ar : emp.departments?.name_en,
+      Job: i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
+      "Passport No": emp.passport_no || "",
+      "Passport Expiry": emp.passport_expiry || "",
+      "Card No": emp.card_no || "",
+      "Card Expiry": emp.card_expiry || "",
+      "Emirates ID": emp.emirates_id || "",
+      "Emirates ID Expiry": emp.emirates_id_expiry || "",
+      "Residence No": emp.residence_no || "",
+      "Residence Expiry": emp.residence_expiry || "",
+      Email: emp.email || "",
+      Phone: emp.phone || "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Selected Employees");
+    XLSX.writeFile(wb, `selected_employees_${dayjs().format("YYYY-MM-DD")}.xlsx`);
   };
 
   const getExpiryStatus = (expiryDate: string | null) => {
@@ -360,6 +445,51 @@ export function EmployeesPage() {
           </Button>
         </div>
       </div>
+
+      {/* Bulk Actions Toolbar */}
+      {showBulkActions && (
+        <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <CheckSquare className="w-5 h-5 text-blue-600" />
+              <span className="font-semibold text-blue-900 dark:text-blue-100">
+                {selectedIds.length} employee(s) selected
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleBulkExport}
+                variant="outline"
+                className="gap-2"
+                size="sm"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Export Selected
+              </Button>
+              <Button
+                onClick={handleBulkDelete}
+                variant="destructive"
+                className="gap-2"
+                size="sm"
+              >
+                <Trash className="w-4 h-4" />
+                Delete Selected
+              </Button>
+              <Button
+                onClick={() => {
+                  setSelectedIds([]);
+                  setShowBulkActions(false);
+                }}
+                variant="ghost"
+                size="sm"
+              >
+                <X className="w-4 h-4" />
+                Clear Selection
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Filters & Controls */}
       <Card className="p-4 space-y-4">
@@ -621,17 +751,37 @@ export function EmployeesPage() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredEmployees?.map((employee: any) => (
-            <Card key={employee.id} className="p-4 space-y-3">
+            <Card 
+              key={employee.id} 
+              className={`p-4 space-y-3 ${
+                selectedIds.includes(employee.id) 
+                  ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' 
+                  : ''
+              }`}
+            >
               <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">
-                    {i18n.language === "ar"
-                      ? employee.name_ar
-                      : employee.name_en}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {employee.employee_no}
-                  </p>
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectOne(employee.id)}
+                    className="hover:bg-muted rounded p-1 mt-1"
+                  >
+                    {selectedIds.includes(employee.id) ? (
+                      <CheckSquare className="w-5 h-5 text-blue-600" />
+                    ) : (
+                      <Square className="w-5 h-5" />
+                    )}
+                  </button>
+                  <div>
+                    <h3 className="font-bold text-lg">
+                      {i18n.language === "ar"
+                        ? employee.name_ar
+                        : employee.name_en}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {employee.employee_no}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -710,6 +860,20 @@ export function EmployeesPage() {
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr className="border-b">
+                <th className="p-3 w-10">
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    className="hover:bg-muted rounded p-1"
+                  >
+                    {selectedIds.length === filteredEmployees?.length &&
+                    filteredEmployees?.length > 0 ? (
+                      <CheckSquare className="w-5 h-5 text-blue-600" />
+                    ) : (
+                      <Square className="w-5 h-5" />
+                    )}
+                  </button>
+                </th>
                 <th className="text-left p-3 font-semibold">Employee No</th>
                 <th className="text-left p-3 font-semibold">Name</th>
                 <th className="text-left p-3 font-semibold">Nationality</th>
@@ -726,6 +890,19 @@ export function EmployeesPage() {
             <tbody>
               {filteredEmployees?.map((employee: any) => (
                 <tr key={employee.id} className="border-b hover:bg-muted/30">
+                  <td className="p-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectOne(employee.id)}
+                      className="hover:bg-muted rounded p-1"
+                    >
+                      {selectedIds.includes(employee.id) ? (
+                        <CheckSquare className="w-5 h-5 text-blue-600" />
+                      ) : (
+                        <Square className="w-5 h-5" />
+                      )}
+                    </button>
+                  </td>
                   <td className="p-3 font-medium">{employee.employee_no}</td>
                   <td className="p-3">
                     {i18n.language === "ar"
