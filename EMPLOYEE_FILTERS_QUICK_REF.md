@@ -28,6 +28,7 @@
 ## 📊 View Modes
 
 ### Grid View (⊞)
+
 ```
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
 │ John Smith  │  │ Ahmed Ali   │  │ Maria Lee   │
@@ -44,6 +45,7 @@
 ```
 
 ### Table View (≡)
+
 ```
 ┌────────┬──────────┬───────────┬─────────┬──────────┬─────────┐
 │ Emp No │   Name   │ Nationality│ Company │  Dept   │ Actions │
@@ -56,16 +58,17 @@
 
 ## 🎨 Status Color Guide
 
-| Color | Status | Days Remaining |
-|-------|--------|---------------|
-| 🟢 Green | Valid | 30+ days |
-| 🟡 Yellow | Expiring Soon | ≤ 30 days |
-| 🔴 Red | Expired | Past due |
-| ⚫ Gray | No Date | N/A |
+| Color     | Status        | Days Remaining |
+| --------- | ------------- | -------------- |
+| 🟢 Green  | Valid         | 30+ days       |
+| 🟡 Yellow | Expiring Soon | ≤ 30 days      |
+| 🔴 Red    | Expired       | Past due       |
+| ⚫ Gray   | No Date       | N/A            |
 
 ## 🔄 Common Workflows
 
 ### 1️⃣ Find Expiring Documents
+
 ```
 1. Select status filter: "Expiring Soon"
 2. View results in grid or table
@@ -73,6 +76,7 @@
 ```
 
 ### 2️⃣ Department Report
+
 ```
 1. Select Department filter
 2. Select Company (optional)
@@ -81,6 +85,7 @@
 ```
 
 ### 3️⃣ Quick Employee Search
+
 ```
 1. Type employee number/name/passport
 2. Results appear instantly
@@ -88,6 +93,7 @@
 ```
 
 ### 4️⃣ Multi-Filter Search
+
 ```
 1. Select Nationality: "Indian"
 2. Select Company: "Tech Corp"
@@ -98,6 +104,7 @@
 ## 📥 Export Excel Features
 
 **What Gets Exported:**
+
 - ✅ All filtered employees (not hidden ones)
 - ✅ Complete employee information
 - ✅ Formatted dates (DD/MM/YYYY)
@@ -105,11 +112,13 @@
 - ✅ All document numbers and expiries
 
 **File Naming:**
+
 ```
 Employees_2025-10-16.xlsx
 ```
 
 **Excel Columns:**
+
 1. Employee No
 2. Name (English)
 3. Name (Arabic)
@@ -131,6 +140,7 @@ Employees_2025-10-16.xlsx
 ## 🎯 Filter Combination Examples
 
 ### Example 1: Expired Passports in Tech Department
+
 ```
 Department: Tech
 Passport Status: Expired
@@ -138,6 +148,7 @@ Result: All tech employees with expired passports
 ```
 
 ### Example 2: Indian Employees in Sales
+
 ```
 Nationality: Indian
 Department: Sales
@@ -145,6 +156,7 @@ Result: All Indian employees in sales department
 ```
 
 ### Example 3: Expiring Emirates IDs at Company X
+
 ```
 Company: Company X
 Emirates ID Status: Expiring Soon
@@ -153,12 +165,12 @@ Result: Company X employees with IDs expiring in 30 days
 
 ## ⌨️ Keyboard Shortcuts (Planned)
 
-| Key | Action |
-|-----|--------|
-| Ctrl + F | Focus search |
-| Ctrl + E | Export Excel |
+| Key      | Action           |
+| -------- | ---------------- |
+| Ctrl + F | Focus search     |
+| Ctrl + E | Export Excel     |
 | Ctrl + N | Add new employee |
-| Esc | Clear search |
+| Esc      | Clear search     |
 
 ## 📱 Mobile Tips
 
@@ -170,23 +182,23 @@ Result: Company X employees with IDs expiring in 30 days
 
 ## 🔧 Button Reference
 
-| Button | Action |
-|--------|--------|
-| ➕ Add Employee | Open new employee form |
-| ⬇️ Export Excel | Download filtered data |
-| ⊞ Grid View | Switch to card layout |
-| ≡ Table View | Switch to table layout |
-| ✏️ Edit | Modify employee details |
-| 🗑️ Delete | Remove employee |
-| ✖️ Clear All | Reset all filters |
-| Hide/Show Filters | Toggle filter panel |
+| Button            | Action                  |
+| ----------------- | ----------------------- |
+| ➕ Add Employee   | Open new employee form  |
+| ⬇️ Export Excel   | Download filtered data  |
+| ⊞ Grid View       | Switch to card layout   |
+| ≡ Table View      | Switch to table layout  |
+| ✏️ Edit           | Modify employee details |
+| 🗑️ Delete         | Remove employee         |
+| ✖️ Clear All      | Reset all filters       |
+| Hide/Show Filters | Toggle filter panel     |
 
 ## 💾 Data Handling
 
 **Auto-Save**: No - Click Save in dialog  
 **Real-time Updates**: Yes  
 **Offline Mode**: No - Requires connection  
-**Backup**: Automatic via Supabase  
+**Backup**: Automatic via Supabase
 
 ## 🔒 Permissions Required
 

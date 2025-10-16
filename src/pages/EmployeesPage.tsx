@@ -21,16 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Download, 
-  Grid3x3, 
-  List, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  Download,
+  Grid3x3,
+  List,
   Filter,
-  X 
+  X,
 } from "lucide-react";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
@@ -65,17 +65,20 @@ export function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  
+
   // Filter states
   const [nationalityFilter, setNationalityFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [jobFilter, setJobFilter] = useState<string>("all");
-  const [passportStatusFilter, setPassportStatusFilter] = useState<StatusFilter>("all");
+  const [passportStatusFilter, setPassportStatusFilter] =
+    useState<StatusFilter>("all");
   const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter>("all");
-  const [emiratesIdStatusFilter, setEmiratesIdStatusFilter] = useState<StatusFilter>("all");
-  const [residenceStatusFilter, setResidenceStatusFilter] = useState<StatusFilter>("all");
-  
+  const [emiratesIdStatusFilter, setEmiratesIdStatusFilter] =
+    useState<StatusFilter>("all");
+  const [residenceStatusFilter, setResidenceStatusFilter] =
+    useState<StatusFilter>("all");
+
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showFilters, setShowFilters] = useState(true);
@@ -127,7 +130,10 @@ export function EmployeesPage() {
   const { data: nationalities } = useQuery({
     queryKey: ["nationalities"],
     queryFn: async () => {
-      const { data } = await supabase.from("nationalities").select("*").order("name_en");
+      const { data } = await supabase
+        .from("nationalities")
+        .select("*")
+        .order("name_en");
       return data || [];
     },
   });
@@ -156,7 +162,8 @@ export function EmployeesPage() {
     return employees?.filter((emp: any) => {
       // Search filter
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = !searchTerm || 
+      const matchesSearch =
+        !searchTerm ||
         emp.name_en.toLowerCase().includes(searchLower) ||
         emp.name_ar.includes(searchTerm) ||
         emp.employee_no.toLowerCase().includes(searchLower) ||
@@ -165,39 +172,67 @@ export function EmployeesPage() {
         emp.residence_no?.toLowerCase().includes(searchLower);
 
       // Nationality filter
-      const matchesNationality = nationalityFilter === "all" || emp.nationality === nationalityFilter;
+      const matchesNationality =
+        nationalityFilter === "all" || emp.nationality === nationalityFilter;
 
       // Company filter
-      const matchesCompany = companyFilter === "all" || emp.company_id === companyFilter;
+      const matchesCompany =
+        companyFilter === "all" || emp.company_id === companyFilter;
 
       // Department filter
-      const matchesDepartment = departmentFilter === "all" || emp.department_id === departmentFilter;
+      const matchesDepartment =
+        departmentFilter === "all" || emp.department_id === departmentFilter;
 
       // Job filter
       const matchesJob = jobFilter === "all" || emp.job_id === jobFilter;
 
       // Passport status filter
       const passportStatus = getDocumentStatus(emp.passport_expiry);
-      const matchesPassport = passportStatusFilter === "all" || passportStatus === passportStatusFilter;
+      const matchesPassport =
+        passportStatusFilter === "all" ||
+        passportStatus === passportStatusFilter;
 
       // Card status filter
       const cardStatus = getDocumentStatus(emp.card_expiry);
-      const matchesCard = cardStatusFilter === "all" || cardStatus === cardStatusFilter;
+      const matchesCard =
+        cardStatusFilter === "all" || cardStatus === cardStatusFilter;
 
       // Emirates ID status filter
       const emiratesIdStatus = getDocumentStatus(emp.emirates_id_expiry);
-      const matchesEmiratesId = emiratesIdStatusFilter === "all" || emiratesIdStatus === emiratesIdStatusFilter;
+      const matchesEmiratesId =
+        emiratesIdStatusFilter === "all" ||
+        emiratesIdStatus === emiratesIdStatusFilter;
 
       // Residence status filter
       const residenceStatus = getDocumentStatus(emp.residence_expiry);
-      const matchesResidence = residenceStatusFilter === "all" || residenceStatus === residenceStatusFilter;
+      const matchesResidence =
+        residenceStatusFilter === "all" ||
+        residenceStatus === residenceStatusFilter;
 
-      return matchesSearch && matchesNationality && matchesCompany && 
-             matchesDepartment && matchesJob && matchesPassport && 
-             matchesCard && matchesEmiratesId && matchesResidence;
+      return (
+        matchesSearch &&
+        matchesNationality &&
+        matchesCompany &&
+        matchesDepartment &&
+        matchesJob &&
+        matchesPassport &&
+        matchesCard &&
+        matchesEmiratesId &&
+        matchesResidence
+      );
     });
-  }, [employees, searchTerm, nationalityFilter, companyFilter, departmentFilter, 
-      jobFilter, passportStatusFilter, cardStatusFilter, emiratesIdStatusFilter, residenceStatusFilter]);
+  }, [
+    employees,
+    searchTerm,
+    nationalityFilter,
+    companyFilter,
+    departmentFilter,
+    jobFilter,
+    passportStatusFilter,
+    cardStatusFilter,
+    emiratesIdStatusFilter,
+    residenceStatusFilter,
+  ]);
 
   const handleEdit = (employee: any) => {
     setEditingEmployee(employee);
@@ -245,38 +280,54 @@ export function EmployeesPage() {
       "Employee No": emp.employee_no,
       "Name (English)": emp.name_en,
       "Name (Arabic)": emp.name_ar,
-      "Nationality": emp.nationality,
-      "Company": i18n.language === "ar" ? emp.companies?.name_ar : emp.companies?.name_en,
-      "Department": i18n.language === "ar" ? emp.departments?.name_ar : emp.departments?.name_en,
-      "Job": i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
+      Nationality: emp.nationality,
+      Company:
+        i18n.language === "ar"
+          ? emp.companies?.name_ar
+          : emp.companies?.name_en,
+      Department:
+        i18n.language === "ar"
+          ? emp.departments?.name_ar
+          : emp.departments?.name_en,
+      Job: i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
       "Passport No": emp.passport_no || "",
-      "Passport Expiry": emp.passport_expiry ? dayjs(emp.passport_expiry).format("DD/MM/YYYY") : "",
+      "Passport Expiry": emp.passport_expiry
+        ? dayjs(emp.passport_expiry).format("DD/MM/YYYY")
+        : "",
       "Card No": emp.card_no || "",
-      "Card Expiry": emp.card_expiry ? dayjs(emp.card_expiry).format("DD/MM/YYYY") : "",
+      "Card Expiry": emp.card_expiry
+        ? dayjs(emp.card_expiry).format("DD/MM/YYYY")
+        : "",
       "Emirates ID": emp.emirates_id || "",
-      "Emirates ID Expiry": emp.emirates_id_expiry ? dayjs(emp.emirates_id_expiry).format("DD/MM/YYYY") : "",
+      "Emirates ID Expiry": emp.emirates_id_expiry
+        ? dayjs(emp.emirates_id_expiry).format("DD/MM/YYYY")
+        : "",
       "Residence No": emp.residence_no || "",
-      "Residence Expiry": emp.residence_expiry ? dayjs(emp.residence_expiry).format("DD/MM/YYYY") : "",
-      "Email": emp.email || "",
-      "Phone": emp.phone || "",
+      "Residence Expiry": emp.residence_expiry
+        ? dayjs(emp.residence_expiry).format("DD/MM/YYYY")
+        : "",
+      Email: emp.email || "",
+      Phone: emp.phone || "",
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Employees");
-    
+
     // Auto-size columns
     const maxWidth = 50;
-    const colWidths = Object.keys(exportData[0]).map(key => ({
+    const colWidths = Object.keys(exportData[0]).map((key) => ({
       wch: Math.min(
         maxWidth,
         Math.max(
           key.length,
-          ...exportData.map(row => String(row[key as keyof typeof row] || "").length)
+          ...exportData.map(
+            (row) => String(row[key as keyof typeof row] || "").length
+          )
         )
-      )
+      ),
     }));
-    ws['!cols'] = colWidths;
+    ws["!cols"] = colWidths;
 
     XLSX.writeFile(wb, `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`);
   };
@@ -292,7 +343,10 @@ export function EmployeesPage() {
         <div>
           <h1 className="text-3xl font-bold">{t("employees.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {filteredEmployees?.length || 0} {t("employees.title").toLowerCase()} {filteredEmployees?.length !== employees?.length && `(filtered from ${employees?.length})`}
+            {filteredEmployees?.length || 0}{" "}
+            {t("employees.title").toLowerCase()}{" "}
+            {filteredEmployees?.length !== employees?.length &&
+              `(filtered from ${employees?.length})`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -315,14 +369,19 @@ export function EmployeesPage() {
             <h2 className="text-lg font-semibold">Filters & Control</h2>
           </div>
           <div className="flex gap-2">
-            <Button 
-              onClick={() => setShowFilters(!showFilters)} 
-              variant="ghost" 
+            <Button
+              onClick={() => setShowFilters(!showFilters)}
+              variant="ghost"
               size="sm"
             >
               {showFilters ? "Hide Filters" : "Show Filters"}
             </Button>
-            <Button onClick={clearAllFilters} variant="ghost" size="sm" className="gap-2">
+            <Button
+              onClick={clearAllFilters}
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+            >
               <X className="w-4 h-4" />
               Clear All
             </Button>
@@ -352,7 +411,8 @@ export function EmployeesPage() {
             {/* Quick Search */}
             <div>
               <Label className="text-sm font-medium mb-2 block">
-                Quick Search (Name, Employee No., Passport No., Emirates ID, Residence No.)
+                Quick Search (Name, Employee No., Passport No., Emirates ID,
+                Residence No.)
               </Label>
               <div className="flex items-center gap-2">
                 <Search className="w-5 h-5 text-gray-400" />
@@ -369,8 +429,13 @@ export function EmployeesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Nationality Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Nationality</Label>
-                <Select value={nationalityFilter} onValueChange={setNationalityFilter}>
+                <Label className="text-sm font-medium mb-2 block">
+                  Nationality
+                </Label>
+                <Select
+                  value={nationalityFilter}
+                  onValueChange={setNationalityFilter}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="جميع الجنسيات / All Nationalities" />
                   </SelectTrigger>
@@ -387,7 +452,9 @@ export function EmployeesPage() {
 
               {/* Company Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Company</Label>
+                <Label className="text-sm font-medium mb-2 block">
+                  Company
+                </Label>
                 <Select value={companyFilter} onValueChange={setCompanyFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="جميع الشركات / All Companies" />
@@ -396,7 +463,9 @@ export function EmployeesPage() {
                     <SelectItem value="all">جميع الشركات / All</SelectItem>
                     {companies?.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
-                        {i18n.language === "ar" ? company.name_ar : company.name_en}
+                        {i18n.language === "ar"
+                          ? company.name_ar
+                          : company.name_en}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -423,8 +492,13 @@ export function EmployeesPage() {
 
               {/* Department Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Department</Label>
-                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <Label className="text-sm font-medium mb-2 block">
+                  Department
+                </Label>
+                <Select
+                  value={departmentFilter}
+                  onValueChange={setDepartmentFilter}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="جميع الأقسام / All Departments" />
                   </SelectTrigger>
@@ -441,15 +515,24 @@ export function EmployeesPage() {
 
               {/* Passport Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Passport Status</Label>
-                <Select value={passportStatusFilter} onValueChange={(value) => setPassportStatusFilter(value as StatusFilter)}>
+                <Label className="text-sm font-medium mb-2 block">
+                  Passport Status
+                </Label>
+                <Select
+                  value={passportStatusFilter}
+                  onValueChange={(value) =>
+                    setPassportStatusFilter(value as StatusFilter)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="valid">Valid (30+ days)</SelectItem>
-                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expiring">
+                      Expiring Soon (≤30 days)
+                    </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
                   </SelectContent>
                 </Select>
@@ -457,15 +540,24 @@ export function EmployeesPage() {
 
               {/* Card Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Card Status</Label>
-                <Select value={cardStatusFilter} onValueChange={(value) => setCardStatusFilter(value as StatusFilter)}>
+                <Label className="text-sm font-medium mb-2 block">
+                  Card Status
+                </Label>
+                <Select
+                  value={cardStatusFilter}
+                  onValueChange={(value) =>
+                    setCardStatusFilter(value as StatusFilter)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="valid">Valid (30+ days)</SelectItem>
-                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expiring">
+                      Expiring Soon (≤30 days)
+                    </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
                   </SelectContent>
                 </Select>
@@ -473,15 +565,24 @@ export function EmployeesPage() {
 
               {/* Emirates ID Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Emirates ID Status</Label>
-                <Select value={emiratesIdStatusFilter} onValueChange={(value) => setEmiratesIdStatusFilter(value as StatusFilter)}>
+                <Label className="text-sm font-medium mb-2 block">
+                  Emirates ID Status
+                </Label>
+                <Select
+                  value={emiratesIdStatusFilter}
+                  onValueChange={(value) =>
+                    setEmiratesIdStatusFilter(value as StatusFilter)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="valid">Valid (30+ days)</SelectItem>
-                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expiring">
+                      Expiring Soon (≤30 days)
+                    </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
                   </SelectContent>
                 </Select>
@@ -489,15 +590,24 @@ export function EmployeesPage() {
 
               {/* Residence Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Residence Status</Label>
-                <Select value={residenceStatusFilter} onValueChange={(value) => setResidenceStatusFilter(value as StatusFilter)}>
+                <Label className="text-sm font-medium mb-2 block">
+                  Residence Status
+                </Label>
+                <Select
+                  value={residenceStatusFilter}
+                  onValueChange={(value) =>
+                    setResidenceStatusFilter(value as StatusFilter)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="valid">Valid (30+ days)</SelectItem>
-                    <SelectItem value="expiring">Expiring Soon (≤30 days)</SelectItem>
+                    <SelectItem value="expiring">
+                      Expiring Soon (≤30 days)
+                    </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
                   </SelectContent>
                 </Select>
@@ -511,84 +621,88 @@ export function EmployeesPage() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredEmployees?.map((employee: any) => (
-          <Card key={employee.id} className="p-4 space-y-3">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold text-lg">
-                  {i18n.language === "ar" ? employee.name_ar : employee.name_en}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {employee.employee_no}
+            <Card key={employee.id} className="p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">
+                    {i18n.language === "ar"
+                      ? employee.name_ar
+                      : employee.name_en}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {employee.employee_no}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleEdit(employee)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDelete(employee.id)}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1 text-sm">
+                <p>
+                  <span className="font-medium">{t("employees.company")}:</span>{" "}
+                  {i18n.language === "ar"
+                    ? employee.companies?.name_ar
+                    : employee.companies?.name_en}
+                </p>
+                <p>
+                  <span className="font-medium">
+                    {t("employees.department")}:
+                  </span>{" "}
+                  {i18n.language === "ar"
+                    ? employee.departments?.name_ar
+                    : employee.departments?.name_en}
+                </p>
+                <p>
+                  <span className="font-medium">{t("employees.job")}:</span>{" "}
+                  {i18n.language === "ar"
+                    ? employee.jobs?.name_ar
+                    : employee.jobs?.name_en}
+                </p>
+                <p>
+                  <span className="font-medium">
+                    {t("employees.passportNo")}:
+                  </span>{" "}
+                  {employee.passport_no || "N/A"}
+                </p>
+                <p>
+                  <span className="font-medium">
+                    {t("employees.cardExpiry")}:
+                  </span>{" "}
+                  <span className={getExpiryStatus(employee.card_expiry)}>
+                    {employee.card_expiry
+                      ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
+                      : "N/A"}
+                  </span>
+                </p>
+                <p>
+                  <span className="font-medium">
+                    {t("employees.emiratesIdExpiry")}:
+                  </span>{" "}
+                  <span
+                    className={getExpiryStatus(employee.emirates_id_expiry)}
+                  >
+                    {employee.emirates_id_expiry
+                      ? dayjs(employee.emirates_id_expiry).format("DD/MM/YYYY")
+                      : "N/A"}
+                  </span>
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleEdit(employee)}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleDelete(employee.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-1 text-sm">
-              <p>
-                <span className="font-medium">{t("employees.company")}:</span>{" "}
-                {i18n.language === "ar"
-                  ? employee.companies?.name_ar
-                  : employee.companies?.name_en}
-              </p>
-              <p>
-                <span className="font-medium">
-                  {t("employees.department")}:
-                </span>{" "}
-                {i18n.language === "ar"
-                  ? employee.departments?.name_ar
-                  : employee.departments?.name_en}
-              </p>
-              <p>
-                <span className="font-medium">{t("employees.job")}:</span>{" "}
-                {i18n.language === "ar"
-                  ? employee.jobs?.name_ar
-                  : employee.jobs?.name_en}
-              </p>
-              <p>
-                <span className="font-medium">
-                  {t("employees.passportNo")}:
-                </span>{" "}
-                {employee.passport_no || "N/A"}
-              </p>
-              <p>
-                <span className="font-medium">
-                  {t("employees.cardExpiry")}:
-                </span>{" "}
-                <span className={getExpiryStatus(employee.card_expiry)}>
-                  {employee.card_expiry
-                    ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
-                    : "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium">
-                  {t("employees.emiratesIdExpiry")}:
-                </span>{" "}
-                <span className={getExpiryStatus(employee.emirates_id_expiry)}>
-                  {employee.emirates_id_expiry
-                    ? dayjs(employee.emirates_id_expiry).format("DD/MM/YYYY")
-                    : "N/A"}
-                </span>
-              </p>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
         </div>
       ) : (
         /* Table View */
@@ -614,7 +728,9 @@ export function EmployeesPage() {
                 <tr key={employee.id} className="border-b hover:bg-muted/30">
                   <td className="p-3 font-medium">{employee.employee_no}</td>
                   <td className="p-3">
-                    {i18n.language === "ar" ? employee.name_ar : employee.name_en}
+                    {i18n.language === "ar"
+                      ? employee.name_ar
+                      : employee.name_en}
                   </td>
                   <td className="p-3">{employee.nationality}</td>
                   <td className="p-3">
@@ -635,7 +751,9 @@ export function EmployeesPage() {
                   <td className="p-3">
                     <div className="text-xs">
                       <div>{employee.passport_no || "N/A"}</div>
-                      <div className={getExpiryStatus(employee.passport_expiry)}>
+                      <div
+                        className={getExpiryStatus(employee.passport_expiry)}
+                      >
                         {employee.passport_expiry
                           ? dayjs(employee.passport_expiry).format("DD/MM/YYYY")
                           : "N/A"}
@@ -652,9 +770,13 @@ export function EmployeesPage() {
                   <td className="p-3">
                     <div className="text-xs">
                       <div>{employee.emirates_id || "N/A"}</div>
-                      <div className={getExpiryStatus(employee.emirates_id_expiry)}>
+                      <div
+                        className={getExpiryStatus(employee.emirates_id_expiry)}
+                      >
                         {employee.emirates_id_expiry
-                          ? dayjs(employee.emirates_id_expiry).format("DD/MM/YYYY")
+                          ? dayjs(employee.emirates_id_expiry).format(
+                              "DD/MM/YYYY"
+                            )
                           : "N/A"}
                       </div>
                     </div>
@@ -662,9 +784,13 @@ export function EmployeesPage() {
                   <td className="p-3">
                     <div className="text-xs">
                       <div>{employee.residence_no || "N/A"}</div>
-                      <div className={getExpiryStatus(employee.residence_expiry)}>
+                      <div
+                        className={getExpiryStatus(employee.residence_expiry)}
+                      >
                         {employee.residence_expiry
-                          ? dayjs(employee.residence_expiry).format("DD/MM/YYYY")
+                          ? dayjs(employee.residence_expiry).format(
+                              "DD/MM/YYYY"
+                            )
                           : "N/A"}
                       </div>
                     </div>
@@ -803,8 +929,8 @@ function EmployeeDialog({
               : t("employees.addEmployee")}
           </DialogTitle>
           <DialogDescription>
-            {employee 
-              ? "Edit employee information and document details" 
+            {employee
+              ? "Edit employee information and document details"
               : "Add a new employee to the system with all required information"}
           </DialogDescription>
         </DialogHeader>
@@ -842,7 +968,8 @@ function EmployeeDialog({
             </div>
             <div>
               <Label>
-                {t("employees.nationality")} <span className="text-red-500">*</span>
+                {t("employees.nationality")}{" "}
+                <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.nationality || ""}

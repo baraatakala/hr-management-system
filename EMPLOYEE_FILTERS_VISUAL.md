@@ -185,6 +185,7 @@
 ## 🎨 Status Indicator Examples
 
 ### Passport Expiry Status
+
 ```
 ┌─────────────────────────────┐
 │ 📇 Passport No: A1234567    │
@@ -214,6 +215,7 @@
 ## 💡 Interactive Elements
 
 ### Dropdown Menu Example
+
 ```
 ┌─────────────────────┐
 │ Nationality       ▼ │
@@ -235,6 +237,7 @@
 ```
 
 ### Status Filter Dropdown
+
 ```
 ┌─────────────────────┐
 │ Passport Status   ▼ │
@@ -252,6 +255,7 @@
 ## 🔘 Button States
 
 ### View Mode Toggle
+
 ```
 Active Grid View:
 ┌──────┬──────┐
@@ -267,6 +271,7 @@ Active Table View:
 ```
 
 ### Action Buttons
+
 ```
 ┌────────────────┐
 │ ➕ Add Employee│  ← Primary button (colored)

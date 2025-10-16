@@ -5,11 +5,11 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Users, 
-  FileX, 
-  AlertTriangle, 
-  Clock, 
+import {
+  Users,
+  FileX,
+  AlertTriangle,
+  Clock,
   Building2,
   Briefcase,
   TrendingUp,
@@ -24,7 +24,7 @@ import {
   Globe,
   Award,
   UserCheck,
-  UserX
+  UserX,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -48,7 +48,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  Radar
+  Radar,
 } from "recharts";
 import { AnimatedStatCard } from "@/components/AnimatedStatCard";
 import * as XLSX from "xlsx";
@@ -57,7 +57,11 @@ export function Dashboard() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
-  const { data: stats, isLoading, refetch } = useQuery({
+  const {
+    data: stats,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
       const today = dayjs().format("YYYY-MM-DD");
@@ -68,59 +72,91 @@ export function Dashboard() {
       // Get all employees with full details
       const { data: allEmployees } = await supabase
         .from("employees")
-        .select("*, companies(name_en, name_ar), departments(name_en, name_ar), jobs(name_en, name_ar)");
+        .select(
+          "*, companies(name_en, name_ar), departments(name_en, name_ar), jobs(name_en, name_ar)"
+        );
 
       const totalEmployees = allEmployees?.length || 0;
 
       // Missing documents analysis
-      const missingPassports = allEmployees?.filter(emp => !emp.passport_no).length || 0;
-      const missingEmiratesId = allEmployees?.filter(emp => !emp.emirates_id).length || 0;
-      const missingResidence = allEmployees?.filter(emp => !emp.residence_no).length || 0;
-      const missingCard = allEmployees?.filter(emp => !emp.card_no).length || 0;
+      const missingPassports =
+        allEmployees?.filter((emp) => !emp.passport_no).length || 0;
+      const missingEmiratesId =
+        allEmployees?.filter((emp) => !emp.emirates_id).length || 0;
+      const missingResidence =
+        allEmployees?.filter((emp) => !emp.residence_no).length || 0;
+      const missingCard =
+        allEmployees?.filter((emp) => !emp.card_no).length || 0;
 
       // Expired documents
-      const expiredPassports = allEmployees?.filter(emp => 
-        emp.passport_expiry && dayjs(emp.passport_expiry).isBefore(dayjs(), 'day')
-      ).length || 0;
-      
-      const expiredCards = allEmployees?.filter(emp => 
-        emp.card_expiry && dayjs(emp.card_expiry).isBefore(dayjs(), 'day')
-      ).length || 0;
-      
-      const expiredEmiratesId = allEmployees?.filter(emp => 
-        emp.emirates_id_expiry && dayjs(emp.emirates_id_expiry).isBefore(dayjs(), 'day')
-      ).length || 0;
-      
-      const expiredResidence = allEmployees?.filter(emp => 
-        emp.residence_expiry && dayjs(emp.residence_expiry).isBefore(dayjs(), 'day')
-      ).length || 0;
+      const expiredPassports =
+        allEmployees?.filter(
+          (emp) =>
+            emp.passport_expiry &&
+            dayjs(emp.passport_expiry).isBefore(dayjs(), "day")
+        ).length || 0;
+
+      const expiredCards =
+        allEmployees?.filter(
+          (emp) =>
+            emp.card_expiry && dayjs(emp.card_expiry).isBefore(dayjs(), "day")
+        ).length || 0;
+
+      const expiredEmiratesId =
+        allEmployees?.filter(
+          (emp) =>
+            emp.emirates_id_expiry &&
+            dayjs(emp.emirates_id_expiry).isBefore(dayjs(), "day")
+        ).length || 0;
+
+      const expiredResidence =
+        allEmployees?.filter(
+          (emp) =>
+            emp.residence_expiry &&
+            dayjs(emp.residence_expiry).isBefore(dayjs(), "day")
+        ).length || 0;
 
       // Expiring soon (within 30 days)
-      const expiringSoonPassports = allEmployees?.filter(emp => 
-        emp.passport_expiry && 
-        dayjs(emp.passport_expiry).isAfter(dayjs(), 'day') &&
-        dayjs(emp.passport_expiry).isBefore(dayjs().add(30, 'day'), 'day')
-      ).length || 0;
+      const expiringSoonPassports =
+        allEmployees?.filter(
+          (emp) =>
+            emp.passport_expiry &&
+            dayjs(emp.passport_expiry).isAfter(dayjs(), "day") &&
+            dayjs(emp.passport_expiry).isBefore(dayjs().add(30, "day"), "day")
+        ).length || 0;
 
-      const expiringSoonCards = allEmployees?.filter(emp => 
-        emp.card_expiry && 
-        dayjs(emp.card_expiry).isAfter(dayjs(), 'day') &&
-        dayjs(emp.card_expiry).isBefore(dayjs().add(30, 'day'), 'day')
-      ).length || 0;
+      const expiringSoonCards =
+        allEmployees?.filter(
+          (emp) =>
+            emp.card_expiry &&
+            dayjs(emp.card_expiry).isAfter(dayjs(), "day") &&
+            dayjs(emp.card_expiry).isBefore(dayjs().add(30, "day"), "day")
+        ).length || 0;
 
-      const expiringSoonEmiratesId = allEmployees?.filter(emp => 
-        emp.emirates_id_expiry && 
-        dayjs(emp.emirates_id_expiry).isAfter(dayjs(), 'day') &&
-        dayjs(emp.emirates_id_expiry).isBefore(dayjs().add(30, 'day'), 'day')
-      ).length || 0;
+      const expiringSoonEmiratesId =
+        allEmployees?.filter(
+          (emp) =>
+            emp.emirates_id_expiry &&
+            dayjs(emp.emirates_id_expiry).isAfter(dayjs(), "day") &&
+            dayjs(emp.emirates_id_expiry).isBefore(
+              dayjs().add(30, "day"),
+              "day"
+            )
+        ).length || 0;
 
-      const expiringSoonResidence = allEmployees?.filter(emp => 
-        emp.residence_expiry && 
-        dayjs(emp.residence_expiry).isAfter(dayjs(), 'day') &&
-        dayjs(emp.residence_expiry).isBefore(dayjs().add(30, 'day'), 'day')
-      ).length || 0;
+      const expiringSoonResidence =
+        allEmployees?.filter(
+          (emp) =>
+            emp.residence_expiry &&
+            dayjs(emp.residence_expiry).isAfter(dayjs(), "day") &&
+            dayjs(emp.residence_expiry).isBefore(dayjs().add(30, "day"), "day")
+        ).length || 0;
 
-      const totalExpiringDocs = expiringSoonPassports + expiringSoonCards + expiringSoonEmiratesId + expiringSoonResidence;
+      const totalExpiringDocs =
+        expiringSoonPassports +
+        expiringSoonCards +
+        expiringSoonEmiratesId +
+        expiringSoonResidence;
 
       // Company statistics
       interface CompanyStat {
@@ -128,58 +164,65 @@ export function Dashboard() {
         count: number;
       }
 
-      const companyStats = allEmployees?.reduce((acc: CompanyStat[], emp) => {
-        const companyName = i18n.language === 'ar' 
-          ? emp.companies?.name_ar || "Unknown"
-          : emp.companies?.name_en || "Unknown";
-        const existing = acc.find(item => item.name === companyName);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          acc.push({ name: companyName, count: 1 });
-        }
-        return acc;
-      }, [] as CompanyStat[]) || [];
+      const companyStats =
+        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+          const companyName =
+            i18n.language === "ar"
+              ? emp.companies?.name_ar || "Unknown"
+              : emp.companies?.name_en || "Unknown";
+          const existing = acc.find((item) => item.name === companyName);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            acc.push({ name: companyName, count: 1 });
+          }
+          return acc;
+        }, [] as CompanyStat[]) || [];
 
       // Department statistics
-      const departmentStats = allEmployees?.reduce((acc: CompanyStat[], emp) => {
-        const deptName = i18n.language === 'ar'
-          ? emp.departments?.name_ar || "Unknown"
-          : emp.departments?.name_en || "Unknown";
-        const existing = acc.find(item => item.name === deptName);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          acc.push({ name: deptName, count: 1 });
-        }
-        return acc;
-      }, [] as CompanyStat[]) || [];
+      const departmentStats =
+        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+          const deptName =
+            i18n.language === "ar"
+              ? emp.departments?.name_ar || "Unknown"
+              : emp.departments?.name_en || "Unknown";
+          const existing = acc.find((item) => item.name === deptName);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            acc.push({ name: deptName, count: 1 });
+          }
+          return acc;
+        }, [] as CompanyStat[]) || [];
 
       // Job statistics
-      const jobStats = allEmployees?.reduce((acc: CompanyStat[], emp) => {
-        const jobName = i18n.language === 'ar'
-          ? emp.jobs?.name_ar || "Unknown"
-          : emp.jobs?.name_en || "Unknown";
-        const existing = acc.find(item => item.name === jobName);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          acc.push({ name: jobName, count: 1 });
-        }
-        return acc;
-      }, [] as CompanyStat[]) || [];
+      const jobStats =
+        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+          const jobName =
+            i18n.language === "ar"
+              ? emp.jobs?.name_ar || "Unknown"
+              : emp.jobs?.name_en || "Unknown";
+          const existing = acc.find((item) => item.name === jobName);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            acc.push({ name: jobName, count: 1 });
+          }
+          return acc;
+        }, [] as CompanyStat[]) || [];
 
       // Nationality statistics
-      const nationalityStats = allEmployees?.reduce((acc: CompanyStat[], emp) => {
-        const nationality = emp.nationality || "Unknown";
-        const existing = acc.find(item => item.name === nationality);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          acc.push({ name: nationality, count: 1 });
-        }
-        return acc;
-      }, [] as CompanyStat[]) || [];
+      const nationalityStats =
+        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+          const nationality = emp.nationality || "Unknown";
+          const existing = acc.find((item) => item.name === nationality);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            acc.push({ name: nationality, count: 1 });
+          }
+          return acc;
+        }, [] as CompanyStat[]) || [];
 
       // Document status timeline (next 90 days)
       const documentTimeline = [
@@ -192,67 +235,144 @@ export function Dashboard() {
         },
         {
           period: "31-60 days",
-          passports: allEmployees?.filter(emp => 
-            emp.passport_expiry && 
-            dayjs(emp.passport_expiry).isAfter(dayjs().add(30, 'day'), 'day') &&
-            dayjs(emp.passport_expiry).isBefore(dayjs().add(60, 'day'), 'day')
-          ).length || 0,
-          cards: allEmployees?.filter(emp => 
-            emp.card_expiry && 
-            dayjs(emp.card_expiry).isAfter(dayjs().add(30, 'day'), 'day') &&
-            dayjs(emp.card_expiry).isBefore(dayjs().add(60, 'day'), 'day')
-          ).length || 0,
-          emiratesId: allEmployees?.filter(emp => 
-            emp.emirates_id_expiry && 
-            dayjs(emp.emirates_id_expiry).isAfter(dayjs().add(30, 'day'), 'day') &&
-            dayjs(emp.emirates_id_expiry).isBefore(dayjs().add(60, 'day'), 'day')
-          ).length || 0,
-          residence: allEmployees?.filter(emp => 
-            emp.residence_expiry && 
-            dayjs(emp.residence_expiry).isAfter(dayjs().add(30, 'day'), 'day') &&
-            dayjs(emp.residence_expiry).isBefore(dayjs().add(60, 'day'), 'day')
-          ).length || 0,
+          passports:
+            allEmployees?.filter(
+              (emp) =>
+                emp.passport_expiry &&
+                dayjs(emp.passport_expiry).isAfter(
+                  dayjs().add(30, "day"),
+                  "day"
+                ) &&
+                dayjs(emp.passport_expiry).isBefore(
+                  dayjs().add(60, "day"),
+                  "day"
+                )
+            ).length || 0,
+          cards:
+            allEmployees?.filter(
+              (emp) =>
+                emp.card_expiry &&
+                dayjs(emp.card_expiry).isAfter(dayjs().add(30, "day"), "day") &&
+                dayjs(emp.card_expiry).isBefore(dayjs().add(60, "day"), "day")
+            ).length || 0,
+          emiratesId:
+            allEmployees?.filter(
+              (emp) =>
+                emp.emirates_id_expiry &&
+                dayjs(emp.emirates_id_expiry).isAfter(
+                  dayjs().add(30, "day"),
+                  "day"
+                ) &&
+                dayjs(emp.emirates_id_expiry).isBefore(
+                  dayjs().add(60, "day"),
+                  "day"
+                )
+            ).length || 0,
+          residence:
+            allEmployees?.filter(
+              (emp) =>
+                emp.residence_expiry &&
+                dayjs(emp.residence_expiry).isAfter(
+                  dayjs().add(30, "day"),
+                  "day"
+                ) &&
+                dayjs(emp.residence_expiry).isBefore(
+                  dayjs().add(60, "day"),
+                  "day"
+                )
+            ).length || 0,
         },
         {
           period: "61-90 days",
-          passports: allEmployees?.filter(emp => 
-            emp.passport_expiry && 
-            dayjs(emp.passport_expiry).isAfter(dayjs().add(60, 'day'), 'day') &&
-            dayjs(emp.passport_expiry).isBefore(dayjs().add(90, 'day'), 'day')
-          ).length || 0,
-          cards: allEmployees?.filter(emp => 
-            emp.card_expiry && 
-            dayjs(emp.card_expiry).isAfter(dayjs().add(60, 'day'), 'day') &&
-            dayjs(emp.card_expiry).isBefore(dayjs().add(90, 'day'), 'day')
-          ).length || 0,
-          emiratesId: allEmployees?.filter(emp => 
-            emp.emirates_id_expiry && 
-            dayjs(emp.emirates_id_expiry).isAfter(dayjs().add(60, 'day'), 'day') &&
-            dayjs(emp.emirates_id_expiry).isBefore(dayjs().add(90, 'day'), 'day')
-          ).length || 0,
-          residence: allEmployees?.filter(emp => 
-            emp.residence_expiry && 
-            dayjs(emp.residence_expiry).isAfter(dayjs().add(60, 'day'), 'day') &&
-            dayjs(emp.residence_expiry).isBefore(dayjs().add(90, 'day'), 'day')
-          ).length || 0,
+          passports:
+            allEmployees?.filter(
+              (emp) =>
+                emp.passport_expiry &&
+                dayjs(emp.passport_expiry).isAfter(
+                  dayjs().add(60, "day"),
+                  "day"
+                ) &&
+                dayjs(emp.passport_expiry).isBefore(
+                  dayjs().add(90, "day"),
+                  "day"
+                )
+            ).length || 0,
+          cards:
+            allEmployees?.filter(
+              (emp) =>
+                emp.card_expiry &&
+                dayjs(emp.card_expiry).isAfter(dayjs().add(60, "day"), "day") &&
+                dayjs(emp.card_expiry).isBefore(dayjs().add(90, "day"), "day")
+            ).length || 0,
+          emiratesId:
+            allEmployees?.filter(
+              (emp) =>
+                emp.emirates_id_expiry &&
+                dayjs(emp.emirates_id_expiry).isAfter(
+                  dayjs().add(60, "day"),
+                  "day"
+                ) &&
+                dayjs(emp.emirates_id_expiry).isBefore(
+                  dayjs().add(90, "day"),
+                  "day"
+                )
+            ).length || 0,
+          residence:
+            allEmployees?.filter(
+              (emp) =>
+                emp.residence_expiry &&
+                dayjs(emp.residence_expiry).isAfter(
+                  dayjs().add(60, "day"),
+                  "day"
+                ) &&
+                dayjs(emp.residence_expiry).isBefore(
+                  dayjs().add(90, "day"),
+                  "day"
+                )
+            ).length || 0,
         },
       ];
 
       // Document health score
       const totalDocs = totalEmployees * 4; // 4 document types
-      const validDocs = totalDocs - (missingPassports + missingEmiratesId + missingResidence + missingCard + 
-                                     expiredPassports + expiredCards + expiredEmiratesId + expiredResidence);
+      const validDocs =
+        totalDocs -
+        (missingPassports +
+          missingEmiratesId +
+          missingResidence +
+          missingCard +
+          expiredPassports +
+          expiredCards +
+          expiredEmiratesId +
+          expiredResidence);
       const healthScore = Math.round((validDocs / totalDocs) * 100);
 
       // Critical alerts (employees with multiple expired docs)
-      const criticalEmployees = allEmployees?.filter(emp => {
-        let expiredCount = 0;
-        if (emp.passport_expiry && dayjs(emp.passport_expiry).isBefore(dayjs(), 'day')) expiredCount++;
-        if (emp.card_expiry && dayjs(emp.card_expiry).isBefore(dayjs(), 'day')) expiredCount++;
-        if (emp.emirates_id_expiry && dayjs(emp.emirates_id_expiry).isBefore(dayjs(), 'day')) expiredCount++;
-        if (emp.residence_expiry && dayjs(emp.residence_expiry).isBefore(dayjs(), 'day')) expiredCount++;
-        return expiredCount >= 2;
-      }) || [];
+      const criticalEmployees =
+        allEmployees?.filter((emp) => {
+          let expiredCount = 0;
+          if (
+            emp.passport_expiry &&
+            dayjs(emp.passport_expiry).isBefore(dayjs(), "day")
+          )
+            expiredCount++;
+          if (
+            emp.card_expiry &&
+            dayjs(emp.card_expiry).isBefore(dayjs(), "day")
+          )
+            expiredCount++;
+          if (
+            emp.emirates_id_expiry &&
+            dayjs(emp.emirates_id_expiry).isBefore(dayjs(), "day")
+          )
+            expiredCount++;
+          if (
+            emp.residence_expiry &&
+            dayjs(emp.residence_expiry).isBefore(dayjs(), "day")
+          )
+            expiredCount++;
+          return expiredCount >= 2;
+        }) || [];
 
       return {
         totalEmployees,
@@ -269,10 +389,16 @@ export function Dashboard() {
         expiringSoonEmiratesId,
         expiringSoonResidence,
         totalExpiringDocs,
-        companyStats: companyStats.sort((a, b) => b.count - a.count).slice(0, 10),
-        departmentStats: departmentStats.sort((a, b) => b.count - a.count).slice(0, 10),
+        companyStats: companyStats
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10),
+        departmentStats: departmentStats
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10),
         jobStats: jobStats.sort((a, b) => b.count - a.count).slice(0, 10),
-        nationalityStats: nationalityStats.sort((a, b) => b.count - a.count).slice(0, 10),
+        nationalityStats: nationalityStats
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10),
         documentTimeline,
         healthScore,
         criticalEmployees,
@@ -374,7 +500,15 @@ export function Dashboard() {
     },
   ];
 
-  const COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
+  const COLORS = [
+    "#3b82f6",
+    "#ef4444",
+    "#10b981",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+  ];
 
   return (
     <div className="space-y-6 pb-8">
@@ -457,7 +591,9 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expiring Soon</span>
+              <span className="text-sm text-muted-foreground">
+                Expiring Soon
+              </span>
               <span className="font-semibold text-yellow-600">
                 {stats?.expiringSoonPassports || 0}
               </span>
@@ -486,7 +622,9 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expiring Soon</span>
+              <span className="text-sm text-muted-foreground">
+                Expiring Soon
+              </span>
               <span className="font-semibold text-yellow-600">
                 {stats?.expiringSoonCards || 0}
               </span>
@@ -515,7 +653,9 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expiring Soon</span>
+              <span className="text-sm text-muted-foreground">
+                Expiring Soon
+              </span>
               <span className="font-semibold text-yellow-600">
                 {stats?.expiringSoonEmiratesId || 0}
               </span>
@@ -544,7 +684,9 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expiring Soon</span>
+              <span className="text-sm text-muted-foreground">
+                Expiring Soon
+              </span>
               <span className="font-semibold text-yellow-600">
                 {stats?.expiringSoonResidence || 0}
               </span>
@@ -603,8 +745,8 @@ export function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stats?.companyStats || []}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   angle={-45}
                   textAnchor="end"
                   height={80}
@@ -662,8 +804,8 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={stats?.nationalityStats || []} 
+              <BarChart
+                data={stats?.nationalityStats || []}
                 layout="vertical"
                 margin={{ left: 80 }}
               >
@@ -688,19 +830,19 @@ export function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={stats?.jobStats || []}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
                 <YAxis />
                 <Tooltip />
-                <Area 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#8b5cf6" 
-                  fill="#8b5cf6" 
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#8b5cf6"
+                  fill="#8b5cf6"
                   fillOpacity={0.6}
                 />
               </AreaChart>
@@ -733,20 +875,20 @@ export function Dashboard() {
             <div className="text-center p-4 bg-red-50 dark:bg-red-900/10 rounded-lg">
               <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-red-600" />
               <p className="text-2xl font-bold text-red-600">
-                {(stats?.expiredPassports || 0) + 
-                 (stats?.expiredCards || 0) + 
-                 (stats?.expiredEmiratesId || 0) + 
-                 (stats?.expiredResidence || 0)}
+                {(stats?.expiredPassports || 0) +
+                  (stats?.expiredCards || 0) +
+                  (stats?.expiredEmiratesId || 0) +
+                  (stats?.expiredResidence || 0)}
               </p>
               <p className="text-sm text-muted-foreground">Total Expired</p>
             </div>
             <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <UserX className="w-8 h-8 mx-auto mb-2 text-gray-600" />
               <p className="text-2xl font-bold text-gray-600">
-                {(stats?.missingPassports || 0) + 
-                 (stats?.missingCard || 0) + 
-                 (stats?.missingEmiratesId || 0) + 
-                 (stats?.missingResidence || 0)}
+                {(stats?.missingPassports || 0) +
+                  (stats?.missingCard || 0) +
+                  (stats?.missingEmiratesId || 0) +
+                  (stats?.missingResidence || 0)}
               </p>
               <p className="text-sm text-muted-foreground">Total Missing</p>
             </div>
