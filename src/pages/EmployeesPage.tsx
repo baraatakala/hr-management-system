@@ -70,6 +70,9 @@ export function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  
+  // Check if RTL
+  const isRTL = i18n.language === "ar";
 
   // Filter states
   const [nationalityFilter, setNationalityFilter] = useState<string>("all");
@@ -435,7 +438,7 @@ export function EmployeesPage() {
               `(filtered from ${employees?.length})`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Button onClick={handleAdd} className="gap-2">
             <Plus className="w-4 h-4" />
             {t("employees.addEmployee")}
@@ -450,14 +453,14 @@ export function EmployeesPage() {
       {/* Bulk Actions Toolbar */}
       {showBulkActions && (
         <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3">
+          <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <CheckSquare className="w-5 h-5 text-blue-600" />
               <span className="font-semibold text-blue-900 dark:text-blue-100">
                 {selectedIds.length} employee(s) selected
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Button
                 onClick={handleBulkExport}
                 variant="outline"
@@ -494,12 +497,12 @@ export function EmployeesPage() {
 
       {/* Filters & Controls */}
       <Card className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Filter className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">Filters & Control</h2>
           </div>
-          <div className="flex gap-2">
+          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Button
               onClick={() => setShowFilters(!showFilters)}
               variant="ghost"
@@ -545,7 +548,7 @@ export function EmployeesPage() {
                 Quick Search (Name, Employee No., Passport No., Emirates ID,
                 Residence No.)
               </Label>
-              <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Search className="w-5 h-5 text-gray-400" />
                 <Input
                   placeholder="Start typing to search automatically..."
