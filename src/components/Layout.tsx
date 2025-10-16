@@ -69,7 +69,7 @@ export function Layout() {
             <Menu className="w-6 h-6" />
           )}
         </button>
-        <h1 className="ml-4 text-lg font-bold text-primary">{t("app.title")}</h1>
+        <h1 className={`text-lg font-bold text-primary ${isRTL ? 'mr-4' : 'ml-4'}`}>{t("app.title")}</h1>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -83,14 +83,14 @@ export function Layout() {
       {/* Sidebar - Responsive */}
       <div className={`fixed inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} z-50 w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
         mobileMenuOpen ? 'translate-x-0' : isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'
-      } ${isRTL ? 'lg:right-0' : 'lg:left-0'}`}>
+      }`}>
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 relative">
             <h1 className="text-xl font-bold text-primary hidden lg:block">{t("app.title")}</h1>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden absolute right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              className={`lg:hidden absolute ${isRTL ? 'left-4' : 'right-4'} p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700`}
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
@@ -156,8 +156,8 @@ export function Layout() {
       </div>
 
       {/* Main content - Responsive padding */}
-      <div className={`${isRTL ? 'lg:pr-64' : 'lg:pl-64'} pt-16 lg:pt-0`}>
-        <main className="p-4 sm:p-6 lg:p-8">
+      <div className={`${isRTL ? 'lg:pr-64' : 'lg:pl-64'} pt-16 lg:pt-0 min-h-screen`}>
+        <main className="p-4 sm:p-6 lg:p-8 w-full">
           <Outlet />
         </main>
       </div>
