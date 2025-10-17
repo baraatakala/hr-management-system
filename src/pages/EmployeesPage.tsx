@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -91,6 +91,22 @@ export function EmployeesPage() {
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showFilters, setShowFilters] = useState(true);
+
+  // Force grid view on mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && viewMode === "table") {
+        setViewMode("grid");
+      }
+    };
+
+    // Check on mount
+    handleResize();
+
+    // Listen for resize events
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [viewMode]);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -552,7 +568,8 @@ export function EmployeesPage() {
               <X className="w-4 h-4" />
               <span className="hidden md:inline">Clear</span>
             </Button>
-            <div className="flex gap-0.5 border rounded-md">
+            {/* View Mode Toggle - Hidden on Mobile (table doesn't work on small screens) */}
+            <div className="hidden md:flex gap-0.5 border rounded-md">
               <Button
                 onClick={() => setViewMode("grid")}
                 variant={viewMode === "grid" ? "default" : "ghost"}
