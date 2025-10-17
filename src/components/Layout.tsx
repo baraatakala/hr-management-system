@@ -87,6 +87,7 @@ export function Layout() {
         <div
           className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
           onClick={() => setMobileMenuOpen(false)}
+          style={{ pointerEvents: 'auto' }}
         />
       )}
 
@@ -101,8 +102,9 @@ export function Layout() {
             ? "translate-x-full lg:translate-x-0"
             : "-translate-x-full lg:translate-x-0"
         }`}
+        style={{ pointerEvents: 'auto' }}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full" style={{ pointerEvents: 'auto' }}>
           <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 relative">
             <h1 className="text-xl font-bold text-primary hidden lg:block">
               {t("app.title")}
@@ -141,14 +143,17 @@ export function Layout() {
             })}
           </nav>
 
-          <div className="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 relative z-50">
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleTheme}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleTheme();
+              }}
               className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
               type="button"
-              style={{ pointerEvents: 'auto' }}
             >
               {theme === "light" ? (
                 <Moon className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
@@ -160,10 +165,13 @@ export function Layout() {
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleLanguage}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleLanguage();
+              }}
               className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
               type="button"
-              style={{ pointerEvents: 'auto' }}
             >
               <Languages className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {i18n.language === "en" ? "العربية" : "English"}
@@ -171,10 +179,21 @@ export function Layout() {
             <Button
               variant="outline"
               size="sm"
+              onTouchStart={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Logout touched on mobile!');
+                try {
+                  await signOut();
+                  console.log('Logout successful');
+                } catch (error) {
+                  console.error('Logout error:', error);
+                }
+              }}
               onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Logout button clicked!');
+                console.log('Logout clicked!');
                 try {
                   await signOut();
                   console.log('Logout successful');
@@ -184,7 +203,6 @@ export function Layout() {
               }}
               className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
               type="button"
-              style={{ pointerEvents: 'auto' }}
             >
               <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {t("auth.logout")}
