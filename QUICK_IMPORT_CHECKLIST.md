@@ -26,7 +26,7 @@ Run these queries in Supabase SQL Editor:
 -- Should show 8+ companies
 SELECT COUNT(*) FROM companies;
 
--- Should show 10+ departments  
+-- Should show 10+ departments
 SELECT COUNT(*) FROM departments;
 
 -- Should show 17+ jobs
@@ -36,7 +36,7 @@ SELECT COUNT(*) FROM jobs;
 SELECT COUNT(*) FROM employees;
 
 -- View all employees with details
-SELECT 
+SELECT
   e.employee_no,
   e.name_en,
   e.name_ar,
@@ -77,6 +77,7 @@ ORDER BY e.employee_no;
 ## 🎉 Expected Result
 
 After successful import, you should have:
+
 - **5 new companies** (Unifood, Rex Dubai, Limousine 409, Leverage, SQFT)
 - **6 new departments** (Sales, Finance, Ops, Admin, IT, Marketing)
 - **13 new jobs** (various positions)
@@ -84,13 +85,13 @@ After successful import, you should have:
 
 ## 📊 Quick Stats
 
-| Item | Count |
-|------|-------|
-| Companies | 8+ |
-| Departments | 10+ |
-| Jobs | 17+ |
-| Employees | 33+ |
-| Nationalities | 14+ |
+| Item          | Count |
+| ------------- | ----- |
+| Companies     | 8+    |
+| Departments   | 10+   |
+| Jobs          | 17+   |
+| Employees     | 33+   |
+| Nationalities | 14+   |
 
 ---
 

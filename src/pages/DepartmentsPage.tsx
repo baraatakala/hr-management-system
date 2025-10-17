@@ -143,7 +143,9 @@ export function DepartmentsPage() {
               {editingItem ? t("common.edit") : t("departments.addDepartment")}
             </DialogTitle>
             <DialogDescription>
-              {editingItem ? "Edit department information" : "Add a new department to the system"}
+              {editingItem
+                ? "Edit department information"
+                : "Add a new department to the system"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">

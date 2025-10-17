@@ -22,6 +22,7 @@
 ## Where It Appears
 
 ### 1. Browser Tab
+
 ```
 ┌──────────────────────────┐
 │ [HR] HR Management Sy... │ ← Your favicon appears here!
@@ -29,12 +30,14 @@
 ```
 
 ### 2. Bookmarks
+
 ```
 Bookmarks Bar:
 [HR] HR System  [📁] Folder  [🏠] Home
 ```
 
 ### 3. Mobile Home Screen (iOS/Android)
+
 ```
 ┌──────┬──────┬──────┐
 │ [HR] │ [📧] │ [📱] │

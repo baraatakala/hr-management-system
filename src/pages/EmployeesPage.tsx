@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VoiceInput } from "@/components/ui/voice-input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   Dialog,
   DialogContent,
@@ -70,7 +71,7 @@ export function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  
+
   // Check if RTL
   const isRTL = i18n.language === "ar";
 
@@ -174,8 +175,8 @@ export function EmployeesPage() {
   });
 
   // Helper function to check document status
-  const getDocumentStatus = (expiryDate: string | null): StatusFilter => {
-    if (!expiryDate) return "expired";
+  const getDocumentStatus = (expiryDate: string | null): StatusFilter | null => {
+    if (!expiryDate) return null; // N/A dates return null to indicate no status
     const daysUntilExpiry = dayjs(expiryDate).diff(dayjs(), "day");
     if (daysUntilExpiry < 0) return "expired";
     if (daysUntilExpiry <= 30) return "expiring";
@@ -215,24 +216,25 @@ export function EmployeesPage() {
       const passportStatus = getDocumentStatus(emp.passport_expiry);
       const matchesPassport =
         passportStatusFilter === "all" ||
-        passportStatus === passportStatusFilter;
+        (passportStatus !== null && passportStatus === passportStatusFilter);
 
       // Card status filter
       const cardStatus = getDocumentStatus(emp.card_expiry);
       const matchesCard =
-        cardStatusFilter === "all" || cardStatus === cardStatusFilter;
+        cardStatusFilter === "all" || 
+        (cardStatus !== null && cardStatus === cardStatusFilter);
 
       // Emirates ID status filter
       const emiratesIdStatus = getDocumentStatus(emp.emirates_id_expiry);
       const matchesEmiratesId =
         emiratesIdStatusFilter === "all" ||
-        emiratesIdStatus === emiratesIdStatusFilter;
+        (emiratesIdStatus !== null && emiratesIdStatus === emiratesIdStatusFilter);
 
       // Residence status filter
       const residenceStatus = getDocumentStatus(emp.residence_expiry);
       const matchesResidence =
         residenceStatusFilter === "all" ||
-        residenceStatus === residenceStatusFilter;
+        (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
       return (
         matchesSearch &&
@@ -291,7 +293,7 @@ export function EmployeesPage() {
     const newSelected = selectedIds.includes(id)
       ? selectedIds.filter((selectedId) => selectedId !== id)
       : [...selectedIds, id];
-    
+
     setSelectedIds(newSelected);
     setShowBulkActions(newSelected.length > 0);
   };
@@ -318,8 +320,14 @@ export function EmployeesPage() {
       "Name (EN)": emp.name_en,
       "Name (AR)": emp.name_ar,
       Nationality: emp.nationality,
-      Company: i18n.language === "ar" ? emp.companies?.name_ar : emp.companies?.name_en,
-      Department: i18n.language === "ar" ? emp.departments?.name_ar : emp.departments?.name_en,
+      Company:
+        i18n.language === "ar"
+          ? emp.companies?.name_ar
+          : emp.companies?.name_en,
+      Department:
+        i18n.language === "ar"
+          ? emp.departments?.name_ar
+          : emp.departments?.name_en,
       Job: i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
       "Passport No": emp.passport_no || "",
       "Passport Expiry": emp.passport_expiry || "",
@@ -336,7 +344,10 @@ export function EmployeesPage() {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Selected Employees");
-    XLSX.writeFile(wb, `selected_employees_${dayjs().format("YYYY-MM-DD")}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `selected_employees_${dayjs().format("YYYY-MM-DD")}.xlsx`
+    );
   };
 
   const getExpiryStatus = (expiryDate: string | null) => {
@@ -438,7 +449,7 @@ export function EmployeesPage() {
               `(filtered from ${employees?.length})`}
           </p>
         </div>
-        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
           <Button onClick={handleAdd} className="gap-2">
             <Plus className="w-4 h-4" />
             {t("employees.addEmployee")}
@@ -453,14 +464,22 @@ export function EmployeesPage() {
       {/* Bulk Actions Toolbar */}
       {showBulkActions && (
         <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-          <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div
+            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${
+              isRTL ? "sm:flex-row-reverse" : ""
+            }`}
+          >
+            <div
+              className={`flex items-center gap-3 ${
+                isRTL ? "flex-row-reverse" : ""
+              }`}
+            >
               <CheckSquare className="w-5 h-5 text-blue-600" />
               <span className="font-semibold text-blue-900 dark:text-blue-100">
                 {selectedIds.length} employee(s) selected
               </span>
             </div>
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
               <Button
                 onClick={handleBulkExport}
                 variant="outline"
@@ -497,12 +516,20 @@ export function EmployeesPage() {
 
       {/* Filters & Controls */}
       <Card className="p-4 space-y-4">
-        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div
+          className={`flex items-center justify-between ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
+          <div
+            className={`flex items-center gap-2 ${
+              isRTL ? "flex-row-reverse" : ""
+            }`}
+          >
             <Filter className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">Filters & Control</h2>
           </div>
-          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
             <Button
               onClick={() => setShowFilters(!showFilters)}
               variant="ghost"
@@ -548,7 +575,11 @@ export function EmployeesPage() {
                 Quick Search (Name, Employee No., Passport No., Emirates ID,
                 Residence No.)
               </Label>
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div
+                className={`flex items-center gap-2 ${
+                  isRTL ? "flex-row-reverse" : ""
+                }`}
+              >
                 <Search className="w-5 h-5 text-gray-400" />
                 <Input
                   placeholder="Start typing to search automatically..."
@@ -755,12 +786,12 @@ export function EmployeesPage() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredEmployees?.map((employee: any) => (
-            <Card 
-              key={employee.id} 
+            <Card
+              key={employee.id}
               className={`p-4 space-y-3 ${
-                selectedIds.includes(employee.id) 
-                  ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' 
-                  : ''
+                selectedIds.includes(employee.id)
+                  ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950"
+                  : ""
               }`}
             >
               <div className="flex justify-between items-start">
@@ -1039,7 +1070,7 @@ function EmployeeDialog({
   jobs,
   nationalities,
 }: EmployeeDialogProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<any>(employee || {});
 
@@ -1158,94 +1189,114 @@ function EmployeeDialog({
                 {t("employees.nationality")}{" "}
                 <span className="text-red-500">*</span>
               </Label>
-              <Select
+              <SearchableSelect
                 value={formData.nationality || ""}
                 onValueChange={(value) =>
                   setFormData({ ...formData, nationality: value })
                 }
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a nationality..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {nationalities.map((nat) => (
-                    <SelectItem key={nat.id} value={nat.name_en}>
-                      {nat.name_en}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={nationalities.map((nat) => ({
+                  value: nat.name_en,
+                  label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
+                }))}
+                placeholder={
+                  i18n.language === "ar"
+                    ? "اختر الجنسية..."
+                    : "Select a nationality..."
+                }
+                searchPlaceholder={
+                  i18n.language === "ar" ? "بحث..." : "Search..."
+                }
+                emptyText={
+                  i18n.language === "ar"
+                    ? "لا توجد نتائج"
+                    : "No results found"
+                }
+              />
             </div>
             <div>
               <Label>
                 {t("employees.company")} <span className="text-red-500">*</span>
               </Label>
-              <Select
+              <SearchableSelect
                 value={formData.company_id || ""}
                 onValueChange={(value) =>
                   setFormData({ ...formData, company_id: value })
                 }
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a company..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name_en}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={companies.map((company) => ({
+                  value: company.id,
+                  label:
+                    i18n.language === "ar"
+                      ? company.name_ar
+                      : company.name_en,
+                }))}
+                placeholder={
+                  i18n.language === "ar" ? "اختر الشركة..." : "Select a company..."
+                }
+                searchPlaceholder={
+                  i18n.language === "ar" ? "بحث..." : "Search..."
+                }
+                emptyText={
+                  i18n.language === "ar"
+                    ? "لا توجد نتائج"
+                    : "No results found"
+                }
+              />
             </div>
             <div>
               <Label>
                 {t("employees.department")}{" "}
                 <span className="text-red-500">*</span>
               </Label>
-              <Select
+              <SearchableSelect
                 value={formData.department_id || ""}
                 onValueChange={(value) =>
                   setFormData({ ...formData, department_id: value })
                 }
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a department..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name_en}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={departments.map((dept) => ({
+                  value: dept.id,
+                  label:
+                    i18n.language === "ar" ? dept.name_ar : dept.name_en,
+                }))}
+                placeholder={
+                  i18n.language === "ar"
+                    ? "اختر القسم..."
+                    : "Select a department..."
+                }
+                searchPlaceholder={
+                  i18n.language === "ar" ? "بحث..." : "Search..."
+                }
+                emptyText={
+                  i18n.language === "ar"
+                    ? "لا توجد نتائج"
+                    : "No results found"
+                }
+              />
             </div>
             <div>
               <Label>
                 {t("employees.job")} <span className="text-red-500">*</span>
               </Label>
-              <Select
+              <SearchableSelect
                 value={formData.job_id || ""}
                 onValueChange={(value) =>
                   setFormData({ ...formData, job_id: value })
                 }
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a job..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {jobs.map((job) => (
-                    <SelectItem key={job.id} value={job.id}>
-                      {job.name_en}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={jobs.map((job) => ({
+                  value: job.id,
+                  label: i18n.language === "ar" ? job.name_ar : job.name_en,
+                }))}
+                placeholder={
+                  i18n.language === "ar" ? "اختر الوظيفة..." : "Select a job..."
+                }
+                searchPlaceholder={
+                  i18n.language === "ar" ? "بحث..." : "Search..."
+                }
+                emptyText={
+                  i18n.language === "ar"
+                    ? "لا توجد نتائج"
+                    : "No results found"
+                }
+              />
             </div>
             <div>
               <Label>{t("employees.passportNo")} 🎤</Label>

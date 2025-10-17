@@ -24,10 +24,12 @@ const [showBulkActions, setShowBulkActions] = useState(false);
 ```
 
 **Why two states?**
+
 - `selectedIds`: Tracks which employees are selected (array of IDs)
 - `showBulkActions`: Controls toolbar visibility (boolean)
 
 **State Updates:**
+
 - Selection updates are **immediate** (no debounce)
 - Toolbar appears/disappears based on selection count
 - State cleared after bulk operations complete
@@ -41,10 +43,7 @@ const [showBulkActions, setShowBulkActions] = useState(false);
 ```typescript
 const bulkDeleteMutation = useMutation({
   mutationFn: async (ids: string[]) => {
-    const { error } = await supabase
-      .from("employees")
-      .delete()
-      .in("id", ids);
+    const { error } = await supabase.from("employees").delete().in("id", ids);
     if (error) throw error;
   },
   onSuccess: () => {
@@ -56,6 +55,7 @@ const bulkDeleteMutation = useMutation({
 ```
 
 **Key Features:**
+
 - Uses Supabase `.in()` method for multiple deletes
 - Single database query (efficient)
 - Auto-invalidates cache on success
@@ -63,6 +63,7 @@ const bulkDeleteMutation = useMutation({
 - Error handling built-in
 
 **Performance:**
+
 - 1 employee: ~50ms
 - 10 employees: ~80ms
 - 100 employees: ~150ms
@@ -88,6 +89,7 @@ const handleSelectAll = () => {
 ```
 
 **Behavior:**
+
 - Toggle: Click once = select all, click again = deselect all
 - Only selects **visible/filtered** employees (not all database records)
 - Efficient array mapping (O(n) complexity)
@@ -99,13 +101,14 @@ const handleSelectOne = (id: string) => {
   const newSelected = selectedIds.includes(id)
     ? selectedIds.filter((selectedId) => selectedId !== id)
     : [...selectedIds, id];
-  
+
   setSelectedIds(newSelected);
   setShowBulkActions(newSelected.length > 0);
 };
 ```
 
 **Behavior:**
+
 - Toggle individual selection
 - Uses array `.includes()` for O(n) lookup
 - Immutable state updates (React best practice)
@@ -137,6 +140,7 @@ const handleBulkExport = () => {
 ```
 
 **Features:**
+
 - Filters only selected employees from visible list
 - Early return if no selection (safety check)
 - Uses XLSX library (already imported)
@@ -144,6 +148,7 @@ const handleBulkExport = () => {
 - Same format as full export (consistency)
 
 **Performance:**
+
 - 10 employees: ~100ms
 - 100 employees: ~500ms
 - 1000 employees: ~2s
@@ -155,27 +160,30 @@ const handleBulkExport = () => {
 #### **Bulk Actions Toolbar**
 
 ```tsx
-{showBulkActions && (
-  <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200">
-    <div className="flex justify-between items-center gap-4">
-      <span className="font-semibold">
-        {selectedIds.length} employee(s) selected
-      </span>
-      <div className="flex gap-2">
-        <Button onClick={handleBulkExport}>Export Selected</Button>
-        <Button onClick={handleBulkDelete} variant="destructive">
-          Delete Selected
-        </Button>
-        <Button onClick={clearSelection} variant="ghost">
-          Clear Selection
-        </Button>
+{
+  showBulkActions && (
+    <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200">
+      <div className="flex justify-between items-center gap-4">
+        <span className="font-semibold">
+          {selectedIds.length} employee(s) selected
+        </span>
+        <div className="flex gap-2">
+          <Button onClick={handleBulkExport}>Export Selected</Button>
+          <Button onClick={handleBulkDelete} variant="destructive">
+            Delete Selected
+          </Button>
+          <Button onClick={clearSelection} variant="ghost">
+            Clear Selection
+          </Button>
+        </div>
       </div>
-    </div>
-  </Card>
-)}
+    </Card>
+  );
+}
 ```
 
 **Design:**
+
 - Conditional rendering (only when selected)
 - Blue theme for visibility (matches selection highlight)
 - Dark mode support
@@ -198,6 +206,7 @@ const handleBulkExport = () => {
 ```
 
 **Features:**
+
 - Shows checked when all selected
 - Shows unchecked when none/partial selected
 - Visual feedback on hover
@@ -221,11 +230,11 @@ const handleBulkExport = () => {
 #### **Checkbox in Grid Card**
 
 ```tsx
-<Card 
+<Card
   className={`${
-    selectedIds.includes(employee.id) 
-      ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' 
-      : ''
+    selectedIds.includes(employee.id)
+      ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950"
+      : ""
   }`}
 >
   <button onClick={() => handleSelectOne(employee.id)}>
@@ -240,6 +249,7 @@ const handleBulkExport = () => {
 ```
 
 **Grid Selection Features:**
+
 - Entire card highlights when selected
 - Blue ring border (ring-2 ring-blue-500)
 - Background color change (bg-blue-50)
@@ -253,16 +263,19 @@ const handleBulkExport = () => {
 ### **Memory Usage**
 
 **State Storage:**
+
 ```typescript
 selectedIds: string[]  // Array of UUIDs (36 chars each)
 ```
 
 **Memory per employee:**
+
 - UUID: ~36 bytes
 - Array overhead: ~4 bytes
 - Total: ~40 bytes per selected employee
 
 **Maximum realistic selection:**
+
 - 1,000 employees: ~40 KB
 - 10,000 employees: ~400 KB
 - **Negligible impact** on modern browsers
@@ -270,11 +283,13 @@ selectedIds: string[]  // Array of UUIDs (36 chars each)
 ### **Render Performance**
 
 **Re-renders triggered:**
+
 1. When selection changes (1 employee)
 2. When bulk action completes
 3. When toolbar appears/disappears
 
 **Optimizations:**
+
 - React re-renders only affected components
 - Checkbox state is memoized
 - No virtual scrolling needed (fast enough)
@@ -282,11 +297,13 @@ selectedIds: string[]  // Array of UUIDs (36 chars each)
 ### **Database Performance**
 
 **Bulk Delete:**
+
 ```sql
 DELETE FROM employees WHERE id IN (uuid1, uuid2, uuid3, ...);
 ```
 
 **Query Performance:**
+
 - Indexed on `id` (primary key)
 - Single query (not N queries)
 - Supabase handles batching internally
@@ -299,11 +316,13 @@ DELETE FROM employees WHERE id IN (uuid1, uuid2, uuid3, ...);
 ### **Current Implementation**
 
 **No Additional Security:**
+
 - Uses existing Supabase Row Level Security (RLS)
 - Same permissions as individual delete
 - No role-based restrictions yet
 
 **Potential Risks:**
+
 - User could accidentally delete all employees
 - No audit trail for bulk operations
 - No undo functionality
@@ -311,13 +330,15 @@ DELETE FROM employees WHERE id IN (uuid1, uuid2, uuid3, ...);
 ### **Recommended Enhancements**
 
 **1. Role-Based Permissions:**
+
 ```typescript
 // Future enhancement
-const canBulkDelete = user.role === 'super_admin';
-const canBulkExport = ['super_admin', 'hr_manager'].includes(user.role);
+const canBulkDelete = user.role === "super_admin";
+const canBulkExport = ["super_admin", "hr_manager"].includes(user.role);
 ```
 
 **2. Audit Logging:**
+
 ```sql
 -- Create audit table
 CREATE TABLE audit_logs (
@@ -331,17 +352,19 @@ CREATE TABLE audit_logs (
 ```
 
 **3. Soft Delete:**
+
 ```sql
 -- Add deleted_at column
 ALTER TABLE employees ADD COLUMN deleted_at timestamptz;
 
 -- Modify delete query
-UPDATE employees 
-SET deleted_at = NOW() 
+UPDATE employees
+SET deleted_at = NOW()
 WHERE id IN (...);
 ```
 
 **4. Rate Limiting:**
+
 ```typescript
 // Prevent abuse
 const MAX_BULK_OPERATIONS_PER_HOUR = 10;
@@ -383,13 +406,13 @@ const MAX_EMPLOYEES_PER_OPERATION = 500;
 ### **Automated Testing (Future)**
 
 ```typescript
-describe('Bulk Operations', () => {
-  test('should select employee when checkbox clicked', () => {});
-  test('should select all employees with header checkbox', () => {});
-  test('should show bulk actions toolbar when selected', () => {});
-  test('should export selected employees to Excel', () => {});
-  test('should delete selected employees with confirmation', () => {});
-  test('should clear selection', () => {});
+describe("Bulk Operations", () => {
+  test("should select employee when checkbox clicked", () => {});
+  test("should select all employees with header checkbox", () => {});
+  test("should show bulk actions toolbar when selected", () => {});
+  test("should export selected employees to Excel", () => {});
+  test("should delete selected employees with confirmation", () => {});
+  test("should clear selection", () => {});
 });
 ```
 
@@ -401,16 +424,17 @@ describe('Bulk Operations', () => {
 
 ```typescript
 // Track bulk operations usage
-analytics.track('bulk_operation_performed', {
-  action: 'export' | 'delete',
+analytics.track("bulk_operation_performed", {
+  action: "export" | "delete",
   employee_count: selectedIds.length,
-  view_mode: 'grid' | 'table',
+  view_mode: "grid" | "table",
   filters_applied: hasActiveFilters,
   timestamp: new Date(),
 });
 ```
 
 **Metrics to Monitor:**
+
 - Number of bulk operations per day
 - Average employees per bulk operation
 - Export vs Delete ratio
@@ -427,13 +451,14 @@ analytics.track('bulk_operation_performed', {
 ```typescript
 const handleBulkUpdate = (field: string, value: any) => {
   await supabase
-    .from('employees')
+    .from("employees")
     .update({ [field]: value })
-    .in('id', selectedIds);
+    .in("id", selectedIds);
 };
 ```
 
 **Use Cases:**
+
 - Change company for multiple employees
 - Update department for team
 - Bulk assign nationality
@@ -443,12 +468,12 @@ const handleBulkUpdate = (field: string, value: any) => {
 ```typescript
 // Save selection to localStorage
 const saveSelection = () => {
-  localStorage.setItem('bulk_selection', JSON.stringify(selectedIds));
+  localStorage.setItem("bulk_selection", JSON.stringify(selectedIds));
 };
 
 // Load on page mount
 const loadSelection = () => {
-  const saved = localStorage.getItem('bulk_selection');
+  const saved = localStorage.getItem("bulk_selection");
   if (saved) setSelectedIds(JSON.parse(saved));
 };
 ```
@@ -458,16 +483,16 @@ const loadSelection = () => {
 ```typescript
 useEffect(() => {
   const handleKeyboard = (e: KeyboardEvent) => {
-    if (e.ctrlKey && e.key === 'a') {
+    if (e.ctrlKey && e.key === "a") {
       e.preventDefault();
       handleSelectAll();
     }
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       clearSelection();
     }
   };
-  window.addEventListener('keydown', handleKeyboard);
-  return () => window.removeEventListener('keydown', handleKeyboard);
+  window.addEventListener("keydown", handleKeyboard);
+  return () => window.removeEventListener("keydown", handleKeyboard);
 }, []);
 ```
 
@@ -484,7 +509,7 @@ const handleBulkDelete = async () => {
 };
 
 const handleUndo = async () => {
-  await supabase.from('employees').insert(deletedEmployees);
+  await supabase.from("employees").insert(deletedEmployees);
   queryClient.invalidateQueries();
 };
 ```
@@ -494,16 +519,18 @@ const handleUndo = async () => {
 ## 📦 Dependencies
 
 **New Icons Added:**
+
 ```typescript
 import {
-  CheckSquare,  // Checked checkbox
-  Square,       // Unchecked checkbox
-  Trash,        // Bulk delete icon
+  CheckSquare, // Checked checkbox
+  Square, // Unchecked checkbox
+  Trash, // Bulk delete icon
   FileSpreadsheet, // Bulk export icon
 } from "lucide-react";
 ```
 
 **Existing Dependencies Used:**
+
 - `@tanstack/react-query` - Mutations and cache invalidation
 - `xlsx` - Excel export functionality
 - `dayjs` - Date formatting in filenames
@@ -546,6 +573,7 @@ filteredEmployees?.map((emp: EmployeeWithRelations) => ...)
 ## ✅ Conclusion
 
 **Implementation Summary:**
+
 - ✅ Clean code (follows existing patterns)
 - ✅ Minimal impact on bundle size (+6 KB)
 - ✅ No new dependencies
@@ -568,6 +596,7 @@ filteredEmployees?.map((emp: EmployeeWithRelations) => ...)
 The bulk operations feature is **fully implemented, tested, and ready for deployment**. No breaking changes, fully backward compatible, and follows all existing code patterns.
 
 **Deployment Steps:**
+
 1. Commit changes
 2. Push to GitHub
 3. Vercel auto-deploys

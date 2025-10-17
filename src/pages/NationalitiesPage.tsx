@@ -62,7 +62,10 @@ export function NationalitiesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("nationalities").delete().eq("id", id);
+      const { error } = await supabase
+        .from("nationalities")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -97,7 +100,10 @@ export function NationalitiesPage() {
     }
   };
 
-  if (isLoading) return <div className="flex items-center justify-center h-64">Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center h-64">Loading...</div>
+    );
 
   return (
     <div className="space-y-6">
@@ -107,8 +113,8 @@ export function NationalitiesPage() {
             {i18n.language === "ar" ? "الجنسيات" : "Nationalities"}
           </h1>
           <p className="text-gray-500 mt-1">
-            {i18n.language === "ar" 
-              ? `${items?.length || 0} جنسية` 
+            {i18n.language === "ar"
+              ? `${items?.length || 0} جنسية`
               : `${items?.length || 0} nationalities`}
           </p>
         </div>
@@ -139,7 +145,12 @@ export function NationalitiesPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleDelete(item.id, i18n.language === "ar" ? item.name_ar : item.name_en)}
+                  onClick={() =>
+                    handleDelete(
+                      item.id,
+                      i18n.language === "ar" ? item.name_ar : item.name_en
+                    )
+                  }
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -152,8 +163,8 @@ export function NationalitiesPage() {
       {items?.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500">
-            {i18n.language === "ar" 
-              ? "لا توجد جنسيات. اضغط على 'إضافة جنسية' للبدء." 
+            {i18n.language === "ar"
+              ? "لا توجد جنسيات. اضغط على 'إضافة جنسية' للبدء."
               : "No nationalities found. Click 'Add Nationality' to get started."}
           </p>
         </div>
@@ -164,13 +175,21 @@ export function NationalitiesPage() {
           <DialogHeader>
             <DialogTitle>
               {editingItem
-                ? i18n.language === "ar" ? "تعديل الجنسية" : "Edit Nationality"
-                : i18n.language === "ar" ? "إضافة جنسية" : "Add Nationality"}
+                ? i18n.language === "ar"
+                  ? "تعديل الجنسية"
+                  : "Edit Nationality"
+                : i18n.language === "ar"
+                ? "إضافة جنسية"
+                : "Add Nationality"}
             </DialogTitle>
             <DialogDescription>
-              {editingItem 
-                ? i18n.language === "ar" ? "تعديل معلومات الجنسية" : "Edit nationality information"
-                : i18n.language === "ar" ? "إضافة جنسية جديدة للنظام" : "Add a new nationality to the system"}
+              {editingItem
+                ? i18n.language === "ar"
+                  ? "تعديل معلومات الجنسية"
+                  : "Edit nationality information"
+                : i18n.language === "ar"
+                ? "إضافة جنسية جديدة للنظام"
+                : "Add a new nationality to the system"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -198,7 +217,11 @@ export function NationalitiesPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name_en: e.target.value })
                 }
-                placeholder={i18n.language === "ar" ? "الإمارات العربية المتحدة" : "United Arab Emirates"}
+                placeholder={
+                  i18n.language === "ar"
+                    ? "الإمارات العربية المتحدة"
+                    : "United Arab Emirates"
+                }
                 required
               />
             </div>
@@ -212,7 +235,11 @@ export function NationalitiesPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name_ar: e.target.value })
                 }
-                placeholder={i18n.language === "ar" ? "الإمارات العربية المتحدة" : "الإمارات العربية المتحدة"}
+                placeholder={
+                  i18n.language === "ar"
+                    ? "الإمارات العربية المتحدة"
+                    : "الإمارات العربية المتحدة"
+                }
                 required
                 dir="rtl"
               />
@@ -227,8 +254,12 @@ export function NationalitiesPage() {
               </Button>
               <Button type="submit" disabled={saveMutation.isPending}>
                 {saveMutation.isPending
-                  ? i18n.language === "ar" ? "جاري الحفظ..." : "Saving..."
-                  : i18n.language === "ar" ? "حفظ" : "Save"}
+                  ? i18n.language === "ar"
+                    ? "جاري الحفظ..."
+                    : "Saving..."
+                  : i18n.language === "ar"
+                  ? "حفظ"
+                  : "Save"}
               </Button>
             </DialogFooter>
           </form>

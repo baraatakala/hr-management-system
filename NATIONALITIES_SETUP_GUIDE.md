@@ -9,6 +9,7 @@ You now have a **Nationalities Management Page** just like Companies, Department
 ## 🎯 Features
 
 ### Same as Companies & Departments:
+
 - ✅ **Add Nationality** button
 - ✅ **Edit** existing nationalities
 - ✅ **Delete** nationalities
@@ -33,6 +34,7 @@ You now have a **Nationalities Management Page** just like Companies, Department
 5. Click **Run** or press `Ctrl+Enter`
 
 **The SQL file creates:**
+
 - ✅ `nationalities` table
 - ✅ 14 sample countries (UAE, Saudi Arabia, Egypt, etc.)
 - ✅ Indexes for performance
@@ -48,6 +50,7 @@ SELECT * FROM nationalities ORDER BY name_en;
 ```
 
 You should see 14 nationalities including:
+
 - 🇦🇪 United Arab Emirates
 - 🇸🇦 Saudi Arabia
 - 🇪🇬 Egypt
@@ -69,6 +72,7 @@ You should see 14 nationalities including:
 **URL:** http://localhost:5175/nationalities
 
 **Or navigate from the sidebar:**
+
 - Look for **"Nationalities" / "الجنسيات"** menu item
 - Icon: 🌍 Globe icon
 - Located between "Jobs" and "Reminders"
@@ -115,6 +119,7 @@ You should see 14 nationalities including:
 4. The new nationality appears instantly!
 
 **Example:**
+
 ```
 Code: FRA
 English Name: France
@@ -146,16 +151,19 @@ Arabic Name: فرنسا
 ## 📱 Responsive Design
 
 ### Desktop View
+
 - **3 columns** grid layout
 - Cards with hover effects
 - Edit/Delete buttons visible
 
 ### Tablet View
+
 - **2 columns** grid layout
 - Touch-friendly buttons
 - Optimized spacing
 
 ### Mobile View
+
 - **1 column** layout
 - Stacked cards
 - Large touch targets
@@ -165,12 +173,14 @@ Arabic Name: فرنسا
 ## 🌐 Multi-Language Support
 
 ### English Mode:
+
 - Page Title: "Nationalities"
 - Count: "14 nationalities"
 - Button: "Add Nationality"
 - Fields: "Code", "English Name", "Arabic Name"
 
 ### Arabic Mode (العربية):
+
 - Page Title: "الجنسيات"
 - Count: "١٤ جنسية"
 - Button: "إضافة جنسية"
@@ -181,19 +191,25 @@ Arabic Name: فرنسا
 ## 🔗 Integration Points
 
 ### 1. Employee Page Filter
+
 The nationality filter on the Employee page will now show:
+
 - All nationalities from this table
 - Sorted alphabetically
 - Bilingual display
 
 ### 2. Dashboard Charts
+
 The nationality distribution chart will use:
+
 - Data from this table
 - Proper country names
 - Accurate statistics
 
 ### 3. Employee Creation
+
 When adding/editing employees:
+
 - Nationality dropdown populated from this table
 - Searchable/filterable
 - Bilingual options
@@ -204,20 +220,22 @@ When adding/editing employees:
 
 ### Table: `nationalities`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | UUID | Primary key (auto-generated) |
-| `code` | VARCHAR(50) | Unique country code (UAE, SAU, etc.) |
-| `name_en` | VARCHAR(255) | English country name |
-| `name_ar` | VARCHAR(255) | Arabic country name |
-| `created_at` | TIMESTAMP | When record was created |
+| Column       | Type         | Description                          |
+| ------------ | ------------ | ------------------------------------ |
+| `id`         | UUID         | Primary key (auto-generated)         |
+| `code`       | VARCHAR(50)  | Unique country code (UAE, SAU, etc.) |
+| `name_en`    | VARCHAR(255) | English country name                 |
+| `name_ar`    | VARCHAR(255) | Arabic country name                  |
+| `created_at` | TIMESTAMP    | When record was created              |
 
 ### Indexes:
+
 - Primary key on `id`
 - Unique constraint on `code`
 - Index on `code` for fast lookups
 
 ### Security:
+
 - ✅ Row Level Security enabled
 - ✅ Authenticated users can read/write
 - ✅ Audit trail via `created_at`
@@ -227,8 +245,10 @@ When adding/editing employees:
 ## 🎯 Common Use Cases
 
 ### 1. Add Your Country
+
 **Problem:** Your country is not in the list
 **Solution:**
+
 1. Click "Add Nationality"
 2. Enter country code (e.g., `DEU` for Germany)
 3. Enter English name: "Germany"
@@ -236,25 +256,32 @@ When adding/editing employees:
 5. Save!
 
 ### 2. Fix Typo in Country Name
+
 **Problem:** Country name has a spelling error
 **Solution:**
+
 1. Find the country card
 2. Click Edit button
 3. Fix the spelling
 4. Save changes
 
 ### 3. Remove Unused Country
+
 **Problem:** Country was added by mistake
 **Solution:**
+
 1. Find the country card
 2. Click Delete button (red)
 3. Confirm deletion
 4. Record removed
 
 ### 4. Bulk Add Countries
+
 **Problem:** Need to add many countries at once
 **Solution:**
+
 1. Use SQL in Supabase:
+
 ```sql
 INSERT INTO nationalities (code, name_en, name_ar) VALUES
     ('FRA', 'France', 'فرنسا'),
@@ -262,6 +289,7 @@ INSERT INTO nationalities (code, name_en, name_ar) VALUES
     ('ITA', 'Italy', 'إيطاليا'),
     ('ESP', 'Spain', 'إسبانيا');
 ```
+
 2. Refresh the page
 3. All countries appear!
 
@@ -270,6 +298,7 @@ INSERT INTO nationalities (code, name_en, name_ar) VALUES
 ## 🔍 Search & Filter (Future Enhancement)
 
 ### Planned Features:
+
 - 🔜 Search by country name (English/Arabic)
 - 🔜 Filter by region (Middle East, Asia, Europe, etc.)
 - 🔜 Sort by code, name, or date added
@@ -281,38 +310,51 @@ INSERT INTO nationalities (code, name_en, name_ar) VALUES
 ## 🐛 Troubleshooting
 
 ### Issue: "Cannot find nationalities table"
+
 **Solution:** Run the SQL migration file first!
+
 ```
 File: CREATE_NATIONALITIES_TABLE.sql
 Location: Project root folder
 ```
 
 ### Issue: "No nationalities showing"
-**Solution:** 
+
+**Solution:**
+
 1. Check Supabase connection
 2. Verify table has data:
+
 ```sql
 SELECT COUNT(*) FROM nationalities;
 ```
+
 3. Check browser console for errors
 
 ### Issue: "Cannot add nationality - code already exists"
-**Solution:** 
+
+**Solution:**
+
 - Country codes must be unique
 - Change the code to something else
 - Example: Instead of `UAE`, use `ARE` (ISO code)
 
 ### Issue: "Delete button doesn't work"
+
 **Solution:**
+
 - Make sure no employees use this nationality
 - Check database constraints
 - Try deleting from SQL Editor:
+
 ```sql
 DELETE FROM nationalities WHERE code = 'XYZ';
 ```
 
 ### Issue: "Arabic text showing as ???"
+
 **Solution:**
+
 - Use proper Arabic font
 - Copy-paste from Google Translate
 - Ensure database supports UTF-8
@@ -322,8 +364,9 @@ DELETE FROM nationalities WHERE code = 'XYZ';
 ## 📈 Statistics & Analytics
 
 ### View Nationality Usage:
+
 ```sql
-SELECT 
+SELECT
     n.code,
     n.name_en,
     n.name_ar,
@@ -335,17 +378,19 @@ ORDER BY employee_count DESC;
 ```
 
 ### Find Unused Nationalities:
+
 ```sql
 SELECT * FROM nationalities n
 WHERE NOT EXISTS (
-    SELECT 1 FROM employees e 
+    SELECT 1 FROM employees e
     WHERE e.nationality = n.name_en
 );
 ```
 
 ### Most Common Nationalities:
+
 ```sql
-SELECT 
+SELECT
     nationality,
     COUNT(*) as count
 FROM employees
@@ -359,22 +404,25 @@ LIMIT 10;
 ## 🔐 Security & Permissions
 
 ### Who Can Access?
+
 - ✅ **Authenticated users** - Full access
 - ❌ **Unauthenticated users** - No access
 - ✅ **Admin users** - Full CRUD operations
 - ✅ **HR users** - Full CRUD operations
 
 ### Row Level Security (RLS):
+
 ```sql
 -- Current policy: Allow all for authenticated users
-CREATE POLICY "Allow all for authenticated users" 
-ON nationalities 
-FOR ALL 
-TO authenticated 
+CREATE POLICY "Allow all for authenticated users"
+ON nationalities
+FOR ALL
+TO authenticated
 USING (true);
 ```
 
 ### Future: Role-Based Access
+
 ```sql
 -- Admin only: Add/Edit/Delete
 -- HR users: Add/Edit
@@ -386,6 +434,7 @@ USING (true);
 ## 🎉 What's Completed
 
 ### Frontend:
+
 - ✅ NationalitiesPage.tsx created
 - ✅ Route added to App.tsx
 - ✅ Menu item added to Layout
@@ -398,6 +447,7 @@ USING (true);
 - ✅ Empty states
 
 ### Backend:
+
 - ✅ Database migration SQL
 - ✅ Table schema defined
 - ✅ Sample data inserted
@@ -406,6 +456,7 @@ USING (true);
 - ✅ Type definitions updated
 
 ### Documentation:
+
 - ✅ Setup guide created
 - ✅ SQL migration file ready
 - ✅ Troubleshooting guide
@@ -432,6 +483,7 @@ USING (true);
 ## 📞 Support
 
 ### If you need help:
+
 1. Check the troubleshooting section above
 2. Verify SQL migration ran successfully
 3. Check browser console for errors
@@ -439,6 +491,7 @@ USING (true);
 5. Verify authentication is working
 
 ### Common SQL Commands:
+
 ```sql
 -- View all nationalities
 SELECT * FROM nationalities ORDER BY name_en;
@@ -458,6 +511,7 @@ DELETE FROM nationalities;
 ## 🎨 Customization Ideas
 
 ### Add More Fields:
+
 - Region (Middle East, Asia, Europe, etc.)
 - ISO 2-letter code (AE, SA, EG)
 - ISO 3-letter code (ARE, SAU, EGY)
@@ -466,6 +520,7 @@ DELETE FROM nationalities;
 - Currency code (AED, SAR, EGP)
 
 ### Visual Enhancements:
+
 - Country flag icons
 - Color coding by region
 - Interactive map view
@@ -473,6 +528,7 @@ DELETE FROM nationalities;
 - Drag-and-drop sorting
 
 ### Advanced Features:
+
 - Search functionality
 - Excel import/export
 - Bulk operations
@@ -484,6 +540,7 @@ DELETE FROM nationalities;
 ## ✅ Success!
 
 Your HR Management System now has:
+
 1. ✅ **Dashboard** - Analytics & charts
 2. ✅ **Employees** - Full employee management with 8 filters
 3. ✅ **Companies** - Add/edit/delete companies
@@ -493,6 +550,7 @@ Your HR Management System now has:
 7. ✅ **Reminders** - Email reminders with delete options
 
 **All pages have:**
+
 - ✅ Bilingual support (English/Arabic)
 - ✅ Dark mode support
 - ✅ Responsive design
@@ -504,4 +562,4 @@ Your HR Management System now has:
 
 **Test it now at:** http://localhost:5175/nationalities
 
-*Version: 1.0.0 | Created: October 16, 2025*
+_Version: 1.0.0 | Created: October 16, 2025_

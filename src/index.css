@@ -56,28 +56,34 @@
     html {
       -webkit-overflow-scrolling: touch;
     }
-    
+
     /* Better tap targets */
-    button, a, input, select, textarea {
+    button,
+    a,
+    input,
+    select,
+    textarea {
       min-height: 44px;
     }
-    
+
     /* PREVENT MOBILE ZOOM ON INPUT FOCUS - Fixed font size */
-    input, select, textarea {
+    input,
+    select,
+    textarea {
       font-size: 16px !important;
     }
-    
+
     /* Prevent text size adjustment on iOS */
     body {
       -webkit-text-size-adjust: 100%;
     }
-    
+
     /* Prevent horizontal scroll */
     body {
       overflow-x: hidden;
     }
   }
-  
+
   /* Touch-friendly spacing */
   @media (max-width: 640px) {
     .card {

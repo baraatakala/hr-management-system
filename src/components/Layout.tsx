@@ -29,7 +29,7 @@ export function Layout() {
 
   // Set initial direction and lang on mount and whenever language changes
   React.useEffect(() => {
-    const currentLang = i18n.language || 'en';
+    const currentLang = i18n.language || "en";
     document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = currentLang;
   }, [i18n.language]);
@@ -47,7 +47,11 @@ export function Layout() {
     { name: t("nav.companies"), href: "/companies", icon: Building2 },
     { name: t("nav.departments"), href: "/departments", icon: FolderKanban },
     { name: t("nav.jobs"), href: "/jobs", icon: Briefcase },
-    { name: i18n.language === "ar" ? "الجنسيات" : "Nationalities", href: "/nationalities", icon: Globe },
+    {
+      name: i18n.language === "ar" ? "الجنسيات" : "Nationalities",
+      href: "/nationalities",
+      icon: Globe,
+    },
     { name: t("nav.reminders"), href: "/reminders", icon: Mail },
   ];
 
@@ -69,7 +73,13 @@ export function Layout() {
             <Menu className="w-6 h-6" />
           )}
         </button>
-        <h1 className={`text-lg font-bold text-primary ${isRTL ? 'mr-4' : 'ml-4'}`}>{t("app.title")}</h1>
+        <h1
+          className={`text-lg font-bold text-primary ${
+            isRTL ? "mr-4" : "ml-4"
+          }`}
+        >
+          {t("app.title")}
+        </h1>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -81,16 +91,28 @@ export function Layout() {
       )}
 
       {/* Sidebar - Responsive */}
-      <div className={`fixed inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} z-50 w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
-        mobileMenuOpen ? 'translate-x-0' : isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}>
+      <div
+        className={`fixed inset-y-0 ${
+          isRTL ? "right-0 border-l" : "left-0 border-r"
+        } z-50 w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen
+            ? "translate-x-0"
+            : isRTL
+            ? "translate-x-full lg:translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 relative">
-            <h1 className="text-xl font-bold text-primary hidden lg:block">{t("app.title")}</h1>
+            <h1 className="text-xl font-bold text-primary hidden lg:block">
+              {t("app.title")}
+            </h1>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className={`lg:hidden absolute ${isRTL ? 'left-4' : 'right-4'} p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700`}
+              className={`lg:hidden absolute ${
+                isRTL ? "left-4" : "right-4"
+              } p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700`}
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
@@ -112,7 +134,7 @@ export function Layout() {
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  <Icon className={`w-5 h-5 ${isRTL ? "ml-3" : "mr-3"}`} />
                   {item.name}
                 </Link>
               );
@@ -127,9 +149,9 @@ export function Layout() {
               className="w-full justify-start"
             >
               {theme === "light" ? (
-                <Moon className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                <Moon className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               ) : (
-                <Sun className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                <Sun className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               )}
               {theme === "light" ? t("settings.dark") : t("settings.light")}
             </Button>
@@ -139,7 +161,7 @@ export function Layout() {
               onClick={toggleLanguage}
               className="w-full justify-start"
             >
-              <Languages className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <Languages className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {i18n.language === "en" ? "العربية" : "English"}
             </Button>
             <Button
@@ -148,7 +170,7 @@ export function Layout() {
               onClick={() => signOut()}
               className="w-full justify-start"
             >
-              <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {t("auth.logout")}
             </Button>
           </div>
@@ -156,7 +178,11 @@ export function Layout() {
       </div>
 
       {/* Main content - Responsive padding */}
-      <div className={`${isRTL ? 'lg:pr-64' : 'lg:pl-64'} pt-16 lg:pt-0 min-h-screen`}>
+      <div
+        className={`${
+          isRTL ? "lg:pr-64" : "lg:pl-64"
+        } pt-16 lg:pt-0 min-h-screen`}
+      >
         <main className="p-4 sm:p-6 lg:p-8 w-full">
           <Outlet />
         </main>

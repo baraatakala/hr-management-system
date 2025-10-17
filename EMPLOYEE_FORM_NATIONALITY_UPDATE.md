@@ -9,6 +9,7 @@ The **Employee Add/Edit Form** now has a **Nationality dropdown** (Select) inste
 ## 🔄 Changes Made
 
 ### 1. **Added Nationalities Query**
+
 ```typescript
 const { data: nationalities } = useQuery({
   queryKey: ["nationalities"],
@@ -23,6 +24,7 @@ const { data: nationalities } = useQuery({
 ```
 
 ### 2. **Passed Nationalities to Employee Dialog**
+
 ```typescript
 <EmployeeDialog
   isOpen={isDialogOpen}
@@ -31,27 +33,27 @@ const { data: nationalities } = useQuery({
   companies={companies || []}
   departments={departments || []}
   jobs={jobs || []}
-  nationalities={nationalities || []}  // ← NEW!
+  nationalities={nationalities || []} // ← NEW!
 />
 ```
 
 ### 3. **Changed Nationality Input to Select Dropdown**
 
 **Before (Text Input):**
+
 ```typescript
 <div>
   <Label>{t("employees.nationality")}</Label>
   <Input
     value={formData.nationality || ""}
-    onChange={(e) =>
-      setFormData({ ...formData, nationality: e.target.value })
-    }
+    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
     required
   />
 </div>
 ```
 
 **After (Select Dropdown):**
+
 ```typescript
 <div>
   <Label>
@@ -59,9 +61,7 @@ const { data: nationalities } = useQuery({
   </Label>
   <Select
     value={formData.nationality || ""}
-    onValueChange={(value) =>
-      setFormData({ ...formData, nationality: value })
-    }
+    onValueChange={(value) => setFormData({ ...formData, nationality: value })}
     required
   >
     <SelectTrigger>
@@ -79,6 +79,7 @@ const { data: nationalities } = useQuery({
 ```
 
 ### 4. **Updated Nationality Filter**
+
 The nationality filter in the filters section now also uses the database nationalities:
 
 ```typescript
@@ -102,6 +103,7 @@ The nationality filter in the filters section now also uses the database nationa
 ## 🎨 What It Looks Like Now
 
 ### Employee Form:
+
 ```
 ┌─────────────────────────────────────────────┐
 │ Add Employee                          [X]   │
@@ -138,6 +140,7 @@ The nationality filter in the filters section now also uses the database nationa
 ```
 
 ### Dropdown Options:
+
 ```
 ┌──────────────────────────────┐
 │ Nationality *           [▼]  │
@@ -164,12 +167,14 @@ The nationality filter in the filters section now also uses the database nationa
 ## ✅ Benefits
 
 ### Before:
+
 - ❌ Manual text entry (typing errors)
 - ❌ Inconsistent data ("UAE" vs "United Arab Emirates")
 - ❌ No validation
 - ❌ Different format each time
 
 ### After:
+
 - ✅ **Dropdown selection** (no typing)
 - ✅ **Consistent data** (always from database)
 - ✅ **Validated options** (only valid nationalities)
@@ -183,6 +188,7 @@ The nationality filter in the filters section now also uses the database nationa
 ## 🎯 How It Works
 
 ### 1. When Adding Employee:
+
 1. Click "Add Employee" button
 2. Fill in Employee No, Name (English), Name (Arabic)
 3. Click **Nationality dropdown** ▼
@@ -192,6 +198,7 @@ The nationality filter in the filters section now also uses the database nationa
 7. Click Save
 
 ### 2. When Editing Employee:
+
 1. Click Edit button on employee row
 2. Form opens with **current nationality pre-selected**
 3. Can change nationality by clicking dropdown
@@ -199,6 +206,7 @@ The nationality filter in the filters section now also uses the database nationa
 5. Click Save
 
 ### 3. Nationality Filter:
+
 1. In filters section, click Nationality dropdown
 2. Shows all nationalities from database
 3. Select to filter employees by that nationality
@@ -209,21 +217,25 @@ The nationality filter in the filters section now also uses the database nationa
 ## 🔗 Integration Points
 
 ### 1. **Nationalities Page** → **Employee Form**
+
 - Add new countries in Nationalities page
 - They appear instantly in Employee form dropdown
 - No code changes needed!
 
 ### 2. **Employee Form** → **Employee Data**
+
 - Selected nationality saved as `name_en` (English name)
 - Example: "United Arab Emirates" (not "UAE")
 - Consistent across all employees
 
 ### 3. **Employee Data** → **Nationality Filter**
+
 - Filter dropdown uses same nationalities table
 - Shows all available nationalities
 - Filters employees by exact match
 
 ### 4. **Employee Data** → **Dashboard Charts**
+
 - Nationality distribution chart uses proper country names
 - Data is consistent and accurate
 - Easy to analyze by nationality
@@ -233,23 +245,31 @@ The nationality filter in the filters section now also uses the database nationa
 ## ⚠️ Important Notes
 
 ### 1. **Run SQL Migration First!**
+
 Before using this feature, you MUST run:
+
 ```
 CREATE_NATIONALITIES_TABLE.sql
 ```
+
 In Supabase SQL Editor to create the nationalities table.
 
 ### 2. **Existing Employees**
+
 If you have existing employees with old nationality data:
+
 - They will still work
 - But nationality might not match dropdown exactly
 - You may need to edit and re-select nationality
 
 ### 3. **Required Field**
-Nationality is now marked with red asterisk (*) as required field, just like Company, Department, and Job.
+
+Nationality is now marked with red asterisk (\*) as required field, just like Company, Department, and Job.
 
 ### 4. **Dropdown Options**
+
 Only nationalities added in the Nationalities page will appear in the dropdown. If you need to add more countries:
+
 1. Go to Nationalities page
 2. Click "Add Nationality"
 3. Add the country
@@ -262,6 +282,7 @@ Only nationalities added in the Nationalities page will appear in the dropdown. 
 After running the SQL migration:
 
 ### Test Add Employee:
+
 - [ ] Click "Add Employee" button
 - [ ] See Nationality dropdown (not text input)
 - [ ] Click dropdown, see list of 14 countries
@@ -272,6 +293,7 @@ After running the SQL migration:
 - [ ] Verify employee created with correct nationality
 
 ### Test Edit Employee:
+
 - [ ] Click Edit on existing employee
 - [ ] See Nationality dropdown pre-selected
 - [ ] Click dropdown
@@ -280,6 +302,7 @@ After running the SQL migration:
 - [ ] Verify nationality updated
 
 ### Test Nationality Filter:
+
 - [ ] Open filters section
 - [ ] Click Nationality dropdown
 - [ ] See all 14 countries
@@ -289,6 +312,7 @@ After running the SQL migration:
 - [ ] See all employees again
 
 ### Test Add Nationality:
+
 - [ ] Go to Nationalities page
 - [ ] Click "Add Nationality"
 - [ ] Add: Code: `FRA`, English: `France`, Arabic: `فرنسا`
@@ -350,21 +374,21 @@ After running the SQL migration:
 
 ## 🎯 Comparison Table
 
-| Field | Input Type | Required | Dropdown Source |
-|-------|------------|----------|-----------------|
-| Employee No | Text Input | ✅ Yes | N/A |
-| Name (English) | Text Input | ✅ Yes | N/A |
-| Name (Arabic) | Text Input | ✅ Yes | N/A |
+| Field           | Input Type          | Required   | Dropdown Source         |
+| --------------- | ------------------- | ---------- | ----------------------- |
+| Employee No     | Text Input          | ✅ Yes     | N/A                     |
+| Name (English)  | Text Input          | ✅ Yes     | N/A                     |
+| Name (Arabic)   | Text Input          | ✅ Yes     | N/A                     |
 | **Nationality** | **Select Dropdown** | **✅ Yes** | **nationalities table** |
-| Company | Select Dropdown | ✅ Yes | companies table |
-| Department | Select Dropdown | ✅ Yes | departments table |
-| Job Title | Select Dropdown | ✅ Yes | jobs table |
-| Passport No | Text Input | ❌ No | N/A |
-| Card No | Text Input | ❌ No | N/A |
-| Emirates ID | Text Input | ❌ No | N/A |
-| Residence No | Text Input | ❌ No | N/A |
-| Email | Text Input | ❌ No | N/A |
-| Phone | Text Input | ❌ No | N/A |
+| Company         | Select Dropdown     | ✅ Yes     | companies table         |
+| Department      | Select Dropdown     | ✅ Yes     | departments table       |
+| Job Title       | Select Dropdown     | ✅ Yes     | jobs table              |
+| Passport No     | Text Input          | ❌ No      | N/A                     |
+| Card No         | Text Input          | ❌ No      | N/A                     |
+| Emirates ID     | Text Input          | ❌ No      | N/A                     |
+| Residence No    | Text Input          | ❌ No      | N/A                     |
+| Email           | Text Input          | ❌ No      | N/A                     |
+| Phone           | Text Input          | ❌ No      | N/A                     |
 
 **Perfect consistency!** All master data fields (Nationality, Company, Department, Job) now use the same dropdown pattern! ✅
 
@@ -375,6 +399,7 @@ After running the SQL migration:
 **Dev Server:** http://localhost:5176/
 
 **Test Steps:**
+
 1. Visit http://localhost:5176/employees
 2. Click "Add Employee" button
 3. Look for **Nationality** field with dropdown
@@ -418,4 +443,4 @@ You now have **complete master data management**:
 
 ---
 
-*Version: 1.0.0 | Updated: October 16, 2025*
+_Version: 1.0.0 | Updated: October 16, 2025_

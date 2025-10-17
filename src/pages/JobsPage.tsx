@@ -140,7 +140,9 @@ export function JobsPage() {
               {editingItem ? t("common.edit") : t("jobs.addJob")}
             </DialogTitle>
             <DialogDescription>
-              {editingItem ? "Edit job position information" : "Add a new job position to the system"}
+              {editingItem
+                ? "Edit job position information"
+                : "Add a new job position to the system"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">

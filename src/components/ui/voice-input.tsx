@@ -10,7 +10,10 @@ export interface VoiceInputProps
 }
 
 const VoiceInput = React.forwardRef<HTMLInputElement, VoiceInputProps>(
-  ({ className, type, onVoiceInput, voiceLanguage = "en-US", ...props }, ref) => {
+  (
+    { className, type, onVoiceInput, voiceLanguage = "en-US", ...props },
+    ref
+  ) => {
     const [isListening, setIsListening] = React.useState(false);
     const [recognition, setRecognition] = React.useState<any>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
@@ -34,7 +37,7 @@ const VoiceInput = React.forwardRef<HTMLInputElement, VoiceInputProps>(
 
         recognitionInstance.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript;
-          
+
           // Update input value
           if (inputRef.current) {
             const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -77,7 +80,9 @@ const VoiceInput = React.forwardRef<HTMLInputElement, VoiceInputProps>(
 
     const toggleListening = () => {
       if (!recognition) {
-        alert("Voice input is not supported in your browser. Please try Chrome or Edge.");
+        alert(
+          "Voice input is not supported in your browser. Please try Chrome or Edge."
+        );
         return;
       }
 

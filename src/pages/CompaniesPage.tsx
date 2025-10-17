@@ -140,7 +140,9 @@ export function CompaniesPage() {
               {editingItem ? t("common.edit") : t("companies.addCompany")}
             </DialogTitle>
             <DialogDescription>
-              {editingItem ? "Edit company information" : "Add a new company to the system"}
+              {editingItem
+                ? "Edit company information"
+                : "Add a new company to the system"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
