@@ -437,66 +437,70 @@ export function EmployeesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4 md:space-y-6 pb-6">
+      {/* Header - Mobile Optimized */}
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center md:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{t("employees.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold">{t("employees.title")}</h1>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1">
             {filteredEmployees?.length || 0}{" "}
             {t("employees.title").toLowerCase()}{" "}
             {filteredEmployees?.length !== employees?.length &&
               `(filtered from ${employees?.length})`}
           </p>
         </div>
-        <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-          <Button onClick={handleAdd} className="gap-2">
+        <div className={`flex gap-2 w-full md:w-auto ${isRTL ? "flex-row-reverse" : ""}`}>
+          <Button onClick={handleAdd} className="gap-2 flex-1 md:flex-initial h-11 md:h-10">
             <Plus className="w-4 h-4" />
-            {t("employees.addEmployee")}
+            <span className="hidden sm:inline">{t("employees.addEmployee")}</span>
+            <span className="sm:hidden">Add</span>
           </Button>
-          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+          <Button onClick={exportToExcel} variant="outline" className="gap-2 flex-1 md:flex-initial h-11 md:h-10">
             <Download className="w-4 h-4" />
-            Export Excel
+            <span className="hidden sm:inline">Export Excel</span>
+            <span className="sm:hidden">Export</span>
           </Button>
         </div>
       </div>
 
-      {/* Bulk Actions Toolbar */}
+      {/* Bulk Actions Toolbar - Mobile Optimized */}
       {showBulkActions && (
-        <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+        <Card className="p-3 md:p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 shadow-lg">
           <div
-            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${
-              isRTL ? "sm:flex-row-reverse" : ""
+            className={`flex flex-col gap-3 md:flex-row md:justify-between md:items-center ${
+              isRTL ? "md:flex-row-reverse" : ""
             }`}
           >
             <div
-              className={`flex items-center gap-3 ${
+              className={`flex items-center gap-2 md:gap-3 ${
                 isRTL ? "flex-row-reverse" : ""
               }`}
             >
-              <CheckSquare className="w-5 h-5 text-blue-600" />
-              <span className="font-semibold text-blue-900 dark:text-blue-100">
-                {selectedIds.length} employee(s) selected
+              <CheckSquare className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <span className="font-semibold text-sm md:text-base text-blue-900 dark:text-blue-100">
+                {selectedIds.length} {selectedIds.length === 1 ? 'employee' : 'employees'} selected
               </span>
             </div>
-            <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <div className={`flex gap-2 w-full md:w-auto ${isRTL ? "flex-row-reverse" : ""}`}>
               <Button
                 onClick={handleBulkExport}
                 variant="outline"
-                className="gap-2"
+                className="gap-2 flex-1 md:flex-initial h-10 text-xs md:text-sm"
                 size="sm"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                Export Selected
+                <span className="hidden sm:inline">Export Selected</span>
+                <span className="sm:hidden">Export</span>
               </Button>
               <Button
                 onClick={handleBulkDelete}
                 variant="destructive"
-                className="gap-2"
+                className="gap-2 flex-1 md:flex-initial h-10 text-xs md:text-sm"
                 size="sm"
               >
                 <Trash className="w-4 h-4" />
-                Delete Selected
+                <span className="hidden sm:inline">Delete Selected</span>
+                <span className="sm:hidden">Delete</span>
               </Button>
               <Button
                 onClick={() => {
@@ -505,17 +509,17 @@ export function EmployeesPage() {
                 }}
                 variant="ghost"
                 size="sm"
+                className="h-10 px-2 md:px-4"
               >
                 <X className="w-4 h-4" />
-                Clear Selection
               </Button>
             </div>
           </div>
         </Card>
       )}
 
-      {/* Filters & Controls */}
-      <Card className="p-4 space-y-4">
+      {/* Filters & Controls - Mobile Optimized */}
+      <Card className="p-3 md:p-4 space-y-3 md:space-y-4">
         <div
           className={`flex items-center justify-between ${
             isRTL ? "flex-row-reverse" : ""
@@ -526,32 +530,34 @@ export function EmployeesPage() {
               isRTL ? "flex-row-reverse" : ""
             }`}
           >
-            <Filter className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Filters & Control</h2>
+            <Filter className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+            <h2 className="text-base md:text-lg font-semibold">Filters & Control</h2>
           </div>
-          <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div className={`flex gap-1 md:gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
             <Button
               onClick={() => setShowFilters(!showFilters)}
               variant="ghost"
               size="sm"
+              className="h-9 text-xs md:text-sm px-2 md:px-3"
             >
-              {showFilters ? "Hide Filters" : "Show Filters"}
+              <span className="hidden sm:inline">{showFilters ? "Hide" : "Show"}</span>
+              <Filter className="w-4 h-4 sm:hidden" />
             </Button>
             <Button
               onClick={clearAllFilters}
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-1 md:gap-2 h-9 text-xs md:text-sm px-2 md:px-3"
             >
               <X className="w-4 h-4" />
-              Clear All
+              <span className="hidden md:inline">Clear</span>
             </Button>
-            <div className="flex gap-1 border rounded-md">
+            <div className="flex gap-0.5 border rounded-md">
               <Button
                 onClick={() => setViewMode("grid")}
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-r-none"
+                className="rounded-r-none h-9 px-2 md:px-3"
               >
                 <Grid3x3 className="w-4 h-4" />
               </Button>
@@ -559,7 +565,7 @@ export function EmployeesPage() {
                 onClick={() => setViewMode("table")}
                 variant={viewMode === "table" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-l-none"
+                className="rounded-l-none h-9 px-2 md:px-3"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -568,44 +574,43 @@ export function EmployeesPage() {
         </div>
 
         {showFilters && (
-          <div className="space-y-4">
-            {/* Quick Search */}
+          <div className="space-y-3 md:space-y-4">
+            {/* Quick Search - Mobile Optimized */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">
-                Quick Search (Name, Employee No., Passport No., Emirates ID,
-                Residence No.)
+              <Label className="text-xs md:text-sm font-medium mb-2 block">
+                Quick Search
               </Label>
               <div
                 className={`flex items-center gap-2 ${
                   isRTL ? "flex-row-reverse" : ""
                 }`}
               >
-                <Search className="w-5 h-5 text-gray-400" />
+                <Search className="w-4 h-4 md:w-5 md:h-5 text-gray-400 flex-shrink-0" />
                 <Input
-                  placeholder="Start typing to search automatically..."
+                  placeholder="Search employees..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 h-11 md:h-10"
                 />
               </div>
             </div>
 
-            {/* Filter Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Filter Grid - Mobile Responsive */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {/* Nationality Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">
+                <Label className="text-xs md:text-sm font-medium mb-2 block">
                   Nationality
                 </Label>
                 <Select
                   value={nationalityFilter}
                   onValueChange={setNationalityFilter}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="جميع الجنسيات / All Nationalities" />
+                  <SelectTrigger className="h-11 md:h-10">
+                    <SelectValue placeholder="All Nationalities" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">جميع الجنسيات / All</SelectItem>
+                    <SelectItem value="all">All Nationalities</SelectItem>
                     {nationalities?.map((nat: any) => (
                       <SelectItem key={nat.id} value={nat.name_en}>
                         {i18n.language === "ar" ? nat.name_ar : nat.name_en}
@@ -617,12 +622,12 @@ export function EmployeesPage() {
 
               {/* Company Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">
+                <Label className="text-xs md:text-sm font-medium mb-2 block">
                   Company
                 </Label>
                 <Select value={companyFilter} onValueChange={setCompanyFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="جميع الشركات / All Companies" />
+                  <SelectTrigger className="h-11 md:h-10">
+                    <SelectValue placeholder="All Companies" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">جميع الشركات / All</SelectItem>
@@ -782,47 +787,48 @@ export function EmployeesPage() {
         )}
       </Card>
 
-      {/* Employee Cards/Table */}
+      {/* Employee Cards/Table - Mobile Optimized */}
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {filteredEmployees?.map((employee: any) => (
             <Card
               key={employee.id}
-              className={`p-4 space-y-3 ${
+              className={`p-4 md:p-5 space-y-3 transition-all duration-200 hover:shadow-lg ${
                 selectedIds.includes(employee.id)
-                  ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950"
+                  ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950 shadow-md"
                   : ""
               }`}
             >
-              <div className="flex justify-between items-start">
-                <div className="flex items-start gap-3">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
                   <button
                     type="button"
                     onClick={() => handleSelectOne(employee.id)}
-                    className="hover:bg-muted rounded p-1 mt-1"
+                    className="hover:bg-muted rounded p-1 mt-0.5 md:mt-1 flex-shrink-0 touch-manipulation active:scale-95 transition-transform"
                   >
                     {selectedIds.includes(employee.id) ? (
-                      <CheckSquare className="w-5 h-5 text-blue-600" />
+                      <CheckSquare className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
                     ) : (
-                      <Square className="w-5 h-5" />
+                      <Square className="w-5 h-5 md:w-6 md:h-6" />
                     )}
                   </button>
-                  <div>
-                    <h3 className="font-bold text-lg">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-base md:text-lg truncate">
                       {i18n.language === "ar"
                         ? employee.name_ar
                         : employee.name_en}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">
                       {employee.employee_no}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 flex-shrink-0">
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleEdit(employee)}
+                    className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -830,41 +836,48 @@ export function EmployeesPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleDelete(employee.id)}
+                    className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
                   >
                     <Trash2 className="w-4 h-4 text-red-600" />
                   </Button>
                 </div>
               </div>
 
-              <div className="space-y-1 text-sm">
-                <p>
-                  <span className="font-medium">{t("employees.company")}:</span>{" "}
-                  {i18n.language === "ar"
-                    ? employee.companies?.name_ar
-                    : employee.companies?.name_en}
+              <div className="space-y-2 text-sm md:text-base">
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">{t("employees.company")}:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {i18n.language === "ar"
+                      ? employee.companies?.name_ar
+                      : employee.companies?.name_en}
+                  </span>
                 </p>
-                <p>
-                  <span className="font-medium">
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
                     {t("employees.department")}:
                   </span>{" "}
-                  {i18n.language === "ar"
-                    ? employee.departments?.name_ar
-                    : employee.departments?.name_en}
+                  <span className="text-muted-foreground">
+                    {i18n.language === "ar"
+                      ? employee.departments?.name_ar
+                      : employee.departments?.name_en}
+                  </span>
                 </p>
-                <p>
-                  <span className="font-medium">{t("employees.job")}:</span>{" "}
-                  {i18n.language === "ar"
-                    ? employee.jobs?.name_ar
-                    : employee.jobs?.name_en}
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">{t("employees.job")}:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {i18n.language === "ar"
+                      ? employee.jobs?.name_ar
+                      : employee.jobs?.name_en}
+                  </span>
                 </p>
-                <p>
-                  <span className="font-medium">
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
                     {t("employees.passportNo")}:
                   </span>{" "}
-                  {employee.passport_no || "N/A"}
+                  <span className="text-muted-foreground">{employee.passport_no || "N/A"}</span>
                 </p>
-                <p>
-                  <span className="font-medium">
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
                     {t("employees.cardExpiry")}:
                   </span>{" "}
                   <span className={getExpiryStatus(employee.card_expiry)}>
@@ -873,8 +886,8 @@ export function EmployeesPage() {
                       : "N/A"}
                   </span>
                 </p>
-                <p>
-                  <span className="font-medium">
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
                     {t("employees.emiratesIdExpiry")}:
                   </span>{" "}
                   <span
@@ -890,39 +903,40 @@ export function EmployeesPage() {
           ))}
         </div>
       ) : (
-        /* Table View */
-        <Card className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr className="border-b">
-                <th className="p-3 w-10">
-                  <button
-                    type="button"
-                    onClick={handleSelectAll}
-                    className="hover:bg-muted rounded p-1"
-                  >
-                    {selectedIds.length === filteredEmployees?.length &&
-                    filteredEmployees?.length > 0 ? (
-                      <CheckSquare className="w-5 h-5 text-blue-600" />
-                    ) : (
-                      <Square className="w-5 h-5" />
-                    )}
-                  </button>
-                </th>
-                <th className="text-left p-3 font-semibold">Employee No</th>
-                <th className="text-left p-3 font-semibold">Name</th>
-                <th className="text-left p-3 font-semibold">Nationality</th>
-                <th className="text-left p-3 font-semibold">Company</th>
-                <th className="text-left p-3 font-semibold">Department</th>
-                <th className="text-left p-3 font-semibold">Job</th>
-                <th className="text-left p-3 font-semibold">Passport</th>
-                <th className="text-left p-3 font-semibold">Card Expiry</th>
-                <th className="text-left p-3 font-semibold">Emirates ID</th>
-                <th className="text-left p-3 font-semibold">Residence</th>
-                <th className="text-right p-3 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+        /* Table View - Hidden on Mobile, Optimized for Desktop */
+        <Card className="overflow-x-auto hidden md:block">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1200px]">
+              <thead className="bg-muted/50">
+                <tr className="border-b">
+                  <th className="p-3 w-10">
+                    <button
+                      type="button"
+                      onClick={handleSelectAll}
+                      className="hover:bg-muted rounded p-1 touch-manipulation"
+                    >
+                      {selectedIds.length === filteredEmployees?.length &&
+                      filteredEmployees?.length > 0 ? (
+                        <CheckSquare className="w-5 h-5 text-blue-600" />
+                      ) : (
+                        <Square className="w-5 h-5" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="text-left p-3 font-semibold text-sm">Employee No</th>
+                  <th className="text-left p-3 font-semibold text-sm">Name</th>
+                  <th className="text-left p-3 font-semibold text-sm">Nationality</th>
+                  <th className="text-left p-3 font-semibold text-sm">Company</th>
+                  <th className="text-left p-3 font-semibold text-sm">Department</th>
+                  <th className="text-left p-3 font-semibold text-sm">Job</th>
+                  <th className="text-left p-3 font-semibold text-sm">Passport</th>
+                  <th className="text-left p-3 font-semibold text-sm">Card Expiry</th>
+                  <th className="text-left p-3 font-semibold text-sm">Emirates ID</th>
+                  <th className="text-left p-3 font-semibold text-sm">Residence</th>
+                  <th className="text-right p-3 font-semibold text-sm">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
               {filteredEmployees?.map((employee: any) => (
                 <tr key={employee.id} className="border-b hover:bg-muted/30">
                   <td className="p-3">
@@ -1029,6 +1043,7 @@ export function EmployeesPage() {
               ))}
             </tbody>
           </table>
+          </div>
           {(!filteredEmployees || filteredEmployees.length === 0) && (
             <div className="text-center py-12 text-muted-foreground">
               No employees found
