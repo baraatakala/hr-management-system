@@ -64,7 +64,7 @@ export function Layout() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? (
@@ -112,7 +112,7 @@ export function Layout() {
               onClick={() => setMobileMenuOpen(false)}
               className={`lg:hidden absolute ${
                 isRTL ? "left-4" : "right-4"
-              } p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700`}
+              } p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center`}
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
@@ -146,7 +146,7 @@ export function Layout() {
               variant="outline"
               size="sm"
               onClick={toggleTheme}
-              className="w-full justify-start"
+              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform"
             >
               {theme === "light" ? (
                 <Moon className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
@@ -159,7 +159,7 @@ export function Layout() {
               variant="outline"
               size="sm"
               onClick={toggleLanguage}
-              className="w-full justify-start"
+              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform"
             >
               <Languages className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {i18n.language === "en" ? "العربية" : "English"}
@@ -168,7 +168,7 @@ export function Layout() {
               variant="outline"
               size="sm"
               onClick={() => signOut()}
-              className="w-full justify-start"
+              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform"
             >
               <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {t("auth.logout")}

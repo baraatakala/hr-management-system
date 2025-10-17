@@ -132,9 +132,12 @@ export function JobsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">{t("jobs.title")}</h1>
-        <Button onClick={handleAdd}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold">{t("jobs.title")}</h1>
+        <Button 
+          onClick={handleAdd}
+          className="w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-95 transition-transform"
+        >
           <Plus className="w-4 h-4 mr-2" />
           {t("jobs.addJob")}
         </Button>

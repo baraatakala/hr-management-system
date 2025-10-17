@@ -148,18 +148,21 @@ export function NationalitiesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl md:text-3xl font-bold">
             {i18n.language === "ar" ? "الجنسيات" : "Nationalities"}
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 mt-1 text-sm md:text-base">
             {i18n.language === "ar"
               ? `${items?.length || 0} جنسية`
               : `${items?.length || 0} nationalities`}
           </p>
         </div>
-        <Button onClick={handleAdd} className="gap-2">
+        <Button 
+          onClick={handleAdd} 
+          className="gap-2 w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-95 transition-transform"
+        >
           <Plus className="w-4 h-4" />
           {i18n.language === "ar" ? "إضافة جنسية" : "Add Nationality"}
         </Button>
