@@ -20,6 +20,9 @@ export function CompaniesPage() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [affectedEmployeesCount, setAffectedEmployeesCount] = useState(0);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState({
     code: "",
@@ -61,11 +64,27 @@ export function CompaniesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      // First, set company_id to NULL for all employees using this company
+      const { error: updateError } = await supabase
+        .from("employees")
+        .update({ company_id: null })
+        .eq("company_id", id);
+
+      if (updateError) throw updateError;
+
+      // Then delete the company
       const { error } = await supabase.from("companies").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: (error: any) => {
+      alert(error.message);
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
     },
   });
 
@@ -77,6 +96,24 @@ export function CompaniesPage() {
       name_ar: item.name_ar,
     });
     setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (item: any) => {
+    // Get count of affected employees
+    const { count } = await supabase
+      .from("employees")
+      .select("*", { count: "exact", head: true })
+      .eq("company_id", item.id);
+    
+    setAffectedEmployeesCount(count || 0);
+    setItemToDelete(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      deleteMutation.mutate(itemToDelete.id);
+    }
   };
 
   const handleAdd = () => {
@@ -123,7 +160,7 @@ export function CompaniesPage() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => deleteMutation.mutate(item.id)}
+                  onClick={() => handleDelete(item)}
                 >
                   <Trash2 className="w-4 h-4 text-red-600" />
                 </Button>
@@ -191,6 +228,57 @@ export function CompaniesPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {i18n.language === "ar" ? "تأكيد الحذف" : "Confirm Delete"}
+            </DialogTitle>
+            <DialogDescription>
+              {i18n.language === "ar"
+                ? `هل أنت متأكد من حذف الشركة "${itemToDelete?.name_ar}"؟`
+                : `Are you sure you want to delete company "${itemToDelete?.name_en}"?`}
+              {affectedEmployeesCount > 0 && (
+                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                  <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                    {i18n.language === "ar"
+                      ? `⚠️ تحذير: ${affectedEmployeesCount} موظف مرتبط بهذه الشركة`
+                      : `⚠️ Warning: ${affectedEmployeesCount} employee(s) linked to this company`}
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                    {i18n.language === "ar"
+                      ? "سيتم إزالة الشركة من بيانات الموظفين (لن يتم حذف الموظفين)"
+                      : "Company field will be removed from employee records (employees won't be deleted)"}
+                  </p>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending
+                ? t("common.loading")
+                : i18n.language === "ar"
+                ? "حذف"
+                : "Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

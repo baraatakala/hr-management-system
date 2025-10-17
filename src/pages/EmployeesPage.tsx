@@ -608,7 +608,7 @@ export function EmployeesPage() {
                     <SelectItem value="all">جميع الجنسيات / All</SelectItem>
                     {nationalities?.map((nat: any) => (
                       <SelectItem key={nat.id} value={nat.name_en}>
-                        {nat.name_en}
+                        {i18n.language === "ar" ? nat.name_ar : nat.name_en}
                       </SelectItem>
                     ))}
                   </SelectContent>

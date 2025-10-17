@@ -20,6 +20,9 @@ export function NationalitiesPage() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [affectedEmployeesCount, setAffectedEmployeesCount] = useState(0);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState({
     code: "",
@@ -62,6 +65,24 @@ export function NationalitiesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      // First, get the nationality name_en
+      const { data: nationality } = await supabase
+        .from("nationalities")
+        .select("name_en")
+        .eq("id", id)
+        .single();
+
+      if (nationality) {
+        // Step 1: Set nationality to NULL for all employees with this nationality
+        const { error: updateError } = await supabase
+          .from("employees")
+          .update({ nationality: null })
+          .eq("nationality", nationality.name_en);
+
+        if (updateError) throw updateError;
+      }
+
+      // Step 2: Delete the nationality
       const { error } = await supabase
         .from("nationalities")
         .delete()
@@ -70,6 +91,14 @@ export function NationalitiesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nationalities"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: (error: any) => {
+      alert(error.message);
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
     },
   });
 
@@ -94,9 +123,21 @@ export function NationalitiesPage() {
     saveMutation.mutate(formData);
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
-      deleteMutation.mutate(id);
+  const handleDelete = async (item: any) => {
+    // Get the count of employees with this nationality
+    const { count } = await supabase
+      .from("employees")
+      .select("*", { count: "exact", head: true })
+      .eq("nationality", item.name_en);
+    
+    setAffectedEmployeesCount(count || 0);
+    setItemToDelete(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      deleteMutation.mutate(itemToDelete.id);
     }
   };
 
@@ -136,7 +177,6 @@ export function NationalitiesPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
                   size="sm"
                   onClick={() => handleEdit(item)}
                 >
@@ -145,12 +185,7 @@ export function NationalitiesPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() =>
-                    handleDelete(
-                      item.id,
-                      i18n.language === "ar" ? item.name_ar : item.name_en
-                    )
-                  }
+                  onClick={() => handleDelete(item)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -263,6 +298,59 @@ export function NationalitiesPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {i18n.language === "ar" ? "تأكيد الحذف" : "Confirm Delete"}
+            </DialogTitle>
+            <DialogDescription>
+              {i18n.language === "ar"
+                ? `هل أنت متأكد من حذف الجنسية "${itemToDelete?.name_ar}"؟`
+                : `Are you sure you want to delete nationality "${itemToDelete?.name_en}"?`}
+              {affectedEmployeesCount > 0 && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm font-semibold text-yellow-800">
+                    {i18n.language === "ar"
+                      ? `⚠️ تحذير: ${affectedEmployeesCount} موظف مرتبط بهذه الجنسية`
+                      : `⚠️ Warning: ${affectedEmployeesCount} employee(s) linked to this nationality`}
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    {i18n.language === "ar"
+                      ? "سيتم إزالة حقل الجنسية من سجلات الموظفين (لن يتم حذف بيانات الموظفين)"
+                      : "Nationality field will be removed from employee records (employees won't be deleted)"}
+                  </p>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              {i18n.language === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending
+                ? i18n.language === "ar"
+                  ? "جاري الحذف..."
+                  : "Deleting..."
+                : i18n.language === "ar"
+                ? "حذف"
+                : "Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
