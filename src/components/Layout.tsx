@@ -3,7 +3,6 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/store/useTheme";
-import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   Users,
@@ -143,16 +142,10 @@ export function Layout() {
             })}
           </nav>
 
-          <div className="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 relative z-50">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleTheme();
-              }}
-              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
+          <div className="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11"
               type="button"
             >
               {theme === "light" ? (
@@ -161,52 +154,25 @@ export function Layout() {
                 <Sun className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               )}
               {theme === "light" ? t("settings.dark") : t("settings.light")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleLanguage();
-              }}
-              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
+            </button>
+            <button
+              onClick={toggleLanguage}
+              className="w-full flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11"
               type="button"
             >
               <Languages className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {i18n.language === "en" ? "العربية" : "English"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onTouchStart={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Logout touched on mobile!');
-                try {
-                  await signOut();
-                  console.log('Logout successful');
-                } catch (error) {
-                  console.error('Logout error:', error);
-                }
+            </button>
+            <button
+              onClick={() => {
+                signOut();
               }}
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Logout clicked!');
-                try {
-                  await signOut();
-                  console.log('Logout successful');
-                } catch (error) {
-                  console.error('Logout error:', error);
-                }
-              }}
-              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
+              className="w-full flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11"
               type="button"
             >
               <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {t("auth.logout")}
-            </Button>
+            </button>
           </div>
         </div>
       </div>
