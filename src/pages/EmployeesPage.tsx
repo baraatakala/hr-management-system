@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -91,22 +91,6 @@ export function EmployeesPage() {
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showFilters, setShowFilters] = useState(true);
-
-  // Force grid view on mobile devices
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768 && viewMode === "table") {
-        setViewMode("grid");
-      }
-    };
-
-    // Check on mount
-    handleResize();
-
-    // Listen for resize events
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [viewMode]);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -568,8 +552,8 @@ export function EmployeesPage() {
               <X className="w-4 h-4" />
               <span className="hidden md:inline">Clear</span>
             </Button>
-            {/* View Mode Toggle - Hidden on Mobile (table doesn't work on small screens) */}
-            <div className="hidden md:flex gap-0.5 border rounded-md">
+            {/* View Mode Toggle - Works on All Screen Sizes */}
+            <div className="flex gap-0.5 border rounded-md">
               <Button
                 onClick={() => setViewMode("grid")}
                 variant={viewMode === "grid" ? "default" : "ghost"}
@@ -920,13 +904,13 @@ export function EmployeesPage() {
           ))}
         </div>
       ) : (
-        /* Table View - Hidden on Mobile, Optimized for Desktop */
-        <Card className="overflow-x-auto hidden md:block">
+        /* Table View - Mobile Responsive with Horizontal Scroll */
+        <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1200px]">
+            <table className="w-full min-w-[1000px]">
               <thead className="bg-muted/50">
                 <tr className="border-b">
-                  <th className="p-3 w-10">
+                  <th className="p-2 md:p-3 w-10">
                     <button
                       type="button"
                       onClick={handleSelectAll}
@@ -934,65 +918,65 @@ export function EmployeesPage() {
                     >
                       {selectedIds.length === filteredEmployees?.length &&
                       filteredEmployees?.length > 0 ? (
-                        <CheckSquare className="w-5 h-5 text-blue-600" />
+                        <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                       ) : (
-                        <Square className="w-5 h-5" />
+                        <Square className="w-4 h-4 md:w-5 md:h-5" />
                       )}
                     </button>
                   </th>
-                  <th className="text-left p-3 font-semibold text-sm">Employee No</th>
-                  <th className="text-left p-3 font-semibold text-sm">Name</th>
-                  <th className="text-left p-3 font-semibold text-sm">Nationality</th>
-                  <th className="text-left p-3 font-semibold text-sm">Company</th>
-                  <th className="text-left p-3 font-semibold text-sm">Department</th>
-                  <th className="text-left p-3 font-semibold text-sm">Job</th>
-                  <th className="text-left p-3 font-semibold text-sm">Passport</th>
-                  <th className="text-left p-3 font-semibold text-sm">Card Expiry</th>
-                  <th className="text-left p-3 font-semibold text-sm">Emirates ID</th>
-                  <th className="text-left p-3 font-semibold text-sm">Residence</th>
-                  <th className="text-right p-3 font-semibold text-sm">Actions</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Employee No</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Name</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Nationality</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Company</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Department</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Job</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Passport</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Card Expiry</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Emirates ID</th>
+                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Residence</th>
+                  <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
               {filteredEmployees?.map((employee: any) => (
-                <tr key={employee.id} className="border-b hover:bg-muted/30">
-                  <td className="p-3">
+                <tr key={employee.id} className="border-b hover:bg-muted/30 transition-colors">
+                  <td className="p-2 md:p-3">
                     <button
                       type="button"
                       onClick={() => handleSelectOne(employee.id)}
-                      className="hover:bg-muted rounded p-1"
+                      className="hover:bg-muted rounded p-1 touch-manipulation"
                     >
                       {selectedIds.includes(employee.id) ? (
-                        <CheckSquare className="w-5 h-5 text-blue-600" />
+                        <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                       ) : (
-                        <Square className="w-5 h-5" />
+                        <Square className="w-4 h-4 md:w-5 md:h-5" />
                       )}
                     </button>
                   </td>
-                  <td className="p-3 font-medium">{employee.employee_no}</td>
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 font-medium text-xs md:text-sm">{employee.employee_no}</td>
+                  <td className="p-2 md:p-3 text-xs md:text-sm">
                     {i18n.language === "ar"
                       ? employee.name_ar
                       : employee.name_en}
                   </td>
-                  <td className="p-3">{employee.nationality}</td>
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 text-xs md:text-sm">{employee.nationality}</td>
+                  <td className="p-2 md:p-3 text-xs md:text-sm">
                     {i18n.language === "ar"
                       ? employee.companies?.name_ar
                       : employee.companies?.name_en}
                   </td>
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 text-xs md:text-sm">
                     {i18n.language === "ar"
                       ? employee.departments?.name_ar
                       : employee.departments?.name_en}
                   </td>
-                  <td className="p-3">
+                  <td className="p-2 md:p-3 text-xs md:text-sm">
                     {i18n.language === "ar"
                       ? employee.jobs?.name_ar
                       : employee.jobs?.name_en}
                   </td>
-                  <td className="p-3">
-                    <div className="text-xs">
+                  <td className="p-2 md:p-3">
+                    <div className="text-[10px] md:text-xs">
                       <div>{employee.passport_no || "N/A"}</div>
                       <div
                         className={getExpiryStatus(employee.passport_expiry)}
@@ -1003,15 +987,15 @@ export function EmployeesPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-3">
-                    <span className={getExpiryStatus(employee.card_expiry)}>
+                  <td className="p-2 md:p-3">
+                    <span className={`${getExpiryStatus(employee.card_expiry)} text-[10px] md:text-xs`}>
                       {employee.card_expiry
                         ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
                         : "N/A"}
                     </span>
                   </td>
-                  <td className="p-3">
-                    <div className="text-xs">
+                  <td className="p-2 md:p-3">
+                    <div className="text-[10px] md:text-xs">
                       <div>{employee.emirates_id || "N/A"}</div>
                       <div
                         className={getExpiryStatus(employee.emirates_id_expiry)}
@@ -1024,8 +1008,8 @@ export function EmployeesPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-3">
-                    <div className="text-xs">
+                  <td className="p-2 md:p-3">
+                    <div className="text-[10px] md:text-xs">
                       <div>{employee.residence_no || "N/A"}</div>
                       <div
                         className={getExpiryStatus(employee.residence_expiry)}
@@ -1038,21 +1022,23 @@ export function EmployeesPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-3">
-                    <div className="flex gap-2 justify-end">
+                  <td className="p-2 md:p-3">
+                    <div className="flex gap-1 md:gap-2 justify-end">
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => handleEdit(employee)}
+                        className="h-8 w-8 p-0 touch-manipulation"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3 h-3 md:w-4 md:h-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => handleDelete(employee.id)}
+                        className="h-8 w-8 p-0 touch-manipulation"
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-red-600" />
                       </Button>
                     </div>
                   </td>
@@ -1165,288 +1151,370 @@ function EmployeeDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
+        <DialogHeader className="space-y-2 md:space-y-3">
+          <DialogTitle className="text-xl md:text-2xl">
             {employee
               ? t("employees.editEmployee")
               : t("employees.addEmployee")}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm md:text-base">
             {employee
               ? "Edit employee information and document details"
               : "Add a new employee to the system with all required information"}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label>{t("employees.employeeNo")} 🎤</Label>
-              <VoiceInput
-                value={formData.employee_no || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, employee_no: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Type or say numbers"
-                required
-              />
-            </div>
-            <div>
-              <Label>{t("employees.nameEn")} 🎤</Label>
-              <VoiceInput
-                value={formData.name_en || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, name_en: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Type or click mic to speak"
-                required
-              />
-            </div>
-            <div>
-              <Label>{t("employees.nameAr")} 🎤</Label>
-              <VoiceInput
-                value={formData.name_ar || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, name_ar: e.target.value })
-                }
-                voiceLanguage="ar-SA"
-                placeholder="اكتب أو انقر على الميكروفون للتحدث"
-                required
-              />
-            </div>
-            <div>
-              <Label>
-                {t("employees.nationality")}{" "}
-                <span className="text-red-500">*</span>
-              </Label>
-              <SearchableSelect
-                value={formData.nationality || ""}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, nationality: value })
-                }
-                options={nationalities.map((nat) => ({
-                  value: nat.name_en,
-                  label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
-                }))}
-                placeholder={
-                  i18n.language === "ar"
-                    ? "اختر الجنسية..."
-                    : "Select a nationality..."
-                }
-                searchPlaceholder={
-                  i18n.language === "ar" ? "بحث..." : "Search..."
-                }
-                emptyText={
-                  i18n.language === "ar"
-                    ? "لا توجد نتائج"
-                    : "No results found"
-                }
-              />
-            </div>
-            <div>
-              <Label>
-                {t("employees.company")} <span className="text-red-500">*</span>
-              </Label>
-              <SearchableSelect
-                value={formData.company_id || ""}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, company_id: value })
-                }
-                options={companies.map((company) => ({
-                  value: company.id,
-                  label:
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 mt-4">
+          {/* Basic Information Section */}
+          <div className="space-y-3 md:space-y-4">
+            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
+              📋 Basic Information
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.employeeNo")} <span className="text-red-500">*</span> 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.employee_no || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, employee_no: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Type or say numbers"
+                  required
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.nameEn")} <span className="text-red-500">*</span> 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.name_en || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name_en: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Type or click mic to speak"
+                  required
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.nameAr")} <span className="text-red-500">*</span> 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.name_ar || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name_ar: e.target.value })
+                  }
+                  voiceLanguage="ar-SA"
+                  placeholder="اكتب أو انقر على الميكروفون للتحدث"
+                  required
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.nationality")}{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <SearchableSelect
+                  value={formData.nationality || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, nationality: value })
+                  }
+                  options={nationalities.map((nat) => ({
+                    value: nat.name_en,
+                    label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
+                  }))}
+                  placeholder={
                     i18n.language === "ar"
-                      ? company.name_ar
-                      : company.name_en,
-                }))}
-                placeholder={
-                  i18n.language === "ar" ? "اختر الشركة..." : "Select a company..."
-                }
-                searchPlaceholder={
-                  i18n.language === "ar" ? "بحث..." : "Search..."
-                }
-                emptyText={
-                  i18n.language === "ar"
-                    ? "لا توجد نتائج"
-                    : "No results found"
-                }
-              />
-            </div>
-            <div>
-              <Label>
-                {t("employees.department")}{" "}
-                <span className="text-red-500">*</span>
-              </Label>
-              <SearchableSelect
-                value={formData.department_id || ""}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, department_id: value })
-                }
-                options={departments.map((dept) => ({
-                  value: dept.id,
-                  label:
-                    i18n.language === "ar" ? dept.name_ar : dept.name_en,
-                }))}
-                placeholder={
-                  i18n.language === "ar"
-                    ? "اختر القسم..."
-                    : "Select a department..."
-                }
-                searchPlaceholder={
-                  i18n.language === "ar" ? "بحث..." : "Search..."
-                }
-                emptyText={
-                  i18n.language === "ar"
-                    ? "لا توجد نتائج"
-                    : "No results found"
-                }
-              />
-            </div>
-            <div>
-              <Label>
-                {t("employees.job")} <span className="text-red-500">*</span>
-              </Label>
-              <SearchableSelect
-                value={formData.job_id || ""}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, job_id: value })
-                }
-                options={jobs.map((job) => ({
-                  value: job.id,
-                  label: i18n.language === "ar" ? job.name_ar : job.name_en,
-                }))}
-                placeholder={
-                  i18n.language === "ar" ? "اختر الوظيفة..." : "Select a job..."
-                }
-                searchPlaceholder={
-                  i18n.language === "ar" ? "بحث..." : "Search..."
-                }
-                emptyText={
-                  i18n.language === "ar"
-                    ? "لا توجد نتائج"
-                    : "No results found"
-                }
-              />
-            </div>
-            <div>
-              <Label>{t("employees.passportNo")} 🎤</Label>
-              <VoiceInput
-                value={formData.passport_no || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, passport_no: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Speak passport number"
-              />
-            </div>
-            <div>
-              <Label>{t("employees.passportExpiry")}</Label>
-              <Input
-                type="date"
-                value={formData.passport_expiry || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, passport_expiry: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>{t("employees.cardNo")} 🎤</Label>
-              <VoiceInput
-                value={formData.card_no || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, card_no: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Speak card number"
-              />
-            </div>
-            <div>
-              <Label>{t("employees.cardExpiry")}</Label>
-              <Input
-                type="date"
-                value={formData.card_expiry || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, card_expiry: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>{t("employees.emiratesId")} 🎤</Label>
-              <VoiceInput
-                value={formData.emirates_id || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, emirates_id: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Speak Emirates ID"
-              />
-            </div>
-            <div>
-              <Label>{t("employees.emiratesIdExpiry")}</Label>
-              <Input
-                type="date"
-                value={formData.emirates_id_expiry || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    emirates_id_expiry: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label>{t("employees.residenceNo")} 🎤</Label>
-              <VoiceInput
-                value={formData.residence_no || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, residence_no: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Speak residence number"
-              />
-            </div>
-            <div>
-              <Label>{t("employees.residenceExpiry")}</Label>
-              <Input
-                type="date"
-                value={formData.residence_expiry || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, residence_expiry: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>{t("employees.email")} 🎤</Label>
-              <VoiceInput
-                type="email"
-                value={formData.email || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Speak email address"
-              />
-            </div>
-            <div>
-              <Label>{t("employees.phone")} 🎤</Label>
-              <VoiceInput
-                value={formData.phone || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-                voiceLanguage="en-US"
-                placeholder="Speak phone number"
-                type="tel"
-              />
+                      ? "اختر الجنسية..."
+                      : "Select a nationality..."
+                  }
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
+                />
+              </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+
+          {/* Company Information Section */}
+          <div className="space-y-3 md:space-y-4">
+            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
+              🏢 Company Information
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.company")} <span className="text-red-500">*</span>
+                </Label>
+                <SearchableSelect
+                  value={formData.company_id || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, company_id: value })
+                  }
+                  options={companies.map((company) => ({
+                    value: company.id,
+                    label:
+                      i18n.language === "ar"
+                        ? company.name_ar
+                        : company.name_en,
+                  }))}
+                  placeholder={
+                    i18n.language === "ar" ? "اختر الشركة..." : "Select a company..."
+                  }
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.department")}{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <SearchableSelect
+                  value={formData.department_id || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, department_id: value })
+                  }
+                  options={departments.map((dept) => ({
+                    value: dept.id,
+                    label:
+                      i18n.language === "ar" ? dept.name_ar : dept.name_en,
+                  }))}
+                  placeholder={
+                    i18n.language === "ar"
+                      ? "اختر القسم..."
+                      : "Select a department..."
+                  }
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.job")} <span className="text-red-500">*</span>
+                </Label>
+                <SearchableSelect
+                  value={formData.job_id || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, job_id: value })
+                  }
+                  options={jobs.map((job) => ({
+                    value: job.id,
+                    label: i18n.language === "ar" ? job.name_ar : job.name_en,
+                  }))}
+                  placeholder={
+                    i18n.language === "ar" ? "اختر الوظيفة..." : "Select a job..."
+                  }
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Documents Section */}
+          <div className="space-y-3 md:space-y-4">
+            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
+              📄 Documents & IDs
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.passportNo")} 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.passport_no || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, passport_no: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Speak passport number"
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.passportExpiry")}
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.passport_expiry || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, passport_expiry: e.target.value })
+                  }
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.cardNo")} 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.card_no || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, card_no: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Speak card number"
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.cardExpiry")}
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.card_expiry || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, card_expiry: e.target.value })
+                  }
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.emiratesId")} 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.emirates_id || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, emirates_id: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Speak Emirates ID"
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.emiratesIdExpiry")}
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.emirates_id_expiry || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      emirates_id_expiry: e.target.value,
+                    })
+                  }
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.residenceNo")} 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.residence_no || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, residence_no: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Speak residence number"
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.residenceExpiry")}
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.residence_expiry || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, residence_expiry: e.target.value })
+                  }
+                  className="h-11 md:h-10"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information Section */}
+          <div className="space-y-3 md:space-y-4">
+            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
+              📞 Contact Information
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.email")} 🎤
+                </Label>
+                <VoiceInput
+                  type="email"
+                  value={formData.email || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Speak email address"
+                  className="h-11 md:h-10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.phone")} 🎤
+                </Label>
+                <VoiceInput
+                  value={formData.phone || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  voiceLanguage="en-US"
+                  placeholder="Speak phone number"
+                  type="tel"
+                  className="h-11 md:h-10"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className="w-full sm:w-auto h-11 md:h-10 order-2 sm:order-1"
+            >
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={saveMutation.isPending}>
+            <Button 
+              type="submit" 
+              disabled={saveMutation.isPending}
+              className="w-full sm:w-auto h-11 md:h-10 order-1 sm:order-2"
+            >
               {saveMutation.isPending ? t("common.loading") : t("common.save")}
             </Button>
           </DialogFooter>
