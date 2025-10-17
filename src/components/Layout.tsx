@@ -141,12 +141,14 @@ export function Layout() {
             })}
           </nav>
 
-          <div className="p-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <Button
               variant="outline"
               size="sm"
               onClick={toggleTheme}
-              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform"
+              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
+              type="button"
+              style={{ pointerEvents: 'auto' }}
             >
               {theme === "light" ? (
                 <Moon className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
@@ -159,7 +161,9 @@ export function Layout() {
               variant="outline"
               size="sm"
               onClick={toggleLanguage}
-              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform"
+              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
+              type="button"
+              style={{ pointerEvents: 'auto' }}
             >
               <Languages className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {i18n.language === "en" ? "العربية" : "English"}
@@ -167,8 +171,20 @@ export function Layout() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => signOut()}
-              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform"
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Logout button clicked!');
+                try {
+                  await signOut();
+                  console.log('Logout successful');
+                } catch (error) {
+                  console.error('Logout error:', error);
+                }
+              }}
+              className="w-full justify-start h-11 touch-manipulation active:scale-95 transition-transform cursor-pointer"
+              type="button"
+              style={{ pointerEvents: 'auto' }}
             >
               <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {t("auth.logout")}
