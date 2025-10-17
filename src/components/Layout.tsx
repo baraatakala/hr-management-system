@@ -120,20 +120,6 @@ export function Layout() {
             </button>
           </div>
 
-          {/* LOGOUT BUTTON AT TOP - ALWAYS WORKS */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => {
-                signOut();
-              }}
-              className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white h-12"
-              type="button"
-            >
-              <LogOut className={`w-5 h-5 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {t("auth.logout")}
-            </button>
-          </div>
-
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -176,6 +162,14 @@ export function Layout() {
             >
               <Languages className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {i18n.language === "en" ? "العربية" : "English"}
+            </button>
+            <button
+              onClick={() => signOut()}
+              className="w-full flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11"
+              type="button"
+            >
+              <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+              {t("auth.logout")}
             </button>
           </div>
         </div>
