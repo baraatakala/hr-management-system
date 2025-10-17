@@ -2,12 +2,6 @@
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 interface SearchableSelectProps {
@@ -29,6 +23,7 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -46,14 +41,42 @@ export function SearchableSelect({
     setSearchQuery("");
   };
 
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Focus search input when dropdown opens
+  React.useEffect(() => {
+    if (open && searchInputRef.current) {
+      setTimeout(() => searchInputRef.current?.focus(), 0);
+    }
+  }, [open]);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+        setSearchQuery("");
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [open]);
+
   return (
-    <>
+    <div ref={containerRef} className="relative w-full">
       <Button
         variant="outline"
         role="combobox"
         aria-expanded={open}
         className="w-full justify-between font-normal"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen(!open)}
         type="button"
       >
         <span className="truncate">
@@ -62,28 +85,27 @@ export function SearchableSelect({
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md p-0" aria-describedby={undefined}>
-          <DialogHeader className="px-4 pt-4 pb-2">
-            <DialogTitle className="sr-only">{placeholder}</DialogTitle>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md animate-in fade-in-0 zoom-in-95">
+          <div className="px-2 pt-2 pb-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder={searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-                autoFocus
+                className="h-9 pl-9"
               />
             </div>
-          </DialogHeader>
-          <div className="max-h-[300px] overflow-y-auto px-2 pb-2">
+          </div>
+          <div className="max-h-[300px] overflow-y-auto px-1 pb-1">
             {filteredOptions.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 {emptyText}
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-0.5 py-1">
                 {filteredOptions.map((option) => (
                   <button
                     key={option.value}
@@ -106,8 +128,8 @@ export function SearchableSelect({
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      )}
+    </div>
   );
 }
