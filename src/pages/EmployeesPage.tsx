@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Edit,
@@ -521,8 +522,8 @@ export function EmployeesPage() {
       {/* Filters & Controls - Mobile Optimized */}
       <Card className="p-3 md:p-4 space-y-3 md:space-y-4">
         <div
-          className={`flex items-center justify-between ${
-            isRTL ? "flex-row-reverse" : ""
+          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+            isRTL ? "sm:flex-row-reverse" : ""
           }`}
         >
           <div
@@ -532,13 +533,24 @@ export function EmployeesPage() {
           >
             <Filter className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
             <h2 className="text-base md:text-lg font-semibold">Filters & Control</h2>
+            {(nationalityFilter !== "all" || companyFilter !== "all" || jobFilter !== "all" || departmentFilter !== "all" || searchTerm) && (
+              <Badge variant="secondary" className="text-xs">
+                {[
+                  searchTerm ? 1 : 0,
+                  nationalityFilter !== "all" ? 1 : 0,
+                  companyFilter !== "all" ? 1 : 0,
+                  jobFilter !== "all" ? 1 : 0,
+                  departmentFilter !== "all" ? 1 : 0,
+                ].reduce((a, b) => a + b, 0)} active
+              </Badge>
+            )}
           </div>
-          <div className={`flex gap-1 md:gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div className={`flex gap-1 md:gap-2 w-full sm:w-auto ${isRTL ? "flex-row-reverse" : ""}`}>
             <Button
               onClick={() => setShowFilters(!showFilters)}
               variant="ghost"
               size="sm"
-              className="h-9 text-xs md:text-sm px-2 md:px-3"
+              className="h-9 text-xs md:text-sm px-2 md:px-3 flex-1 sm:flex-initial"
             >
               <span className="hidden sm:inline">{showFilters ? "Hide" : "Show"}</span>
               <Filter className="w-4 h-4 sm:hidden" />
@@ -547,10 +559,11 @@ export function EmployeesPage() {
               onClick={clearAllFilters}
               variant="ghost"
               size="sm"
-              className="gap-1 md:gap-2 h-9 text-xs md:text-sm px-2 md:px-3"
+              className="gap-1 md:gap-2 h-9 text-xs md:text-sm px-2 md:px-3 flex-1 sm:flex-initial"
             >
               <X className="w-4 h-4" />
-              <span className="hidden md:inline">Clear</span>
+              <span className="hidden md:inline">Clear All</span>
+              <span className="md:hidden">Clear</span>
             </Button>
             {/* View Mode Toggle - Works on All Screen Sizes */}
             <div className="flex gap-0.5 border rounded-md">
@@ -576,24 +589,105 @@ export function EmployeesPage() {
 
         {showFilters && (
           <div className="space-y-3 md:space-y-4">
+            {/* Active Filters Display */}
+            {(nationalityFilter !== "all" || companyFilter !== "all" || jobFilter !== "all" || departmentFilter !== "all" || searchTerm) && (
+              <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                <span className="text-xs font-medium text-blue-900 dark:text-blue-100">Active Filters:</span>
+                {searchTerm && (
+                  <Badge variant="secondary" className="gap-1 pr-1">
+                    Search: "{searchTerm.slice(0, 20)}{searchTerm.length > 20 ? '...' : ''}"
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {nationalityFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 pr-1">
+                    Nationality: {nationalityFilter}
+                    <button
+                      onClick={() => setNationalityFilter("all")}
+                      className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {companyFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 pr-1">
+                    Company
+                    <button
+                      onClick={() => setCompanyFilter("all")}
+                      className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {jobFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 pr-1">
+                    Job
+                    <button
+                      onClick={() => setJobFilter("all")}
+                      className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {departmentFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 pr-1">
+                    Department
+                    <button
+                      onClick={() => setDepartmentFilter("all")}
+                      className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+              </div>
+            )}
+
             {/* Quick Search - Mobile Optimized */}
+            {/* Enhanced Quick Search with Clear Button */}
             <div>
-              <Label className="text-xs md:text-sm font-medium mb-2 block">
+              <Label className="text-xs md:text-sm font-medium mb-2 flex items-center gap-2">
+                <Search className="w-4 h-4" />
                 Quick Search
+                {searchTerm && (
+                  <span className="text-xs text-muted-foreground">
+                    ({filteredEmployees?.length || 0} results)
+                  </span>
+                )}
               </Label>
               <div
-                className={`flex items-center gap-2 ${
+                className={`relative flex items-center gap-2 ${
                   isRTL ? "flex-row-reverse" : ""
                 }`}
               >
-                <Search className="w-4 h-4 md:w-5 md:h-5 text-gray-400 flex-shrink-0" />
+                <Search className="absolute left-3 w-4 h-4 md:w-5 md:h-5 text-gray-400 flex-shrink-0 pointer-events-none" />
                 <Input
-                  placeholder="Search employees..."
+                  placeholder="Search by name, employee #, email, phone, passport, emirates ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 h-11 md:h-10"
+                  className="flex-1 h-11 md:h-10 pl-10 pr-10"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    type="button"
+                  >
+                    <X className="w-4 h-4 text-gray-400" />
+                  </button>
+                )}
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Tip: Search works across all fields - names, documents, contact info
+              </p>
             </div>
 
             {/* Filter Grid - Mobile Responsive */}
