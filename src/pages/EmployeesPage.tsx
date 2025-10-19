@@ -38,6 +38,9 @@ import {
   Square,
   Trash,
   FileSpreadsheet,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
@@ -93,9 +96,35 @@ export function EmployeesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showFilters, setShowFilters] = useState(true);
 
+  // Sort states
+  const [sortColumn, setSortColumn] = useState<string>("employee_no");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
+
+  // Sort handler
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  // Sort icon component
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="w-3 h-3 md:w-4 md:h-4 ml-1 opacity-50" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="w-3 h-3 md:w-4 md:h-4 ml-1 text-blue-600" />
+    ) : (
+      <ArrowDown className="w-3 h-3 md:w-4 md:h-4 ml-1 text-blue-600" />
+    );
+  };
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ["employees"],
@@ -186,7 +215,7 @@ export function EmployeesPage() {
 
   // Comprehensive filtering
   const filteredEmployees = useMemo(() => {
-    return employees?.filter((emp: any) => {
+    const filtered = employees?.filter((emp: any) => {
       // Search filter
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
@@ -249,6 +278,70 @@ export function EmployeesPage() {
         matchesResidence
       );
     });
+
+    // Apply sorting
+    if (!sortColumn || !filtered) return filtered;
+
+    return [...filtered].sort((a: any, b: any) => {
+      let aValue: any;
+      let bValue: any;
+
+      // Get values based on column
+      switch (sortColumn) {
+        case "employee_no":
+          aValue = a.employee_no;
+          bValue = b.employee_no;
+          break;
+        case "name":
+          aValue = i18n.language === "ar" ? a.name_ar : a.name_en;
+          bValue = i18n.language === "ar" ? b.name_ar : b.name_en;
+          break;
+        case "nationality":
+          aValue = a.nationality || "";
+          bValue = b.nationality || "";
+          break;
+        case "company":
+          aValue = i18n.language === "ar" ? a.companies?.name_ar : a.companies?.name_en;
+          bValue = i18n.language === "ar" ? b.companies?.name_ar : b.companies?.name_en;
+          break;
+        case "department":
+          aValue = i18n.language === "ar" ? a.departments?.name_ar : a.departments?.name_en;
+          bValue = i18n.language === "ar" ? b.departments?.name_ar : b.departments?.name_en;
+          break;
+        case "job":
+          aValue = i18n.language === "ar" ? a.jobs?.name_ar : a.jobs?.name_en;
+          bValue = i18n.language === "ar" ? b.jobs?.name_ar : b.jobs?.name_en;
+          break;
+        case "passport":
+          aValue = a.passport_expiry || "";
+          bValue = b.passport_expiry || "";
+          break;
+        case "card_expiry":
+          aValue = a.card_expiry || "";
+          bValue = b.card_expiry || "";
+          break;
+        case "emirates_id":
+          aValue = a.emirates_id_expiry || "";
+          bValue = b.emirates_id_expiry || "";
+          break;
+        case "residence":
+          aValue = a.residence_expiry || "";
+          bValue = b.residence_expiry || "";
+          break;
+        default:
+          return 0;
+      }
+
+      // Handle null/undefined values
+      if (!aValue && !bValue) return 0;
+      if (!aValue) return 1;
+      if (!bValue) return -1;
+
+      // Compare values
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
   }, [
     employees,
     searchTerm,
@@ -260,6 +353,9 @@ export function EmployeesPage() {
     cardStatusFilter,
     emiratesIdStatusFilter,
     residenceStatusFilter,
+    sortColumn,
+    sortDirection,
+    i18n.language,
   ]);
 
   const handleEdit = (employee: any) => {
@@ -1014,16 +1110,96 @@ export function EmployeesPage() {
                       )}
                     </button>
                   </th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Employee No</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Name</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Nationality</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Company</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Department</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Job</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Passport</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Card Expiry</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Emirates ID</th>
-                  <th className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm">Residence</th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("employee_no")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Employee No
+                      <SortIcon column="employee_no" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("name")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Name
+                      <SortIcon column="name" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("nationality")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Nationality
+                      <SortIcon column="nationality" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("company")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Company
+                      <SortIcon column="company" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("department")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Department
+                      <SortIcon column="department" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("job")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Job
+                      <SortIcon column="job" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("passport")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Passport
+                      <SortIcon column="passport" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("card_expiry")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Card Expiry
+                      <SortIcon column="card_expiry" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("emirates_id")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Emirates ID
+                      <SortIcon column="emirates_id" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    onClick={() => handleSort("residence")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Residence
+                      <SortIcon column="residence" />
+                    </div>
+                  </th>
                   <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm">Actions</th>
                 </tr>
               </thead>
