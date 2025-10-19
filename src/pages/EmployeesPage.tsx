@@ -1302,11 +1302,14 @@ export function EmployeesPage() {
                     </div>
                   </td>
                   <td className="p-2 md:p-3">
-                    <span className={`${getExpiryStatus(employee.card_expiry)} text-[10px] md:text-xs`}>
-                      {employee.card_expiry
-                        ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
-                        : "N/A"}
-                    </span>
+                    <div className="text-[10px] md:text-xs">
+                      <div>{employee.card_no || "N/A"}</div>
+                      <div className={getExpiryStatus(employee.card_expiry)}>
+                        {employee.card_expiry
+                          ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
+                          : "N/A"}
+                      </div>
+                    </div>
                   </td>
                   <td className="p-2 md:p-3">
                     <div className="text-[10px] md:text-xs">
