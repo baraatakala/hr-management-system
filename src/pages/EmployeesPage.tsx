@@ -1010,11 +1010,12 @@ export function EmployeesPage() {
         )}
       </Card>
 
-      {/* Employee Cards/Table - Mobile Optimized */}
+      {/* Employee Cards/Table - Mobile Optimized with Fixed Height */}
       {viewMode === "grid" ? (
         <>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          {paginatedEmployees?.map((employee: any) => (
+        {paginatedEmployees && paginatedEmployees.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 min-h-[500px]">
+          {paginatedEmployees.map((employee: any) => (
             <Card
               key={employee.id}
               className={`p-4 md:p-5 space-y-3 transition-all duration-200 hover:shadow-lg ${
@@ -1174,9 +1175,17 @@ export function EmployeesPage() {
             </Card>
           ))}
         </div>
+        ) : (
+        <div className="flex items-center justify-center min-h-[500px]">
+          <div className="text-center text-muted-foreground">
+            <p className="text-lg font-medium">No employees found</p>
+            <p className="text-sm mt-2">Try adjusting your filters or search terms</p>
+          </div>
+        </div>
+        )}
 
         {/* Pagination for Grid View */}
-        {totalPages > 1 && (
+        {paginatedEmployees && paginatedEmployees.length > 0 && totalPages > 1 && (
           <Card className="p-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -1249,8 +1258,8 @@ export function EmployeesPage() {
       ) : (
         <>
         {/* Table View - Sticky Header with Smooth Scrolling */}
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto">
+        <Card className="overflow-hidden min-h-[500px]">
+          <div className="overflow-x-auto max-h-[calc(100vh-300px)] min-h-[500px] overflow-y-auto">
             <table className="w-full min-w-[1000px]">
               <thead className="sticky top-0 z-10">
                 <tr className="border-b bg-muted dark:bg-gray-800 shadow-md">
@@ -1473,12 +1482,15 @@ export function EmployeesPage() {
               ))}
             </tbody>
           </table>
-          </div>
           {(!filteredEmployees || filteredEmployees.length === 0) && (
-            <div className="text-center py-12 text-muted-foreground">
-              No employees found
+            <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
+              <div className="text-center">
+                <p className="text-lg font-medium">No employees found</p>
+                <p className="text-sm mt-2">Try adjusting your filters or search terms</p>
+              </div>
             </div>
           )}
+          </div>
           {/* Table info footer */}
           {filteredEmployees && filteredEmployees.length > 0 && (
             <div className="border-t p-3 bg-muted/20 text-center text-sm text-muted-foreground">
