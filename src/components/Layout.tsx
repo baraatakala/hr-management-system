@@ -128,20 +128,24 @@ export function Layout() {
             >
               <X className="w-5 h-5" />
             </button>
-            {/* Desktop collapse button */}
+          </div>
+
+          {/* Desktop collapse button - Prominent position below header */}
+          <div className="hidden lg:block p-2 border-b border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className={`hidden lg:flex absolute ${
-                isRTL ? "left-4" : "right-4"
-              } p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors items-center justify-center`}
+              className={`w-full flex items-center ${
+                sidebarCollapsed ? "justify-center" : "justify-between"
+              } px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 transition-colors border border-blue-200 dark:border-blue-800`}
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
+              {!sidebarCollapsed && <span className="text-xs font-semibold">Collapse</span>}
               {sidebarCollapsed ? (
-                isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+                isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />
               ) : (
-                isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />
+                isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />
               )}
             </button>
           </div>
