@@ -878,7 +878,7 @@ export function EmployeesPage() {
               {/* Passport Status Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
-                  Passport Status
+                  {t("filters.passportStatus")}
                 </Label>
                 <Select
                   value={passportStatusFilter}
@@ -887,17 +887,17 @@ export function EmployeesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
-                      Expiring Soon (≤30 days)
+                      {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
-                    <SelectItem value="missing_number">Missing Passport No</SelectItem>
+                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
+                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
+                    <SelectItem value="missing_number">{t("filters.missingPassportNo")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -905,7 +905,7 @@ export function EmployeesPage() {
               {/* Card Status Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
-                  Card Status
+                  {t("filters.cardStatus")}
                 </Label>
                 <Select
                   value={cardStatusFilter}
@@ -914,17 +914,17 @@ export function EmployeesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
-                      Expiring Soon (≤30 days)
+                      {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
-                    <SelectItem value="missing_number">Missing Card No</SelectItem>
+                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
+                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
+                    <SelectItem value="missing_number">{t("filters.missingCardNo")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -932,7 +932,7 @@ export function EmployeesPage() {
               {/* Emirates ID Status Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
-                  Emirates ID Status
+                  {t("filters.emiratesIdStatus")}
                 </Label>
                 <Select
                   value={emiratesIdStatusFilter}
@@ -941,17 +941,17 @@ export function EmployeesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
-                      Expiring Soon (≤30 days)
+                      {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
-                    <SelectItem value="missing_number">Missing Emirates ID</SelectItem>
+                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
+                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
+                    <SelectItem value="missing_number">{t("filters.missingEmiratesId")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -959,7 +959,7 @@ export function EmployeesPage() {
               {/* Residence Status Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
-                  Residence Status
+                  {t("filters.residenceStatus")}
                 </Label>
                 <Select
                   value={residenceStatusFilter}
@@ -968,17 +968,17 @@ export function EmployeesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="valid">Valid (30+ days)</SelectItem>
+                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
-                      Expiring Soon (≤30 days)
+                      {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
-                    <SelectItem value="missing_number">Missing Residence No</SelectItem>
+                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
+                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
+                    <SelectItem value="missing_number">{t("filters.missingResidenceNo")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

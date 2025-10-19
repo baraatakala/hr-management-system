@@ -71,6 +71,21 @@ const resources = {
       "employees.deleteConfirm":
         "Are you sure you want to delete this employee?",
 
+      // Document Status Filters
+      "filters.passportStatus": "Passport Status",
+      "filters.cardStatus": "Card Status",
+      "filters.emiratesIdStatus": "Emirates ID Status",
+      "filters.residenceStatus": "Residence Status",
+      "filters.allStatus": "All Status",
+      "filters.valid": "Valid (30+ days)",
+      "filters.expiring": "Expiring Soon (≤30 days)",
+      "filters.expired": "Expired",
+      "filters.missingExpiry": "Missing Expiry Date",
+      "filters.missingPassportNo": "Missing Passport No",
+      "filters.missingCardNo": "Missing Card No",
+      "filters.missingEmiratesId": "Missing Emirates ID",
+      "filters.missingResidenceNo": "Missing Residence No",
+
       // Companies
       "companies.title": "Companies",
       "companies.addCompany": "Add Company",
@@ -172,6 +187,21 @@ const resources = {
       "employees.email": "البريد الإلكتروني",
       "employees.phone": "الهاتف",
       "employees.deleteConfirm": "هل أنت متأكد من حذف هذا الموظف؟",
+
+      // Document Status Filters
+      "filters.passportStatus": "حالة جواز السفر",
+      "filters.cardStatus": "حالة البطاقة",
+      "filters.emiratesIdStatus": "حالة الهوية الإماراتية",
+      "filters.residenceStatus": "حالة الإقامة",
+      "filters.allStatus": "جميع الحالات",
+      "filters.valid": "صالح (30+ يوم)",
+      "filters.expiring": "ينتهي قريباً (≤30 يوم)",
+      "filters.expired": "منتهي",
+      "filters.missingExpiry": "تاريخ الانتهاء مفقود",
+      "filters.missingPassportNo": "رقم جواز السفر مفقود",
+      "filters.missingCardNo": "رقم البطاقة مفقود",
+      "filters.missingEmiratesId": "الهوية الإماراتية مفقودة",
+      "filters.missingResidenceNo": "رقم الإقامة مفقود",
 
       // Companies
       "companies.title": "الشركات",
