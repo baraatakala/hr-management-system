@@ -71,7 +71,7 @@ interface Employee {
 }
 
 type ViewMode = "grid" | "table";
-type StatusFilter = "all" | "valid" | "expiring" | "expired" | "missing";
+type StatusFilter = "all" | "valid" | "expiring" | "expired" | "missing" | "missing_number";
 
 export function EmployeesPage() {
   const { t, i18n } = useTranslation();
@@ -270,6 +270,7 @@ export function EmployeesPage() {
       const matchesPassport =
         passportStatusFilter === "all" ||
         (passportStatusFilter === "missing" && passportStatus === null) ||
+        (passportStatusFilter === "missing_number" && !emp.passport_no) ||
         (passportStatus !== null && passportStatus === passportStatusFilter);
 
       // Card status filter
@@ -277,6 +278,7 @@ export function EmployeesPage() {
       const matchesCard =
         cardStatusFilter === "all" || 
         (cardStatusFilter === "missing" && cardStatus === null) ||
+        (cardStatusFilter === "missing_number" && !emp.card_no) ||
         (cardStatus !== null && cardStatus === cardStatusFilter);
 
       // Emirates ID status filter
@@ -284,6 +286,7 @@ export function EmployeesPage() {
       const matchesEmiratesId =
         emiratesIdStatusFilter === "all" ||
         (emiratesIdStatusFilter === "missing" && emiratesIdStatus === null) ||
+        (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
         (emiratesIdStatus !== null && emiratesIdStatus === emiratesIdStatusFilter);
 
       // Residence status filter
@@ -291,6 +294,7 @@ export function EmployeesPage() {
       const matchesResidence =
         residenceStatusFilter === "all" ||
         (residenceStatusFilter === "missing" && residenceStatus === null) ||
+        (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
         (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
       return (
@@ -892,7 +896,8 @@ export function EmployeesPage() {
                       Expiring Soon (≤30 days)
                     </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing</SelectItem>
+                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
+                    <SelectItem value="missing_number">Missing Passport No</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -918,7 +923,8 @@ export function EmployeesPage() {
                       Expiring Soon (≤30 days)
                     </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing</SelectItem>
+                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
+                    <SelectItem value="missing_number">Missing Card No</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -944,7 +950,8 @@ export function EmployeesPage() {
                       Expiring Soon (≤30 days)
                     </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing</SelectItem>
+                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
+                    <SelectItem value="missing_number">Missing Emirates ID</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -970,7 +977,8 @@ export function EmployeesPage() {
                       Expiring Soon (≤30 days)
                     </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="missing">Missing</SelectItem>
+                    <SelectItem value="missing">Missing Expiry Date</SelectItem>
+                    <SelectItem value="missing_number">Missing Residence No</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
