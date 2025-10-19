@@ -598,8 +598,8 @@ export function EmployeesPage() {
           </Button>
           <Button onClick={exportToExcel} variant="outline" className="gap-2 flex-1 md:flex-initial h-9">
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export Excel</span>
-            <span className="sm:hidden">Export</span>
+            <span className="hidden sm:inline">{t("filters.exportExcel")}</span>
+            <span className="sm:hidden">{t("common.export")}</span>
           </Button>
         </div>
       </div>
@@ -672,7 +672,7 @@ export function EmployeesPage() {
             }`}
           >
             <Filter className="w-4 h-4 text-primary flex-shrink-0" />
-            <h2 className="text-sm md:text-base font-semibold">Filters & Control</h2>
+            <h2 className="text-sm md:text-base font-semibold">{t("filters.filtersControl")}</h2>
             {(nationalityFilter !== "all" || companyFilter !== "all" || jobFilter !== "all" || departmentFilter !== "all" || searchTerm) && (
               <Badge variant="secondary" className="text-xs">
                 {[
@@ -692,7 +692,7 @@ export function EmployeesPage() {
               size="sm"
               className="h-8 text-xs px-2 md:px-3 flex-1 sm:flex-initial"
             >
-              <span className="hidden sm:inline">{showFilters ? "Hide" : "Show"}</span>
+              <span className="hidden sm:inline">{showFilters ? t("common.hide") : t("common.show")}</span>
               <Filter className="w-4 h-4 sm:hidden" />
             </Button>
             <Button
@@ -702,8 +702,8 @@ export function EmployeesPage() {
               className="gap-1 h-8 text-xs px-2 md:px-3 flex-1 sm:flex-initial"
             >
               <X className="w-3 h-3" />
-              <span className="hidden md:inline">Clear All</span>
-              <span className="md:hidden">Clear</span>
+              <span className="hidden md:inline">{t("filters.clearAll")}</span>
+              <span className="md:hidden">{t("filters.clearAll")}</span>
             </Button>
             {/* View Mode Toggle - Works on All Screen Sizes */}
             <div className="flex gap-0.5 border rounded-md">
@@ -796,19 +796,19 @@ export function EmployeesPage() {
               {/* Nationality Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
-                  Nationality
+                  {t("employees.nationality")}
                 </Label>
                 <SearchableSelect
                   value={nationalityFilter}
                   onValueChange={setNationalityFilter}
                   options={[
-                    { value: "all", label: "All Nationalities" },
+                    { value: "all", label: t("filters.allNationalities") },
                     ...nationalities.map((nat: any) => ({
                       value: nat.name_en,
                       label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
                     })),
                   ]}
-                  placeholder="All Nationalities"
+                  placeholder={t("filters.allNationalities")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                   emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
                 />
@@ -817,19 +817,19 @@ export function EmployeesPage() {
               {/* Company Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
-                  Company
+                  {t("employees.company")}
                 </Label>
                 <SearchableSelect
                   value={companyFilter}
                   onValueChange={setCompanyFilter}
                   options={[
-                    { value: "all", label: i18n.language === "ar" ? "جميع الشركات" : "All Companies" },
+                    { value: "all", label: t("filters.allCompanies") },
                     ...companies.map((company) => ({
                       value: company.id,
                       label: i18n.language === "ar" ? company.name_ar : company.name_en,
                     })),
                   ]}
-                  placeholder={i18n.language === "ar" ? "جميع الشركات" : "All Companies"}
+                  placeholder={t("filters.allCompanies")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                   emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
                 />
@@ -837,18 +837,18 @@ export function EmployeesPage() {
 
               {/* Job Filter */}
               <div>
-                <Label className="text-xs font-medium mb-1 block">Job</Label>
+                <Label className="text-xs font-medium mb-1 block">{t("employees.job")}</Label>
                 <SearchableSelect
                   value={jobFilter}
                   onValueChange={setJobFilter}
                   options={[
-                    { value: "all", label: i18n.language === "ar" ? "جميع الوظائف" : "All Jobs" },
+                    { value: "all", label: t("filters.allJobs") },
                     ...jobs.map((job) => ({
                       value: job.id,
                       label: i18n.language === "ar" ? job.name_ar : job.name_en,
                     })),
                   ]}
-                  placeholder={i18n.language === "ar" ? "جميع الوظائف" : "All Jobs"}
+                  placeholder={t("filters.allJobs")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                   emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
                 />
@@ -857,19 +857,19 @@ export function EmployeesPage() {
               {/* Department Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
-                  Department
+                  {t("employees.department")}
                 </Label>
                 <SearchableSelect
                   value={departmentFilter}
                   onValueChange={setDepartmentFilter}
                   options={[
-                    { value: "all", label: i18n.language === "ar" ? "جميع الأقسام" : "All Departments" },
+                    { value: "all", label: t("filters.allDepartments") },
                     ...departments.map((dept) => ({
                       value: dept.id,
                       label: i18n.language === "ar" ? dept.name_ar : dept.name_en,
                     })),
                   ]}
-                  placeholder={i18n.language === "ar" ? "جميع الأقسام" : "All Departments"}
+                  placeholder={t("filters.allDepartments")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                   emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
                 />
@@ -989,7 +989,7 @@ export function EmployeesPage() {
             <div>
               <Label className="text-xs font-medium mb-1 flex items-center gap-2">
                 <Search className="w-4 h-4" />
-                Quick Search
+                {t("filters.quickSearch")}
                 {searchTerm && (
                   <span className="text-xs text-muted-foreground">
                     ({filteredEmployees?.length || 0} results)

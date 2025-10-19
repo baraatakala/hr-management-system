@@ -20,6 +20,8 @@ const resources = {
       "common.confirm": "Confirm",
       "common.yes": "Yes",
       "common.no": "No",
+      "common.hide": "Hide",
+      "common.show": "Show",
 
       // Auth
       "auth.login": "Login",
@@ -85,6 +87,14 @@ const resources = {
       "filters.missingCardNo": "Missing Card No",
       "filters.missingEmiratesId": "Missing Emirates ID",
       "filters.missingResidenceNo": "Missing Residence No",
+      "filters.filtersControl": "Filters & Control",
+      "filters.clearAll": "Clear All",
+      "filters.quickSearch": "Quick Search",
+      "filters.exportExcel": "Export Excel",
+      "filters.allNationalities": "All Nationalities",
+      "filters.allCompanies": "All Companies",
+      "filters.allJobs": "All Jobs",
+      "filters.allDepartments": "All Departments",
 
       // Companies
       "companies.title": "Companies",
@@ -138,6 +148,8 @@ const resources = {
       "common.confirm": "تأكيد",
       "common.yes": "نعم",
       "common.no": "لا",
+      "common.hide": "إخفاء",
+      "common.show": "إظهار",
 
       // Auth
       "auth.login": "تسجيل الدخول",
@@ -202,6 +214,14 @@ const resources = {
       "filters.missingCardNo": "رقم البطاقة مفقود",
       "filters.missingEmiratesId": "الهوية الإماراتية مفقودة",
       "filters.missingResidenceNo": "رقم الإقامة مفقود",
+      "filters.filtersControl": "الفلاتر والتحكم",
+      "filters.clearAll": "مسح الكل",
+      "filters.quickSearch": "بحث سريع",
+      "filters.exportExcel": "تصدير إكسل",
+      "filters.allNationalities": "جميع الجنسيات",
+      "filters.allCompanies": "جميع الشركات",
+      "filters.allJobs": "جميع الوظائف",
+      "filters.allDepartments": "جميع الأقسام",
 
       // Companies
       "companies.title": "الشركات",
