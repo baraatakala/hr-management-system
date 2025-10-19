@@ -17,6 +17,8 @@ import {
   Languages,
   Menu,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 export function Layout() {
@@ -25,6 +27,7 @@ export function Layout() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   // Set initial direction and lang on mount and whenever language changes
   React.useEffect(() => {
@@ -94,7 +97,9 @@ export function Layout() {
       <div
         className={`fixed inset-y-0 ${
           isRTL ? "right-0 border-l" : "left-0 border-r"
-        } z-50 w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
+        } z-50 ${
+          sidebarCollapsed ? "w-16" : "w-64"
+        } bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform transition-all duration-300 ease-in-out ${
           mobileMenuOpen
             ? "translate-x-0"
             : isRTL
@@ -105,9 +110,14 @@ export function Layout() {
       >
         <div className="flex flex-col h-full" style={{ pointerEvents: 'auto' }}>
           <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 relative">
-            <h1 className="text-xl font-bold text-primary hidden lg:block">
+            <h1 className={`text-xl font-bold text-primary ${sidebarCollapsed ? "hidden" : "hidden lg:block"}`}>
               {t("app.title")}
             </h1>
+            {sidebarCollapsed && (
+              <h1 className="text-xl font-bold text-primary hidden lg:block">
+                HR
+              </h1>
+            )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
@@ -117,6 +127,22 @@ export function Layout() {
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
+            </button>
+            {/* Desktop collapse button */}
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className={`hidden lg:flex absolute ${
+                isRTL ? "left-4" : "right-4"
+              } p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors items-center justify-center`}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? (
+                isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+              ) : (
+                isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />
+              )}
             </button>
           </div>
 
@@ -129,47 +155,59 @@ export function Layout() {
                   key={item.href}
                   to={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                  className={`flex items-center ${
+                    sidebarCollapsed ? "justify-center px-2" : "px-4"
+                  } py-3 text-sm font-medium rounded-lg transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
+                  title={sidebarCollapsed ? item.name : undefined}
                 >
-                  <Icon className={`w-5 h-5 ${isRTL ? "ml-3" : "mr-3"}`} />
-                  {item.name}
+                  <Icon className={`w-5 h-5 ${sidebarCollapsed ? "" : isRTL ? "ml-3" : "mr-3"}`} />
+                  {!sidebarCollapsed && item.name}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className={`p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800`}>
             <button
               onClick={toggleTheme}
-              className="w-full flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11"
+              className={`w-full flex items-center ${
+                sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
+              } py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11`}
               type="button"
+              title={sidebarCollapsed ? (theme === "light" ? t("settings.dark") : t("settings.light")) : undefined}
             >
               {theme === "light" ? (
-                <Moon className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                <Moon className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
               ) : (
-                <Sun className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                <Sun className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
               )}
-              {theme === "light" ? t("settings.dark") : t("settings.light")}
+              {!sidebarCollapsed && (theme === "light" ? t("settings.dark") : t("settings.light"))}
             </button>
             <button
               onClick={toggleLanguage}
-              className="w-full flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11"
+              className={`w-full flex items-center ${
+                sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
+              } py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11`}
               type="button"
+              title={sidebarCollapsed ? (i18n.language === "en" ? "العربية" : "English") : undefined}
             >
-              <Languages className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {i18n.language === "en" ? "العربية" : "English"}
+              <Languages className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
+              {!sidebarCollapsed && (i18n.language === "en" ? "العربية" : "English")}
             </button>
             <button
               onClick={() => signOut()}
-              className="w-full flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11"
+              className={`w-full flex items-center ${
+                sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
+              } py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11`}
               type="button"
+              title={sidebarCollapsed ? t("auth.logout") : undefined}
             >
-              <LogOut className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {t("auth.logout")}
+              <LogOut className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
+              {!sidebarCollapsed && t("auth.logout")}
             </button>
           </div>
         </div>
@@ -178,8 +216,10 @@ export function Layout() {
       {/* Main content - Responsive padding */}
       <div
         className={`${
-          isRTL ? "lg:pr-64" : "lg:pl-64"
-        } pt-16 lg:pt-0 min-h-screen`}
+          isRTL 
+            ? (sidebarCollapsed ? "lg:pr-16" : "lg:pr-64")
+            : (sidebarCollapsed ? "lg:pl-16" : "lg:pl-64")
+        } pt-16 lg:pt-0 min-h-screen transition-all duration-300 ease-in-out`}
       >
         <main className="p-4 sm:p-6 lg:p-8 w-full">
           <Outlet />
