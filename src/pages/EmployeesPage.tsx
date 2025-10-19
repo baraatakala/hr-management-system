@@ -41,6 +41,10 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
@@ -99,6 +103,10 @@ export function EmployeesPage() {
   // Sort states
   const [sortColumn, setSortColumn] = useState<string>("employee_no");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -357,6 +365,19 @@ export function EmployeesPage() {
     sortDirection,
     i18n.language,
   ]);
+
+  // Pagination logic
+  const totalPages = Math.ceil((filteredEmployees?.length || 0) / itemsPerPage);
+  const paginatedEmployees = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredEmployees?.slice(startIndex, endIndex);
+  }, [filteredEmployees, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, nationalityFilter, companyFilter, departmentFilter, jobFilter, passportStatusFilter, cardStatusFilter, emiratesIdStatusFilter, residenceStatusFilter]);
 
   const handleEdit = (employee: any) => {
     setEditingEmployee(employee);
@@ -976,8 +997,9 @@ export function EmployeesPage() {
 
       {/* Employee Cards/Table - Mobile Optimized */}
       {viewMode === "grid" ? (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          {filteredEmployees?.map((employee: any) => (
+          {paginatedEmployees?.map((employee: any) => (
             <Card
               key={employee.id}
               className={`p-4 md:p-5 space-y-3 transition-all duration-200 hover:shadow-lg ${
@@ -1137,8 +1159,81 @@ export function EmployeesPage() {
             </Card>
           ))}
         </div>
+
+        {/* Pagination for Grid View */}
+        {totalPages > 1 && (
+          <Card className="p-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees?.length || 0)} of {filteredEmployees?.length || 0} employees
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-medium px-2">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px] h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 / page</SelectItem>
+                    <SelectItem value="20">20 / page</SelectItem>
+                    <SelectItem value="50">50 / page</SelectItem>
+                    <SelectItem value="100">100 / page</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+        )}
+        </>
       ) : (
-        /* Table View - Mobile Responsive with Horizontal Scroll */
+        <>
+        {/* Table View - Mobile Responsive with Horizontal Scroll */}
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px]">
@@ -1252,7 +1347,7 @@ export function EmployeesPage() {
                 </tr>
               </thead>
               <tbody>
-              {filteredEmployees?.map((employee: any) => (
+              {paginatedEmployees?.map((employee: any) => (
                 <tr key={employee.id} className="border-b hover:bg-muted/30 transition-colors">
                   <td className="p-2 md:p-3">
                     <button
@@ -1364,12 +1459,84 @@ export function EmployeesPage() {
             </tbody>
           </table>
           </div>
-          {(!filteredEmployees || filteredEmployees.length === 0) && (
+          {(!paginatedEmployees || paginatedEmployees.length === 0) && (
             <div className="text-center py-12 text-muted-foreground">
               No employees found
             </div>
           )}
         </Card>
+
+        {/* Pagination for Table View */}
+        {totalPages > 1 && (
+          <Card className="p-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees?.length || 0)} of {filteredEmployees?.length || 0} employees
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-medium px-2">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="h-9 w-9 p-0"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px] h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 / page</SelectItem>
+                    <SelectItem value="20">20 / page</SelectItem>
+                    <SelectItem value="50">50 / page</SelectItem>
+                    <SelectItem value="100">100 / page</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+        )}
+        </>
       )}
 
       {/* Employee Dialog */}
