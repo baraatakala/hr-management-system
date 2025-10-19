@@ -1544,20 +1544,15 @@ function EmployeeDialog({
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Validate required fields
-      if (!data.company_id || !data.department_id || !data.job_id) {
-        throw new Error("Company, Department, and Job are required fields");
-      }
-
       // Clean data: remove nested objects and keep only valid columns
       const cleanData = {
         employee_no: data.employee_no,
         name_en: data.name_en,
         name_ar: data.name_ar,
         nationality: data.nationality,
-        company_id: data.company_id,
-        department_id: data.department_id,
-        job_id: data.job_id,
+        company_id: data.company_id || null,
+        department_id: data.department_id || null,
+        job_id: data.job_id || null,
         passport_no: data.passport_no || null,
         passport_expiry: data.passport_expiry || null,
         card_no: data.card_no || null,
@@ -1702,7 +1697,7 @@ function EmployeeDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-2">
                 <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.company")} <span className="text-red-500">*</span>
+                  {t("employees.company")}
                 </Label>
                 <SearchableSelect
                   value={formData.company_id || ""}
@@ -1731,8 +1726,7 @@ function EmployeeDialog({
               </div>
               <div className="space-y-2">
                 <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.department")}{" "}
-                  <span className="text-red-500">*</span>
+                  {t("employees.department")}
                 </Label>
                 <SearchableSelect
                   value={formData.department_id || ""}
@@ -1761,7 +1755,7 @@ function EmployeeDialog({
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.job")} <span className="text-red-500">*</span>
+                  {t("employees.job")}
                 </Label>
                 <SearchableSelect
                   value={formData.job_id || ""}
