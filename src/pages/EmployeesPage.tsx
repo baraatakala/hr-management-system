@@ -93,7 +93,7 @@ export function EmployeesPage() {
     useState<StatusFilter>("all");
 
   // View mode
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [showFilters, setShowFilters] = useState(true);
 
   // Sort states
