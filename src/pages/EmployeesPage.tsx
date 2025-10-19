@@ -231,6 +231,8 @@ export function EmployeesPage() {
         emp.name_en.toLowerCase().includes(searchLower) ||
         emp.name_ar.includes(searchTerm) ||
         emp.employee_no.toLowerCase().includes(searchLower) ||
+        emp.email?.toLowerCase().includes(searchLower) ||
+        emp.phone?.toLowerCase().includes(searchLower) ||
         emp.passport_no?.toLowerCase().includes(searchLower) ||
         emp.emirates_id?.toLowerCase().includes(searchLower) ||
         emp.residence_no?.toLowerCase().includes(searchLower);
@@ -636,10 +638,10 @@ export function EmployeesPage() {
         </Card>
       )}
 
-      {/* Filters & Controls - Mobile Optimized */}
-      <Card className="p-3 md:p-4 space-y-3 md:space-y-4">
+      {/* Filters & Controls - Compact Design */}
+      <Card className="p-2 md:p-3">
         <div
-          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 ${
             isRTL ? "sm:flex-row-reverse" : ""
           }`}
         >
@@ -648,8 +650,8 @@ export function EmployeesPage() {
               isRTL ? "flex-row-reverse" : ""
             }`}
           >
-            <Filter className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
-            <h2 className="text-base md:text-lg font-semibold">Filters & Control</h2>
+            <Filter className="w-4 h-4 text-primary flex-shrink-0" />
+            <h2 className="text-sm md:text-base font-semibold">Filters & Control</h2>
             {(nationalityFilter !== "all" || companyFilter !== "all" || jobFilter !== "all" || departmentFilter !== "all" || searchTerm) && (
               <Badge variant="secondary" className="text-xs">
                 {[
@@ -667,7 +669,7 @@ export function EmployeesPage() {
               onClick={() => setShowFilters(!showFilters)}
               variant="ghost"
               size="sm"
-              className="h-9 text-xs md:text-sm px-2 md:px-3 flex-1 sm:flex-initial"
+              className="h-8 text-xs px-2 md:px-3 flex-1 sm:flex-initial"
             >
               <span className="hidden sm:inline">{showFilters ? "Hide" : "Show"}</span>
               <Filter className="w-4 h-4 sm:hidden" />
@@ -676,9 +678,9 @@ export function EmployeesPage() {
               onClick={clearAllFilters}
               variant="ghost"
               size="sm"
-              className="gap-1 md:gap-2 h-9 text-xs md:text-sm px-2 md:px-3 flex-1 sm:flex-initial"
+              className="gap-1 h-8 text-xs px-2 md:px-3 flex-1 sm:flex-initial"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3" />
               <span className="hidden md:inline">Clear All</span>
               <span className="md:hidden">Clear</span>
             </Button>
@@ -688,7 +690,7 @@ export function EmployeesPage() {
                 onClick={() => setViewMode("grid")}
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-r-none h-9 px-2 md:px-3"
+                className="rounded-r-none h-8 px-2"
               >
                 <Grid3x3 className="w-4 h-4" />
               </Button>
@@ -696,7 +698,7 @@ export function EmployeesPage() {
                 onClick={() => setViewMode("table")}
                 variant={viewMode === "table" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-l-none h-9 px-2 md:px-3"
+                className="rounded-l-none h-8 px-2"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -705,11 +707,11 @@ export function EmployeesPage() {
         </div>
 
         {showFilters && (
-          <div className="space-y-3 md:space-y-4">
+          <div className="space-y-2 mt-2">
             {/* Active Filters Display */}
             {(nationalityFilter !== "all" || companyFilter !== "all" || jobFilter !== "all" || departmentFilter !== "all" || searchTerm) && (
-              <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                <span className="text-xs font-medium text-blue-900 dark:text-blue-100">Active Filters:</span>
+              <div className="flex flex-wrap items-center gap-1.5 p-2 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+                <span className="text-xs font-medium text-blue-900 dark:text-blue-100">Active:</span>
                 {searchTerm && (
                   <Badge variant="secondary" className="gap-1 pr-1">
                     Search: "{searchTerm.slice(0, 20)}{searchTerm.length > 20 ? '...' : ''}"
@@ -768,50 +770,11 @@ export function EmployeesPage() {
               </div>
             )}
 
-            {/* Quick Search - Mobile Optimized */}
-            {/* Enhanced Quick Search with Clear Button */}
-            <div>
-              <Label className="text-xs md:text-sm font-medium mb-2 flex items-center gap-2">
-                <Search className="w-4 h-4" />
-                Quick Search
-                {searchTerm && (
-                  <span className="text-xs text-muted-foreground">
-                    ({filteredEmployees?.length || 0} results)
-                  </span>
-                )}
-              </Label>
-              <div
-                className={`relative flex items-center gap-2 ${
-                  isRTL ? "flex-row-reverse" : ""
-                }`}
-              >
-                <Search className="absolute left-3 w-4 h-4 md:w-5 md:h-5 text-gray-400 flex-shrink-0 pointer-events-none" />
-                <Input
-                  placeholder="Search by name, employee #, email, phone, passport, emirates ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 h-11 md:h-10 pl-10 pr-10"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-3 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                    type="button"
-                  >
-                    <X className="w-4 h-4 text-gray-400" />
-                  </button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                💡 Tip: Search works across all fields - names, documents, contact info
-              </p>
-            </div>
-
-            {/* Filter Grid - Mobile Responsive */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            {/* Filter Grid - Compact Layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               {/* Nationality Filter */}
               <div>
-                <Label className="text-xs md:text-sm font-medium mb-2 block">
+                <Label className="text-xs font-medium mb-1 block">
                   Nationality
                 </Label>
                 <SearchableSelect
@@ -832,7 +795,7 @@ export function EmployeesPage() {
 
               {/* Company Filter */}
               <div>
-                <Label className="text-xs md:text-sm font-medium mb-2 block">
+                <Label className="text-xs font-medium mb-1 block">
                   Company
                 </Label>
                 <SearchableSelect
@@ -853,7 +816,7 @@ export function EmployeesPage() {
 
               {/* Job Filter */}
               <div>
-                <Label className="text-xs md:text-sm font-medium mb-2 block">Job</Label>
+                <Label className="text-xs font-medium mb-1 block">Job</Label>
                 <SearchableSelect
                   value={jobFilter}
                   onValueChange={setJobFilter}
@@ -872,7 +835,7 @@ export function EmployeesPage() {
 
               {/* Department Filter */}
               <div>
-                <Label className="text-xs md:text-sm font-medium mb-2 block">
+                <Label className="text-xs font-medium mb-1 block">
                   Department
                 </Label>
                 <SearchableSelect
@@ -893,7 +856,7 @@ export function EmployeesPage() {
 
               {/* Passport Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">
+                <Label className="text-xs font-medium mb-1 block">
                   Passport Status
                 </Label>
                 <Select
@@ -918,7 +881,7 @@ export function EmployeesPage() {
 
               {/* Card Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">
+                <Label className="text-xs font-medium mb-1 block">
                   Card Status
                 </Label>
                 <Select
@@ -943,7 +906,7 @@ export function EmployeesPage() {
 
               {/* Emirates ID Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">
+                <Label className="text-xs font-medium mb-1 block">
                   Emirates ID Status
                 </Label>
                 <Select
@@ -968,7 +931,7 @@ export function EmployeesPage() {
 
               {/* Residence Status Filter */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">
+                <Label className="text-xs font-medium mb-1 block">
                   Residence Status
                 </Label>
                 <Select
@@ -990,6 +953,45 @@ export function EmployeesPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Quick Search - Mobile Optimized */}
+            {/* Enhanced Quick Search with Clear Button */}
+            <div>
+              <Label className="text-xs font-medium mb-1 flex items-center gap-2">
+                <Search className="w-4 h-4" />
+                Quick Search
+                {searchTerm && (
+                  <span className="text-xs text-muted-foreground">
+                    ({filteredEmployees?.length || 0} results)
+                  </span>
+                )}
+              </Label>
+              <div
+                className={`relative flex items-center gap-2 ${
+                  isRTL ? "flex-row-reverse" : ""
+                }`}
+              >
+                <Search className="absolute left-3 w-4 h-4 text-gray-400 flex-shrink-0 pointer-events-none" />
+                <Input
+                  placeholder="Search by name, employee #, email, phone, passport, emirates ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1 h-9 pl-10 pr-10"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    type="button"
+                  >
+                    <X className="w-4 h-4 text-gray-400" />
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Tip: Search works across all fields - names, documents, contact info
+              </p>
             </div>
           </div>
         )}
