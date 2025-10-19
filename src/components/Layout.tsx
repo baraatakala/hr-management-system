@@ -27,7 +27,7 @@ export function Layout() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
 
   // Set initial direction and lang on mount and whenever language changes
   React.useEffect(() => {
