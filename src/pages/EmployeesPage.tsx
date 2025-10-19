@@ -1032,6 +1032,10 @@ export function EmployeesPage() {
 
               <div className="space-y-2 text-sm md:text-base">
                 <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">Nationality:</span>{" "}
+                  <span className="text-muted-foreground">{employee.nationality || "N/A"}</span>
+                </p>
+                <p className="truncate">
                   <span className="font-medium text-xs md:text-sm">{t("employees.company")}:</span>{" "}
                   <span className="text-muted-foreground">
                     {i18n.language === "ar"
@@ -1065,6 +1069,16 @@ export function EmployeesPage() {
                 </p>
                 <p className="truncate">
                   <span className="font-medium text-xs md:text-sm">
+                    Passport Expiry:
+                  </span>{" "}
+                  <span className={getExpiryStatus(employee.passport_expiry)}>
+                    {employee.passport_expiry
+                      ? dayjs(employee.passport_expiry).format("DD/MM/YYYY")
+                      : "N/A"}
+                  </span>
+                </p>
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
                     {t("employees.cardExpiry")}:
                   </span>{" "}
                   <span className={getExpiryStatus(employee.card_expiry)}>
@@ -1072,6 +1086,12 @@ export function EmployeesPage() {
                       ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
                       : "N/A"}
                   </span>
+                </p>
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
+                    Emirates ID:
+                  </span>{" "}
+                  <span className="text-muted-foreground">{employee.emirates_id || "N/A"}</span>
                 </p>
                 <p className="truncate">
                   <span className="font-medium text-xs md:text-sm">
@@ -1084,6 +1104,34 @@ export function EmployeesPage() {
                       ? dayjs(employee.emirates_id_expiry).format("DD/MM/YYYY")
                       : "N/A"}
                   </span>
+                </p>
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
+                    Residence No:
+                  </span>{" "}
+                  <span className="text-muted-foreground">{employee.residence_no || "N/A"}</span>
+                </p>
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
+                    Residence Expiry:
+                  </span>{" "}
+                  <span className={getExpiryStatus(employee.residence_expiry)}>
+                    {employee.residence_expiry
+                      ? dayjs(employee.residence_expiry).format("DD/MM/YYYY")
+                      : "N/A"}
+                  </span>
+                </p>
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
+                    Email:
+                  </span>{" "}
+                  <span className="text-muted-foreground text-xs">{employee.email || "N/A"}</span>
+                </p>
+                <p className="truncate">
+                  <span className="font-medium text-xs md:text-sm">
+                    Phone:
+                  </span>{" "}
+                  <span className="text-muted-foreground">{employee.phone || "N/A"}</span>
                 </p>
               </div>
             </Card>
