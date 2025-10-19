@@ -570,12 +570,12 @@ export function EmployeesPage() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-6">
-      {/* Header - Mobile Optimized */}
-      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center md:gap-4">
+    <div className="space-y-3 pb-6">
+      {/* Header - Compact Design */}
+      <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">{t("employees.title")}</h1>
-          <p className="text-xs md:text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl md:text-2xl font-bold">{t("employees.title")}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             {filteredEmployees?.length || 0}{" "}
             {t("employees.title").toLowerCase()}{" "}
             {filteredEmployees?.length !== employees?.length &&
@@ -583,12 +583,12 @@ export function EmployeesPage() {
           </p>
         </div>
         <div className={`flex gap-2 w-full md:w-auto ${isRTL ? "flex-row-reverse" : ""}`}>
-          <Button onClick={handleAdd} className="gap-2 flex-1 md:flex-initial h-11 md:h-10">
+          <Button onClick={handleAdd} className="gap-2 flex-1 md:flex-initial h-9">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">{t("employees.addEmployee")}</span>
             <span className="sm:hidden">Add</span>
           </Button>
-          <Button onClick={exportToExcel} variant="outline" className="gap-2 flex-1 md:flex-initial h-11 md:h-10">
+          <Button onClick={exportToExcel} variant="outline" className="gap-2 flex-1 md:flex-initial h-9">
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Export Excel</span>
             <span className="sm:hidden">Export</span>
@@ -596,21 +596,21 @@ export function EmployeesPage() {
         </div>
       </div>
 
-      {/* Bulk Actions Toolbar - Mobile Optimized */}
+      {/* Bulk Actions Toolbar - Compact Design */}
       {showBulkActions && (
-        <Card className="p-3 md:p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 shadow-lg">
+        <Card className="p-2 md:p-3 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 shadow-lg">
           <div
-            className={`flex flex-col gap-3 md:flex-row md:justify-between md:items-center ${
+            className={`flex flex-col gap-2 md:flex-row md:justify-between md:items-center ${
               isRTL ? "md:flex-row-reverse" : ""
             }`}
           >
             <div
-              className={`flex items-center gap-2 md:gap-3 ${
+              className={`flex items-center gap-2 ${
                 isRTL ? "flex-row-reverse" : ""
               }`}
             >
-              <CheckSquare className="w-5 h-5 text-blue-600 flex-shrink-0" />
-              <span className="font-semibold text-sm md:text-base text-blue-900 dark:text-blue-100">
+              <CheckSquare className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <span className="font-semibold text-xs md:text-sm text-blue-900 dark:text-blue-100">
                 {selectedIds.length} {selectedIds.length === 1 ? 'employee' : 'employees'} selected
               </span>
             </div>
@@ -618,7 +618,7 @@ export function EmployeesPage() {
               <Button
                 onClick={handleBulkExport}
                 variant="outline"
-                className="gap-2 flex-1 md:flex-initial h-10 text-xs md:text-sm"
+                className="gap-2 flex-1 md:flex-initial h-8 text-xs"
                 size="sm"
               >
                 <FileSpreadsheet className="w-4 h-4" />
@@ -628,7 +628,7 @@ export function EmployeesPage() {
               <Button
                 onClick={handleBulkDelete}
                 variant="destructive"
-                className="gap-2 flex-1 md:flex-initial h-10 text-xs md:text-sm"
+                className="gap-2 flex-1 md:flex-initial h-8 text-xs"
                 size="sm"
               >
                 <Trash className="w-4 h-4" />
@@ -642,7 +642,7 @@ export function EmployeesPage() {
                 }}
                 variant="ghost"
                 size="sm"
-                className="h-10 px-2 md:px-4"
+                className="h-8 px-2"
               >
                 <X className="w-4 h-4" />
               </Button>
