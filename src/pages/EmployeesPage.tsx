@@ -224,18 +224,31 @@ export function EmployeesPage() {
   // Comprehensive filtering
   const filteredEmployees = useMemo(() => {
     const filtered = employees?.filter((emp: any) => {
-      // Search filter
-      const searchLower = searchTerm.toLowerCase();
+      // Search filter - Enhanced for Arabic
+      const searchLower = searchTerm.toLowerCase().trim();
+      const searchOriginal = searchTerm.trim();
       const matchesSearch =
         !searchTerm ||
-        emp.name_en.toLowerCase().includes(searchLower) ||
-        emp.name_ar.includes(searchTerm) ||
-        emp.employee_no.toLowerCase().includes(searchLower) ||
+        emp.name_en?.toLowerCase().includes(searchLower) ||
+        emp.name_ar?.toLowerCase().includes(searchLower) ||
+        emp.name_ar?.includes(searchOriginal) ||
+        emp.employee_no?.toLowerCase().includes(searchLower) ||
         emp.email?.toLowerCase().includes(searchLower) ||
         emp.phone?.toLowerCase().includes(searchLower) ||
+        emp.phone?.includes(searchOriginal) ||
         emp.passport_no?.toLowerCase().includes(searchLower) ||
+        emp.card_no?.toLowerCase().includes(searchLower) ||
         emp.emirates_id?.toLowerCase().includes(searchLower) ||
-        emp.residence_no?.toLowerCase().includes(searchLower);
+        emp.residence_no?.toLowerCase().includes(searchLower) ||
+        emp.companies?.name_en?.toLowerCase().includes(searchLower) ||
+        emp.companies?.name_ar?.toLowerCase().includes(searchLower) ||
+        emp.companies?.name_ar?.includes(searchOriginal) ||
+        emp.departments?.name_en?.toLowerCase().includes(searchLower) ||
+        emp.departments?.name_ar?.toLowerCase().includes(searchLower) ||
+        emp.departments?.name_ar?.includes(searchOriginal) ||
+        emp.jobs?.name_en?.toLowerCase().includes(searchLower) ||
+        emp.jobs?.name_ar?.toLowerCase().includes(searchLower) ||
+        emp.jobs?.name_ar?.includes(searchOriginal);
 
       // Nationality filter
       const matchesNationality =
