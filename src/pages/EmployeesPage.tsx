@@ -1233,13 +1233,13 @@ export function EmployeesPage() {
         </>
       ) : (
         <>
-        {/* Table View - Mobile Responsive with Horizontal Scroll */}
+        {/* Table View - Sticky Header with Smooth Scrolling */}
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto">
             <table className="w-full min-w-[1000px]">
-              <thead className="bg-muted/50">
-                <tr className="border-b">
-                  <th className="p-2 md:p-3 w-10">
+              <thead className="sticky top-0 z-10">
+                <tr className="border-b bg-muted dark:bg-gray-800 shadow-md">
+                  <th className="p-2 md:p-3 w-10 bg-muted dark:bg-gray-800">
                     <button
                       type="button"
                       onClick={handleSelectAll}
@@ -1254,7 +1254,7 @@ export function EmployeesPage() {
                     </button>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("employee_no")}
                   >
                     <div className="flex items-center gap-1">
@@ -1263,7 +1263,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("name")}
                   >
                     <div className="flex items-center gap-1">
@@ -1272,7 +1272,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("nationality")}
                   >
                     <div className="flex items-center gap-1">
@@ -1281,7 +1281,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("company")}
                   >
                     <div className="flex items-center gap-1">
@@ -1290,7 +1290,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("department")}
                   >
                     <div className="flex items-center gap-1">
@@ -1299,7 +1299,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("job")}
                   >
                     <div className="flex items-center gap-1">
@@ -1308,7 +1308,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("passport")}
                   >
                     <div className="flex items-center gap-1">
@@ -1317,7 +1317,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("card_expiry")}
                   >
                     <div className="flex items-center gap-1">
@@ -1326,7 +1326,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("emirates_id")}
                   >
                     <div className="flex items-center gap-1">
@@ -1335,7 +1335,7 @@ export function EmployeesPage() {
                     </div>
                   </th>
                   <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors"
+                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                     onClick={() => handleSort("residence")}
                   >
                     <div className="flex items-center gap-1">
@@ -1343,11 +1343,11 @@ export function EmployeesPage() {
                       <SortIcon column="residence" />
                     </div>
                   </th>
-                  <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm">Actions</th>
+                  <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm bg-muted dark:bg-gray-800">Actions</th>
                 </tr>
               </thead>
               <tbody>
-              {paginatedEmployees?.map((employee: any) => (
+              {filteredEmployees?.map((employee: any) => (
                 <tr key={employee.id} className="border-b hover:bg-muted/30 transition-colors">
                   <td className="p-2 md:p-3">
                     <button
@@ -1459,83 +1459,18 @@ export function EmployeesPage() {
             </tbody>
           </table>
           </div>
-          {(!paginatedEmployees || paginatedEmployees.length === 0) && (
+          {(!filteredEmployees || filteredEmployees.length === 0) && (
             <div className="text-center py-12 text-muted-foreground">
               No employees found
             </div>
           )}
-        </Card>
-
-        {/* Pagination for Table View */}
-        {totalPages > 1 && (
-          <Card className="p-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees?.length || 0)} of {filteredEmployees?.length || 0} employees
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronsLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-sm font-medium px-2">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronsRight className="w-4 h-4" />
-                </Button>
-                <Select
-                  value={itemsPerPage.toString()}
-                  onValueChange={(value) => {
-                    setItemsPerPage(Number(value));
-                    setCurrentPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-[100px] h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 / page</SelectItem>
-                    <SelectItem value="20">20 / page</SelectItem>
-                    <SelectItem value="50">50 / page</SelectItem>
-                    <SelectItem value="100">100 / page</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Table info footer */}
+          {filteredEmployees && filteredEmployees.length > 0 && (
+            <div className="border-t p-3 bg-muted/20 text-center text-sm text-muted-foreground">
+              Showing {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} • Scroll to view all
             </div>
-          </Card>
-        )}
+          )}
+        </Card>
         </>
       )}
 
