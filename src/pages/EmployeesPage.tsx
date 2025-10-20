@@ -148,7 +148,7 @@ export function EmployeesPage() {
     },
   });
 
-  const { data: companies } = useQuery({
+  const { data: companies = [] } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
       const { data } = await supabase
@@ -159,7 +159,7 @@ export function EmployeesPage() {
     },
   });
 
-  const { data: departments } = useQuery({
+  const { data: departments = [] } = useQuery({
     queryKey: ["departments"],
     queryFn: async () => {
       const { data } = await supabase
@@ -170,7 +170,7 @@ export function EmployeesPage() {
     },
   });
 
-  const { data: jobs } = useQuery({
+  const { data: jobs = [] } = useQuery({
     queryKey: ["jobs"],
     queryFn: async () => {
       const { data } = await supabase.from("jobs").select("*").order("name_en");
@@ -178,7 +178,7 @@ export function EmployeesPage() {
     },
   });
 
-  const { data: nationalities } = useQuery({
+  const { data: nationalities = [] } = useQuery({
     queryKey: ["nationalities"],
     queryFn: async () => {
       const { data } = await supabase
