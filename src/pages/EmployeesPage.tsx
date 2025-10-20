@@ -1298,7 +1298,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("employee_no")}
                   >
                     <div className="flex items-center gap-1">
-                      Employee No
+                      {t("table.employeeNo")}
                       <SortIcon column="employee_no" />
                     </div>
                   </th>
@@ -1307,7 +1307,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("name")}
                   >
                     <div className="flex items-center gap-1">
-                      Name
+                      {t("table.name")}
                       <SortIcon column="name" />
                     </div>
                   </th>
@@ -1316,7 +1316,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("nationality")}
                   >
                     <div className="flex items-center gap-1">
-                      Nationality
+                      {t("table.nationality")}
                       <SortIcon column="nationality" />
                     </div>
                   </th>
@@ -1325,7 +1325,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("company")}
                   >
                     <div className="flex items-center gap-1">
-                      Company
+                      {t("table.company")}
                       <SortIcon column="company" />
                     </div>
                   </th>
@@ -1334,7 +1334,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("department")}
                   >
                     <div className="flex items-center gap-1">
-                      Department
+                      {t("table.department")}
                       <SortIcon column="department" />
                     </div>
                   </th>
@@ -1343,7 +1343,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("job")}
                   >
                     <div className="flex items-center gap-1">
-                      Job
+                      {t("table.job")}
                       <SortIcon column="job" />
                     </div>
                   </th>
@@ -1352,7 +1352,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("passport")}
                   >
                     <div className="flex items-center gap-1">
-                      Passport
+                      {t("table.passport")}
                       <SortIcon column="passport" />
                     </div>
                   </th>
@@ -1361,7 +1361,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("card_expiry")}
                   >
                     <div className="flex items-center gap-1">
-                      Card Expiry
+                      {t("table.cardExpiry")}
                       <SortIcon column="card_expiry" />
                     </div>
                   </th>
@@ -1370,7 +1370,7 @@ export function EmployeesPage() {
                     onClick={() => handleSort("emirates_id")}
                   >
                     <div className="flex items-center gap-1">
-                      Emirates ID
+                      {t("table.emiratesId")}
                       <SortIcon column="emirates_id" />
                     </div>
                   </th>
@@ -1379,11 +1379,11 @@ export function EmployeesPage() {
                     onClick={() => handleSort("residence")}
                   >
                     <div className="flex items-center gap-1">
-                      Residence
+                      {t("table.residence")}
                       <SortIcon column="residence" />
                     </div>
                   </th>
-                  <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm bg-muted dark:bg-gray-800">Actions</th>
+                  <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm bg-muted dark:bg-gray-800">{t("table.actions")}</th>
                 </tr>
               </thead>
               <tbody>

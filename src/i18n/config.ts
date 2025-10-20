@@ -73,6 +73,19 @@ const resources = {
       "employees.deleteConfirm":
         "Are you sure you want to delete this employee?",
 
+      // Table Column Headers
+      "table.employeeNo": "Employee No",
+      "table.name": "Name",
+      "table.nationality": "Nationality",
+      "table.company": "Company",
+      "table.department": "Department",
+      "table.job": "Job",
+      "table.passport": "Passport",
+      "table.cardExpiry": "Card Expiry",
+      "table.emiratesId": "Emirates ID",
+      "table.residence": "Residence",
+      "table.actions": "Actions",
+
       // Document Status Filters
       "filters.passportStatus": "Passport Status",
       "filters.cardStatus": "Card Status",
@@ -200,6 +213,19 @@ const resources = {
       "employees.phone": "الهاتف",
       "employees.deleteConfirm": "هل أنت متأكد من حذف هذا الموظف؟",
 
+      // Table Column Headers
+      "table.employeeNo": "رقم الموظف",
+      "table.name": "الاسم",
+      "table.nationality": "الجنسية",
+      "table.company": "الشركة",
+      "table.department": "القسم",
+      "table.job": "الوظيفة",
+      "table.passport": "جواز السفر",
+      "table.cardExpiry": "انتهاء البطاقة",
+      "table.emiratesId": "الهوية الإماراتية",
+      "table.residence": "الإقامة",
+      "table.actions": "الإجراءات",
+
       // Document Status Filters
       "filters.passportStatus": "حالة جواز السفر",
       "filters.cardStatus": "حالة البطاقة",
@@ -261,7 +287,7 @@ const resources = {
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: "en",
+  lng: "ar",
   fallbackLng: "en",
   interpolation: {
     escapeValue: false,
