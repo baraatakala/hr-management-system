@@ -62,7 +62,9 @@ export function Dashboard() {
   const [selectedCompany, setSelectedCompany] = React.useState<string>("all");
   const [selectedDepartment, setSelectedDepartment] = React.useState<string>("all");
   const [selectedNationality, setSelectedNationality] = React.useState<string>("all");
-  const [dateRange, setDateRange] = React.useState<string>("all"); // all, 30days, 60days, 90days
+  const [dateRange, setDateRange] = React.useState<string>("all"); // all, 30days, 60days, 90days, custom
+  const [customStartDate, setCustomStartDate] = React.useState<string>("");
+  const [customEndDate, setCustomEndDate] = React.useState<string>("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all"); // all, active, inactive
   const [showFilters, setShowFilters] = React.useState(false);
 
@@ -71,7 +73,7 @@ export function Dashboard() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["dashboard-stats", selectedCompany, selectedDepartment, selectedNationality, dateRange, statusFilter],
+    queryKey: ["dashboard-stats", selectedCompany, selectedDepartment, selectedNationality, dateRange, customStartDate, customEndDate, statusFilter],
     queryFn: async () => {
       const today = dayjs().format("YYYY-MM-DD");
       const thirtyDaysFromNow = dayjs().add(30, "day").format("YYYY-MM-DD");
@@ -107,13 +109,35 @@ export function Dashboard() {
       }
       
       if (dateRange !== "all" && filteredEmployees) {
-        const rangeDate = dateRange === "30days" ? dayjs().subtract(30, "day") :
-                         dateRange === "60days" ? dayjs().subtract(60, "day") :
-                         dateRange === "90days" ? dayjs().subtract(90, "day") : null;
-        if (rangeDate) {
-          filteredEmployees = filteredEmployees.filter(emp => 
-            emp.added_date && dayjs(emp.added_date).isAfter(rangeDate)
-          );
+        if (dateRange === "custom") {
+          // Custom date range
+          if (customStartDate && customEndDate) {
+            filteredEmployees = filteredEmployees.filter(emp => 
+              emp.added_date && 
+              dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day')) &&
+              dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'))
+            );
+          } else if (customStartDate) {
+            filteredEmployees = filteredEmployees.filter(emp => 
+              emp.added_date && 
+              dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day'))
+            );
+          } else if (customEndDate) {
+            filteredEmployees = filteredEmployees.filter(emp => 
+              emp.added_date && 
+              dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'))
+            );
+          }
+        } else {
+          // Preset ranges (30, 60, 90 days)
+          const rangeDate = dateRange === "30days" ? dayjs().subtract(30, "day") :
+                           dateRange === "60days" ? dayjs().subtract(60, "day") :
+                           dateRange === "90days" ? dayjs().subtract(90, "day") : null;
+          if (rangeDate) {
+            filteredEmployees = filteredEmployees.filter(emp => 
+              emp.added_date && dayjs(emp.added_date).isAfter(rangeDate)
+            );
+          }
         }
       }
 
@@ -566,6 +590,8 @@ export function Dashboard() {
     setSelectedDepartment("all");
     setSelectedNationality("all");
     setDateRange("all");
+    setCustomStartDate("");
+    setCustomEndDate("");
     setStatusFilter("all");
   };
 
@@ -608,7 +634,14 @@ export function Dashboard() {
       ["Company Filter", selectedCompany !== "all" ? companies.find((c: { id: string; name_en: string }) => c.id === selectedCompany)?.name_en || "N/A" : "All Companies"],
       ["Department Filter", selectedDepartment !== "all" ? departments.find((d: { id: string; name_en: string }) => d.id === selectedDepartment)?.name_en || "N/A" : "All Departments"],
       ["Nationality Filter", selectedNationality !== "all" ? selectedNationality : "All Nationalities"],
-      ["Date Range", dateRange === "30days" ? "Last 30 Days" : dateRange === "60days" ? "Last 60 Days" : dateRange === "90days" ? "Last 90 Days" : "All Time"],
+      ["Date Range", 
+        dateRange === "custom" 
+          ? `Custom: ${customStartDate ? dayjs(customStartDate).format("DD/MM/YYYY") : "Not Set"} to ${customEndDate ? dayjs(customEndDate).format("DD/MM/YYYY") : "Not Set"}`
+          : dateRange === "30days" ? "Last 30 Days" 
+          : dateRange === "60days" ? "Last 60 Days" 
+          : dateRange === "90days" ? "Last 90 Days" 
+          : "All Time"
+      ],
       ["Status Filter", statusFilter === "active" ? "Active Only" : statusFilter === "inactive" ? "Inactive Only" : "All Employees"],
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
@@ -1009,7 +1042,40 @@ export function Dashboard() {
                   <option value="30days">Last 30 Days</option>
                   <option value="60days">Last 60 Days</option>
                   <option value="90days">Last 90 Days</option>
+                  <option value="custom">Custom Date Range</option>
                 </select>
+
+                {/* Custom Date Range Inputs */}
+                {dateRange === "custom" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="space-y-1.5">
+                      <label htmlFor="startDate" className="text-xs text-muted-foreground">
+                        From Date
+                      </label>
+                      <input
+                        id="startDate"
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        max={customEndDate || undefined}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="endDate" className="text-xs text-muted-foreground">
+                        To Date
+                      </label>
+                      <input
+                        id="endDate"
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        min={customStartDate || undefined}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Status Filter */}
@@ -1056,7 +1122,12 @@ export function Dashboard() {
                   {dateRange !== "all" && (
                     <Badge variant="secondary" className="gap-1">
                       <Calendar className="w-3 h-3" />
-                      {dateRange === "30days" ? "Last 30 Days" : dateRange === "60days" ? "Last 60 Days" : "Last 90 Days"}
+                      {dateRange === "custom" 
+                        ? `${customStartDate ? dayjs(customStartDate).format("DD/MM/YYYY") : "Start"} - ${customEndDate ? dayjs(customEndDate).format("DD/MM/YYYY") : "End"}`
+                        : dateRange === "30days" ? "Last 30 Days" 
+                        : dateRange === "60days" ? "Last 60 Days" 
+                        : "Last 90 Days"
+                      }
                     </Badge>
                   )}
                   {statusFilter !== "all" && (
