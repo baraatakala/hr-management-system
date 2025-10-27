@@ -521,17 +521,17 @@ export function Dashboard() {
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button 
-            onClick={() => refetch()} 
-            variant="outline" 
+          <Button
+            onClick={() => refetch()}
+            variant="outline"
             size="sm"
             className="flex-1 sm:flex-initial h-11 md:h-9 touch-manipulation active:scale-95 transition-transform"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button 
-            onClick={exportDashboard} 
+          <Button
+            onClick={exportDashboard}
             size="sm"
             className="flex-1 sm:flex-initial h-11 md:h-9 touch-manipulation active:scale-95 transition-transform"
           >

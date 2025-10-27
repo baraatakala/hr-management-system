@@ -49,6 +49,29 @@ import {
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 
+interface Company {
+  id: string;
+  name_en: string;
+  name_ar: string;
+}
+
+interface Department {
+  id: string;
+  name_en: string;
+  name_ar: string;
+}
+
+interface Job {
+  id: string;
+  name_en: string;
+  name_ar: string;
+}
+
+interface Nationality {
+  name_en: string;
+  name_ar: string;
+}
+
 interface Employee {
   id: string;
   employee_no: string;
@@ -68,10 +91,21 @@ interface Employee {
   residence_expiry: string | null;
   email: string | null;
   phone: string | null;
+  status: 'active' | 'inactive';
+  added_date: string | null;
+  companies?: Company;
+  departments?: Department;
+  jobs?: Job;
 }
 
 type ViewMode = "grid" | "table";
-type StatusFilter = "all" | "valid" | "expiring" | "expired" | "missing" | "missing_number";
+type StatusFilter =
+  | "all"
+  | "valid"
+  | "expiring"
+  | "expired"
+  | "missing"
+  | "missing_number";
 
 export function EmployeesPage() {
   const { t, i18n } = useTranslation();
@@ -95,6 +129,9 @@ export function EmployeesPage() {
     useState<StatusFilter>("all");
   const [residenceStatusFilter, setResidenceStatusFilter] =
     useState<StatusFilter>("all");
+    
+  // Employee status filter
+  const [employeeStatusFilter, setEmployeeStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -213,7 +250,9 @@ export function EmployeesPage() {
   });
 
   // Helper function to check document status
-  const getDocumentStatus = (expiryDate: string | null): StatusFilter | null => {
+  const getDocumentStatus = (
+    expiryDate: string | null
+  ): StatusFilter | null => {
     if (!expiryDate) return null; // N/A dates return null to indicate no status
     const daysUntilExpiry = dayjs(expiryDate).diff(dayjs(), "day");
     if (daysUntilExpiry < 0) return "expired";
@@ -223,7 +262,7 @@ export function EmployeesPage() {
 
   // Comprehensive filtering
   const filteredEmployees = useMemo(() => {
-    const filtered = employees?.filter((emp: any) => {
+    const filtered = employees?.filter((emp: Employee) => {
       // Search filter - Enhanced for Arabic
       const searchLower = searchTerm.toLowerCase().trim();
       const searchOriginal = searchTerm.trim();
@@ -276,7 +315,7 @@ export function EmployeesPage() {
       // Card status filter
       const cardStatus = getDocumentStatus(emp.card_expiry);
       const matchesCard =
-        cardStatusFilter === "all" || 
+        cardStatusFilter === "all" ||
         (cardStatusFilter === "missing" && cardStatus === null) ||
         (cardStatusFilter === "missing_number" && !emp.card_no) ||
         (cardStatus !== null && cardStatus === cardStatusFilter);
@@ -287,7 +326,8 @@ export function EmployeesPage() {
         emiratesIdStatusFilter === "all" ||
         (emiratesIdStatusFilter === "missing" && emiratesIdStatus === null) ||
         (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
-        (emiratesIdStatus !== null && emiratesIdStatus === emiratesIdStatusFilter);
+        (emiratesIdStatus !== null &&
+          emiratesIdStatus === emiratesIdStatusFilter);
 
       // Residence status filter
       const residenceStatus = getDocumentStatus(emp.residence_expiry);
@@ -296,6 +336,9 @@ export function EmployeesPage() {
         (residenceStatusFilter === "missing" && residenceStatus === null) ||
         (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
         (residenceStatus !== null && residenceStatus === residenceStatusFilter);
+
+      // Employee status filter
+      const matchesStatus = employeeStatusFilter === "all" || emp.status === employeeStatusFilter;
 
       return (
         matchesSearch &&
@@ -306,16 +349,17 @@ export function EmployeesPage() {
         matchesPassport &&
         matchesCard &&
         matchesEmiratesId &&
-        matchesResidence
+        matchesResidence &&
+        matchesStatus
       );
     });
 
     // Apply sorting
     if (!sortColumn || !filtered) return filtered;
 
-    return [...filtered].sort((a: any, b: any) => {
-      let aValue: any;
-      let bValue: any;
+    return [...filtered].sort((a: Employee, b: Employee) => {
+      let aValue: string;
+      let bValue: string;
 
       // Get values based on column
       switch (sortColumn) {
@@ -332,12 +376,24 @@ export function EmployeesPage() {
           bValue = b.nationality || "";
           break;
         case "company":
-          aValue = i18n.language === "ar" ? a.companies?.name_ar : a.companies?.name_en;
-          bValue = i18n.language === "ar" ? b.companies?.name_ar : b.companies?.name_en;
+          aValue =
+            i18n.language === "ar"
+              ? a.companies?.name_ar
+              : a.companies?.name_en;
+          bValue =
+            i18n.language === "ar"
+              ? b.companies?.name_ar
+              : b.companies?.name_en;
           break;
         case "department":
-          aValue = i18n.language === "ar" ? a.departments?.name_ar : a.departments?.name_en;
-          bValue = i18n.language === "ar" ? b.departments?.name_ar : b.departments?.name_en;
+          aValue =
+            i18n.language === "ar"
+              ? a.departments?.name_ar
+              : a.departments?.name_en;
+          bValue =
+            i18n.language === "ar"
+              ? b.departments?.name_ar
+              : b.departments?.name_en;
           break;
         case "job":
           aValue = i18n.language === "ar" ? a.jobs?.name_ar : a.jobs?.name_en;
@@ -358,6 +414,14 @@ export function EmployeesPage() {
         case "residence":
           aValue = a.residence_expiry || "";
           bValue = b.residence_expiry || "";
+          break;
+        case "status":
+          aValue = a.status || "";
+          bValue = b.status || "";
+          break;
+        case "added_date":
+          aValue = a.added_date || "";
+          bValue = b.added_date || "";
           break;
         default:
           return 0;
@@ -384,6 +448,7 @@ export function EmployeesPage() {
     cardStatusFilter,
     emiratesIdStatusFilter,
     residenceStatusFilter,
+    employeeStatusFilter,
     sortColumn,
     sortDirection,
     i18n.language,
@@ -400,9 +465,19 @@ export function EmployeesPage() {
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, nationalityFilter, companyFilter, departmentFilter, jobFilter, passportStatusFilter, cardStatusFilter, emiratesIdStatusFilter, residenceStatusFilter]);
+  }, [
+    searchTerm,
+    nationalityFilter,
+    companyFilter,
+    departmentFilter,
+    jobFilter,
+    passportStatusFilter,
+    cardStatusFilter,
+    emiratesIdStatusFilter,
+    residenceStatusFilter,
+  ]);
 
-  const handleEdit = (employee: any) => {
+  const handleEdit = (employee: Employee) => {
     setEditingEmployee(employee);
     setIsDialogOpen(true);
   };
@@ -424,7 +499,7 @@ export function EmployeesPage() {
       setSelectedIds([]);
       setShowBulkActions(false);
     } else {
-      const allIds = filteredEmployees?.map((emp: any) => emp.id) || [];
+      const allIds = filteredEmployees?.map((emp: Employee) => emp.id) || [];
       setSelectedIds(allIds);
       setShowBulkActions(true);
     }
@@ -450,13 +525,13 @@ export function EmployeesPage() {
   };
 
   const handleBulkExport = () => {
-    const selectedEmployees = filteredEmployees?.filter((emp: any) =>
+    const selectedEmployees = filteredEmployees?.filter((emp: Employee) =>
       selectedIds.includes(emp.id)
     );
 
     if (!selectedEmployees || selectedEmployees.length === 0) return;
 
-    const exportData = selectedEmployees.map((emp: any) => ({
+    const exportData = selectedEmployees.map((emp: Employee) => ({
       "Employee No": emp.employee_no,
       "Name (EN)": emp.name_en,
       "Name (AR)": emp.name_ar,
@@ -509,6 +584,7 @@ export function EmployeesPage() {
     setCardStatusFilter("all");
     setEmiratesIdStatusFilter("all");
     setResidenceStatusFilter("all");
+    setEmployeeStatusFilter("all");
   };
 
   const exportToExcel = () => {
@@ -517,7 +593,7 @@ export function EmployeesPage() {
       return;
     }
 
-    const exportData = filteredEmployees.map((emp: any) => ({
+    const exportData = filteredEmployees.map((emp: Employee) => ({
       "Employee No": emp.employee_no,
       "Name (English)": emp.name_en,
       "Name (Arabic)": emp.name_ar,
@@ -582,7 +658,9 @@ export function EmployeesPage() {
       {/* Header - Compact Design */}
       <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold">{t("employees.title")}</h1>
+          <h1 className="text-xl md:text-2xl font-bold">
+            {t("employees.title")}
+          </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             {filteredEmployees?.length || 0}{" "}
             {t("employees.title").toLowerCase()}{" "}
@@ -590,13 +668,26 @@ export function EmployeesPage() {
               `(filtered from ${employees?.length})`}
           </p>
         </div>
-        <div className={`flex gap-2 w-full md:w-auto ${isRTL ? "flex-row-reverse" : ""}`}>
-          <Button onClick={handleAdd} className="gap-2 flex-1 md:flex-initial h-9">
+        <div
+          className={`flex gap-2 w-full md:w-auto ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
+          <Button
+            onClick={handleAdd}
+            className="gap-2 flex-1 md:flex-initial h-9"
+          >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">{t("employees.addEmployee")}</span>
+            <span className="hidden sm:inline">
+              {t("employees.addEmployee")}
+            </span>
             <span className="sm:hidden">Add</span>
           </Button>
-          <Button onClick={exportToExcel} variant="outline" className="gap-2 flex-1 md:flex-initial h-9">
+          <Button
+            onClick={exportToExcel}
+            variant="outline"
+            className="gap-2 flex-1 md:flex-initial h-9"
+          >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{t("filters.exportExcel")}</span>
             <span className="sm:hidden">{t("common.export")}</span>
@@ -619,10 +710,15 @@ export function EmployeesPage() {
             >
               <CheckSquare className="w-4 h-4 text-blue-600 flex-shrink-0" />
               <span className="font-semibold text-xs md:text-sm text-blue-900 dark:text-blue-100">
-                {selectedIds.length} {selectedIds.length === 1 ? 'employee' : 'employees'} selected
+                {selectedIds.length}{" "}
+                {selectedIds.length === 1 ? "employee" : "employees"} selected
               </span>
             </div>
-            <div className={`flex gap-2 w-full md:w-auto ${isRTL ? "flex-row-reverse" : ""}`}>
+            <div
+              className={`flex gap-2 w-full md:w-auto ${
+                isRTL ? "flex-row-reverse" : ""
+              }`}
+            >
               <Button
                 onClick={handleBulkExport}
                 variant="outline"
@@ -672,8 +768,14 @@ export function EmployeesPage() {
             }`}
           >
             <Filter className="w-4 h-4 text-primary flex-shrink-0" />
-            <h2 className="text-sm md:text-base font-semibold">{t("filters.filtersControl")}</h2>
-            {(nationalityFilter !== "all" || companyFilter !== "all" || jobFilter !== "all" || departmentFilter !== "all" || searchTerm) && (
+            <h2 className="text-sm md:text-base font-semibold">
+              {t("filters.filtersControl")}
+            </h2>
+            {(nationalityFilter !== "all" ||
+              companyFilter !== "all" ||
+              jobFilter !== "all" ||
+              departmentFilter !== "all" ||
+              searchTerm) && (
               <Badge variant="secondary" className="text-xs">
                 {[
                   searchTerm ? 1 : 0,
@@ -681,18 +783,25 @@ export function EmployeesPage() {
                   companyFilter !== "all" ? 1 : 0,
                   jobFilter !== "all" ? 1 : 0,
                   departmentFilter !== "all" ? 1 : 0,
-                ].reduce((a, b) => a + b, 0)} active
+                ].reduce((a, b) => a + b, 0)}{" "}
+                active
               </Badge>
             )}
           </div>
-          <div className={`flex gap-1 md:gap-2 w-full sm:w-auto ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div
+            className={`flex gap-1 md:gap-2 w-full sm:w-auto ${
+              isRTL ? "flex-row-reverse" : ""
+            }`}
+          >
             <Button
               onClick={() => setShowFilters(!showFilters)}
               variant="ghost"
               size="sm"
               className="h-8 text-xs px-2 md:px-3 flex-1 sm:flex-initial"
             >
-              <span className="hidden sm:inline">{showFilters ? t("common.hide") : t("common.show")}</span>
+              <span className="hidden sm:inline">
+                {showFilters ? t("common.hide") : t("common.show")}
+              </span>
               <Filter className="w-4 h-4 sm:hidden" />
             </Button>
             <Button
@@ -730,12 +839,19 @@ export function EmployeesPage() {
         {showFilters && (
           <div className="space-y-2 mt-2">
             {/* Active Filters Display */}
-            {(nationalityFilter !== "all" || companyFilter !== "all" || jobFilter !== "all" || departmentFilter !== "all" || searchTerm) && (
+            {(nationalityFilter !== "all" ||
+              companyFilter !== "all" ||
+              jobFilter !== "all" ||
+              departmentFilter !== "all" ||
+              searchTerm) && (
               <div className="flex flex-wrap items-center gap-1.5 p-2 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
-                <span className="text-xs font-medium text-blue-900 dark:text-blue-100">Active:</span>
+                <span className="text-xs font-medium text-blue-900 dark:text-blue-100">
+                  Active:
+                </span>
                 {searchTerm && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Search: "{searchTerm.slice(0, 20)}{searchTerm.length > 20 ? '...' : ''}"
+                    Search: "{searchTerm.slice(0, 20)}
+                    {searchTerm.length > 20 ? "..." : ""}"
                     <button
                       onClick={() => setSearchTerm("")}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
@@ -803,14 +919,20 @@ export function EmployeesPage() {
                   onValueChange={setNationalityFilter}
                   options={[
                     { value: "all", label: t("filters.allNationalities") },
-                    ...nationalities.map((nat: any) => ({
+                    ...nationalities.map((nat: Nationality) => ({
                       value: nat.name_en,
                       label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
                     })),
                   ]}
                   placeholder={t("filters.allNationalities")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                  emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
                 />
               </div>
 
@@ -826,18 +948,29 @@ export function EmployeesPage() {
                     { value: "all", label: t("filters.allCompanies") },
                     ...companies.map((company) => ({
                       value: company.id,
-                      label: i18n.language === "ar" ? company.name_ar : company.name_en,
+                      label:
+                        i18n.language === "ar"
+                          ? company.name_ar
+                          : company.name_en,
                     })),
                   ]}
                   placeholder={t("filters.allCompanies")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                  emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
                 />
               </div>
 
               {/* Job Filter */}
               <div>
-                <Label className="text-xs font-medium mb-1 block">{t("employees.job")}</Label>
+                <Label className="text-xs font-medium mb-1 block">
+                  {t("employees.job")}
+                </Label>
                 <SearchableSelect
                   value={jobFilter}
                   onValueChange={setJobFilter}
@@ -849,8 +982,14 @@ export function EmployeesPage() {
                     })),
                   ]}
                   placeholder={t("filters.allJobs")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                  emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
                 />
               </div>
 
@@ -866,12 +1005,19 @@ export function EmployeesPage() {
                     { value: "all", label: t("filters.allDepartments") },
                     ...departments.map((dept) => ({
                       value: dept.id,
-                      label: i18n.language === "ar" ? dept.name_ar : dept.name_en,
+                      label:
+                        i18n.language === "ar" ? dept.name_ar : dept.name_en,
                     })),
                   ]}
                   placeholder={t("filters.allDepartments")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                  emptyText={i18n.language === "ar" ? "لا توجد نتائج" : "No results found"}
+                  searchPlaceholder={
+                    i18n.language === "ar" ? "بحث..." : "Search..."
+                  }
+                  emptyText={
+                    i18n.language === "ar"
+                      ? "لا توجد نتائج"
+                      : "No results found"
+                  }
                 />
               </div>
 
@@ -890,14 +1036,22 @@ export function EmployeesPage() {
                     <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
                     <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
                       {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
-                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
-                    <SelectItem value="missing_number">{t("filters.missingPassportNo")}</SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingPassportNo")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -917,14 +1071,22 @@ export function EmployeesPage() {
                     <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
                     <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
                       {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
-                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
-                    <SelectItem value="missing_number">{t("filters.missingCardNo")}</SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingCardNo")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -944,14 +1106,22 @@ export function EmployeesPage() {
                     <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
                     <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
                       {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
-                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
-                    <SelectItem value="missing_number">{t("filters.missingEmiratesId")}</SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingEmiratesId")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -971,14 +1141,46 @@ export function EmployeesPage() {
                     <SelectValue placeholder={t("filters.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
                     <SelectItem value="valid">{t("filters.valid")}</SelectItem>
                     <SelectItem value="expiring">
                       {t("filters.expiring")}
                     </SelectItem>
-                    <SelectItem value="expired">{t("filters.expired")}</SelectItem>
-                    <SelectItem value="missing">{t("filters.missingExpiry")}</SelectItem>
-                    <SelectItem value="missing_number">{t("filters.missingResidenceNo")}</SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingResidenceNo")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Employee Status Filter */}
+              <div>
+                <Label className="text-xs md:text-sm font-medium mb-1 block">
+                  {t("employees.statusFilter")}
+                </Label>
+                <Select
+                  value={employeeStatusFilter}
+                  onValueChange={(value) =>
+                    setEmployeeStatusFilter(value as "all" | "active" | "inactive")
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("employees.allStatus")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("employees.allStatus")}
+                    </SelectItem>
+                    <SelectItem value="active">{t("employees.status.active")}</SelectItem>
+                    <SelectItem value="inactive">{t("employees.status.inactive")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1019,7 +1221,8 @@ export function EmployeesPage() {
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                💡 Tip: Search works across all fields - names, documents, contact info
+                💡 Tip: Search works across all fields - names, documents,
+                contact info
               </p>
             </div>
           </div>
@@ -1029,427 +1232,143 @@ export function EmployeesPage() {
       {/* Employee Cards/Table - Mobile Optimized with Fixed Height */}
       {viewMode === "grid" ? (
         <>
-        {paginatedEmployees && paginatedEmployees.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 min-h-[500px]">
-          {paginatedEmployees.map((employee: any) => (
-            <Card
-              key={employee.id}
-              className={`p-4 md:p-5 space-y-3 transition-all duration-200 hover:shadow-lg ${
-                selectedIds.includes(employee.id)
-                  ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950 shadow-md"
-                  : ""
-              }`}
-            >
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectOne(employee.id)}
-                    className="hover:bg-muted rounded p-1 mt-0.5 md:mt-1 flex-shrink-0 touch-manipulation active:scale-95 transition-transform"
-                  >
-                    {selectedIds.includes(employee.id) ? (
-                      <CheckSquare className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
-                    ) : (
-                      <Square className="w-5 h-5 md:w-6 md:h-6" />
-                    )}
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-base md:text-lg truncate">
-                      {i18n.language === "ar"
-                        ? employee.name_ar
-                        : employee.name_en}
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground truncate">
-                      {employee.employee_no}
-                    </p>
+          {paginatedEmployees && paginatedEmployees.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 min-h-[500px]">
+              {paginatedEmployees.map((employee: Employee) => (
+                <Card
+                  key={employee.id}
+                  className={`p-4 md:p-5 space-y-3 transition-all duration-200 hover:shadow-lg ${
+                    selectedIds.includes(employee.id)
+                      ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950 shadow-md"
+                      : ""
+                  }`}
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectOne(employee.id)}
+                        className="hover:bg-muted rounded p-1 mt-0.5 md:mt-1 flex-shrink-0 touch-manipulation active:scale-95 transition-transform"
+                      >
+                        {selectedIds.includes(employee.id) ? (
+                          <CheckSquare className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+                        ) : (
+                          <Square className="w-5 h-5 md:w-6 md:h-6" />
+                        )}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-base md:text-lg truncate">
+                          {i18n.language === "ar"
+                            ? employee.name_ar
+                            : employee.name_en}
+                        </h3>
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">
+                          {employee.employee_no}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(employee)}
+                        className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(employee.id)}
+                        className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-1 flex-shrink-0">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEdit(employee)}
-                    className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDelete(employee.id)}
-                    className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
-                </div>
-              </div>
 
-              <div className="space-y-2 text-sm md:text-base">
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">Nationality:</span>{" "}
-                  <span className="text-muted-foreground">{employee.nationality || "N/A"}</span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">{t("employees.company")}:</span>{" "}
-                  <span className="text-muted-foreground">
-                    {i18n.language === "ar"
-                      ? employee.companies?.name_ar
-                      : employee.companies?.name_en}
-                  </span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    {t("employees.department")}:
-                  </span>{" "}
-                  <span className="text-muted-foreground">
-                    {i18n.language === "ar"
-                      ? employee.departments?.name_ar
-                      : employee.departments?.name_en}
-                  </span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">{t("employees.job")}:</span>{" "}
-                  <span className="text-muted-foreground">
-                    {i18n.language === "ar"
-                      ? employee.jobs?.name_ar
-                      : employee.jobs?.name_en}
-                  </span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    {t("employees.passportNo")}:
-                  </span>{" "}
-                  <span className="text-muted-foreground">{employee.passport_no || "N/A"}</span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    Passport Expiry:
-                  </span>{" "}
-                  <span className={getExpiryStatus(employee.passport_expiry)}>
-                    {employee.passport_expiry
-                      ? dayjs(employee.passport_expiry).format("DD/MM/YYYY")
-                      : "N/A"}
-                  </span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    {t("employees.cardExpiry")}:
-                  </span>{" "}
-                  <span className={getExpiryStatus(employee.card_expiry)}>
-                    {employee.card_expiry
-                      ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
-                      : "N/A"}
-                  </span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    Emirates ID:
-                  </span>{" "}
-                  <span className="text-muted-foreground">{employee.emirates_id || "N/A"}</span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    {t("employees.emiratesIdExpiry")}:
-                  </span>{" "}
-                  <span
-                    className={getExpiryStatus(employee.emirates_id_expiry)}
-                  >
-                    {employee.emirates_id_expiry
-                      ? dayjs(employee.emirates_id_expiry).format("DD/MM/YYYY")
-                      : "N/A"}
-                  </span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    Residence No:
-                  </span>{" "}
-                  <span className="text-muted-foreground">{employee.residence_no || "N/A"}</span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    Residence Expiry:
-                  </span>{" "}
-                  <span className={getExpiryStatus(employee.residence_expiry)}>
-                    {employee.residence_expiry
-                      ? dayjs(employee.residence_expiry).format("DD/MM/YYYY")
-                      : "N/A"}
-                  </span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    Email:
-                  </span>{" "}
-                  <span className="text-muted-foreground text-xs">{employee.email || "N/A"}</span>
-                </p>
-                <p className="truncate">
-                  <span className="font-medium text-xs md:text-sm">
-                    Phone:
-                  </span>{" "}
-                  <span className="text-muted-foreground">{employee.phone || "N/A"}</span>
-                </p>
-              </div>
-            </Card>
-          ))}
-        </div>
-        ) : (
-        <div className="flex items-center justify-center min-h-[500px]">
-          <div className="text-center text-muted-foreground">
-            <p className="text-lg font-medium">No employees found</p>
-            <p className="text-sm mt-2">Try adjusting your filters or search terms</p>
-          </div>
-        </div>
-        )}
-
-        {/* Pagination for Grid View */}
-        {paginatedEmployees && paginatedEmployees.length > 0 && totalPages > 1 && (
-          <Card className="p-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees?.length || 0)} of {filteredEmployees?.length || 0} employees
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronsLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-sm font-medium px-2">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronsRight className="w-4 h-4" />
-                </Button>
-                <Select
-                  value={itemsPerPage.toString()}
-                  onValueChange={(value) => {
-                    setItemsPerPage(Number(value));
-                    setCurrentPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-[100px] h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 / page</SelectItem>
-                    <SelectItem value="20">20 / page</SelectItem>
-                    <SelectItem value="50">50 / page</SelectItem>
-                    <SelectItem value="100">100 / page</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </Card>
-        )}
-        </>
-      ) : (
-        <>
-        {/* Table View - Sticky Header with Smooth Scrolling */}
-        <Card className="overflow-hidden min-h-[500px]">
-          <div className="overflow-x-auto max-h-[calc(100vh-300px)] min-h-[500px] overflow-y-auto">
-            <table className="w-full min-w-[1000px]">
-              <thead className="sticky top-0 z-10">
-                <tr className="border-b bg-muted dark:bg-gray-800 shadow-md">
-                  <th className="p-2 md:p-3 w-10 bg-muted dark:bg-gray-800">
-                    <button
-                      type="button"
-                      onClick={handleSelectAll}
-                      className="hover:bg-muted rounded p-1 touch-manipulation"
-                    >
-                      {selectedIds.length === filteredEmployees?.length &&
-                      filteredEmployees?.length > 0 ? (
-                        <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                      ) : (
-                        <Square className="w-4 h-4 md:w-5 md:h-5" />
-                      )}
-                    </button>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("employee_no")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.employeeNo")}
-                      <SortIcon column="employee_no" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("name")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.name")}
-                      <SortIcon column="name" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("nationality")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.nationality")}
-                      <SortIcon column="nationality" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("company")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.company")}
-                      <SortIcon column="company" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("department")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.department")}
-                      <SortIcon column="department" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("job")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.job")}
-                      <SortIcon column="job" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("passport")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.passport")}
-                      <SortIcon column="passport" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("card_expiry")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.cardExpiry")}
-                      <SortIcon column="card_expiry" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("emirates_id")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.emiratesId")}
-                      <SortIcon column="emirates_id" />
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                    onClick={() => handleSort("residence")}
-                  >
-                    <div className="flex items-center gap-1">
-                      {t("table.residence")}
-                      <SortIcon column="residence" />
-                    </div>
-                  </th>
-                  <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm bg-muted dark:bg-gray-800">{t("table.actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-              {filteredEmployees?.map((employee: any) => (
-                <tr key={employee.id} className="border-b hover:bg-muted/30 transition-colors">
-                  <td className="p-2 md:p-3">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectOne(employee.id)}
-                      className="hover:bg-muted rounded p-1 touch-manipulation"
-                    >
-                      {selectedIds.includes(employee.id) ? (
-                        <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                      ) : (
-                        <Square className="w-4 h-4 md:w-5 md:h-5" />
-                      )}
-                    </button>
-                  </td>
-                  <td className="p-2 md:p-3 font-medium text-xs md:text-sm">{employee.employee_no}</td>
-                  <td className="p-2 md:p-3 text-xs md:text-sm">
-                    {i18n.language === "ar"
-                      ? employee.name_ar
-                      : employee.name_en}
-                  </td>
-                  <td className="p-2 md:p-3 text-xs md:text-sm">{employee.nationality}</td>
-                  <td className="p-2 md:p-3 text-xs md:text-sm">
-                    {i18n.language === "ar"
-                      ? employee.companies?.name_ar
-                      : employee.companies?.name_en}
-                  </td>
-                  <td className="p-2 md:p-3 text-xs md:text-sm">
-                    {i18n.language === "ar"
-                      ? employee.departments?.name_ar
-                      : employee.departments?.name_en}
-                  </td>
-                  <td className="p-2 md:p-3 text-xs md:text-sm">
-                    {i18n.language === "ar"
-                      ? employee.jobs?.name_ar
-                      : employee.jobs?.name_en}
-                  </td>
-                  <td className="p-2 md:p-3">
-                    <div className="text-[10px] md:text-xs">
-                      <div>{employee.passport_no || "N/A"}</div>
-                      <div
+                  <div className="space-y-2 text-sm md:text-base">
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        Nationality:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {employee.nationality || "N/A"}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.company")}:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {i18n.language === "ar"
+                          ? employee.companies?.name_ar
+                          : employee.companies?.name_en}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.department")}:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {i18n.language === "ar"
+                          ? employee.departments?.name_ar
+                          : employee.departments?.name_en}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.job")}:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {i18n.language === "ar"
+                          ? employee.jobs?.name_ar
+                          : employee.jobs?.name_en}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.passportNo")}:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {employee.passport_no || "N/A"}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        Passport Expiry:
+                      </span>{" "}
+                      <span
                         className={getExpiryStatus(employee.passport_expiry)}
                       >
                         {employee.passport_expiry
                           ? dayjs(employee.passport_expiry).format("DD/MM/YYYY")
                           : "N/A"}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-2 md:p-3">
-                    <div className="text-[10px] md:text-xs">
-                      <div>{employee.card_no || "N/A"}</div>
-                      <div className={getExpiryStatus(employee.card_expiry)}>
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.cardExpiry")}:
+                      </span>{" "}
+                      <span className={getExpiryStatus(employee.card_expiry)}>
                         {employee.card_expiry
                           ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
                           : "N/A"}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-2 md:p-3">
-                    <div className="text-[10px] md:text-xs">
-                      <div>{employee.emirates_id || "N/A"}</div>
-                      <div
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        Emirates ID:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {employee.emirates_id || "N/A"}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.emiratesIdExpiry")}:
+                      </span>{" "}
+                      <span
                         className={getExpiryStatus(employee.emirates_id_expiry)}
                       >
                         {employee.emirates_id_expiry
@@ -1457,13 +1376,21 @@ export function EmployeesPage() {
                               "DD/MM/YYYY"
                             )
                           : "N/A"}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-2 md:p-3">
-                    <div className="text-[10px] md:text-xs">
-                      <div>{employee.residence_no || "N/A"}</div>
-                      <div
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        Residence No:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {employee.residence_no || "N/A"}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        Residence Expiry:
+                      </span>{" "}
+                      <span
                         className={getExpiryStatus(employee.residence_expiry)}
                       >
                         {employee.residence_expiry
@@ -1471,49 +1398,426 @@ export function EmployeesPage() {
                               "DD/MM/YYYY"
                             )
                           : "N/A"}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-2 md:p-3">
-                    <div className="flex gap-1 md:gap-2 justify-end">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEdit(employee)}
-                        className="h-8 w-8 p-0 touch-manipulation"
-                      >
-                        <Edit className="w-3 h-3 md:w-4 md:h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(employee.id)}
-                        className="h-8 w-8 p-0 touch-manipulation"
-                      >
-                        <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-red-600" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        Email:
+                      </span>{" "}
+                      <span className="text-muted-foreground text-xs">
+                        {employee.email || "N/A"}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        Phone:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {employee.phone || "N/A"}
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.status")}:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
+                          {t(`employees.status.${employee.status}`)}
+                        </Badge>
+                      </span>
+                    </p>
+                    <p className="truncate">
+                      <span className="font-medium text-xs md:text-sm">
+                        {t("employees.addedDate")}:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {employee.added_date ? dayjs(employee.added_date).format('DD/MM/YYYY') : '-'}
+                      </span>
+                    </p>
+                  </div>
+                </Card>
               ))}
-            </tbody>
-          </table>
-          {(!filteredEmployees || filteredEmployees.length === 0) && (
-            <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
-              <div className="text-center">
+            </div>
+          ) : (
+            <div className="flex items-center justify-center min-h-[500px]">
+              <div className="text-center text-muted-foreground">
                 <p className="text-lg font-medium">No employees found</p>
-                <p className="text-sm mt-2">Try adjusting your filters or search terms</p>
+                <p className="text-sm mt-2">
+                  Try adjusting your filters or search terms
+                </p>
               </div>
             </div>
           )}
-          </div>
-          {/* Table info footer */}
-          {filteredEmployees && filteredEmployees.length > 0 && (
-            <div className="border-t p-3 bg-muted/20 text-center text-sm text-muted-foreground">
-              Showing {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} • Scroll to view all
+
+          {/* Pagination for Grid View */}
+          {paginatedEmployees &&
+            paginatedEmployees.length > 0 &&
+            totalPages > 1 && (
+              <Card className="p-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                      {Math.min(
+                        currentPage * itemsPerPage,
+                        filteredEmployees?.length || 0
+                      )}{" "}
+                      of {filteredEmployees?.length || 0} employees
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="h-9 w-9 p-0"
+                    >
+                      <ChevronsLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="h-9 w-9 p-0"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm font-medium px-2">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="h-9 w-9 p-0"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="h-9 w-9 p-0"
+                    >
+                      <ChevronsRight className="w-4 h-4" />
+                    </Button>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-[100px] h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10 / page</SelectItem>
+                        <SelectItem value="20">20 / page</SelectItem>
+                        <SelectItem value="50">50 / page</SelectItem>
+                        <SelectItem value="100">100 / page</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </Card>
+            )}
+        </>
+      ) : (
+        <>
+          {/* Table View - Sticky Header with Smooth Scrolling */}
+          <Card className="overflow-hidden min-h-[500px]">
+            <div className="overflow-x-auto max-h-[calc(100vh-300px)] min-h-[500px] overflow-y-auto">
+              <table className="w-full min-w-[1000px]">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b bg-muted dark:bg-gray-800 shadow-md">
+                    <th className="p-2 md:p-3 w-10 bg-muted dark:bg-gray-800">
+                      <button
+                        type="button"
+                        onClick={handleSelectAll}
+                        className="hover:bg-muted rounded p-1 touch-manipulation"
+                      >
+                        {selectedIds.length === filteredEmployees?.length &&
+                        filteredEmployees?.length > 0 ? (
+                          <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                        ) : (
+                          <Square className="w-4 h-4 md:w-5 md:h-5" />
+                        )}
+                      </button>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("employee_no")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.employeeNo")}
+                        <SortIcon column="employee_no" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("name")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.name")}
+                        <SortIcon column="name" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("nationality")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.nationality")}
+                        <SortIcon column="nationality" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("company")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.company")}
+                        <SortIcon column="company" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("department")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.department")}
+                        <SortIcon column="department" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("job")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.job")}
+                        <SortIcon column="job" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("passport")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.passport")}
+                        <SortIcon column="passport" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("card_expiry")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.cardExpiry")}
+                        <SortIcon column="card_expiry" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("emirates_id")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.emiratesId")}
+                        <SortIcon column="emirates_id" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("residence")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("table.residence")}
+                        <SortIcon column="residence" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("status")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("employees.status")}
+                        <SortIcon column="status" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("added_date")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("employees.addedDate")}
+                        <SortIcon column="added_date" />
+                      </div>
+                    </th>
+                    <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm bg-muted dark:bg-gray-800">
+                      {t("table.actions")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEmployees?.map((employee: Employee) => (
+                    <tr
+                      key={employee.id}
+                      className="border-b hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="p-2 md:p-3">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectOne(employee.id)}
+                          className="hover:bg-muted rounded p-1 touch-manipulation"
+                        >
+                          {selectedIds.includes(employee.id) ? (
+                            <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                          ) : (
+                            <Square className="w-4 h-4 md:w-5 md:h-5" />
+                          )}
+                        </button>
+                      </td>
+                      <td className="p-2 md:p-3 font-medium text-xs md:text-sm">
+                        {employee.employee_no}
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        {i18n.language === "ar"
+                          ? employee.name_ar
+                          : employee.name_en}
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        {employee.nationality}
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        {i18n.language === "ar"
+                          ? employee.companies?.name_ar
+                          : employee.companies?.name_en}
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        {i18n.language === "ar"
+                          ? employee.departments?.name_ar
+                          : employee.departments?.name_en}
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        {i18n.language === "ar"
+                          ? employee.jobs?.name_ar
+                          : employee.jobs?.name_en}
+                      </td>
+                      <td className="p-2 md:p-3">
+                        <div className="text-[10px] md:text-xs">
+                          <div>{employee.passport_no || "N/A"}</div>
+                          <div
+                            className={getExpiryStatus(
+                              employee.passport_expiry
+                            )}
+                          >
+                            {employee.passport_expiry
+                              ? dayjs(employee.passport_expiry).format(
+                                  "DD/MM/YYYY"
+                                )
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-2 md:p-3">
+                        <div className="text-[10px] md:text-xs">
+                          <div>{employee.card_no || "N/A"}</div>
+                          <div
+                            className={getExpiryStatus(employee.card_expiry)}
+                          >
+                            {employee.card_expiry
+                              ? dayjs(employee.card_expiry).format("DD/MM/YYYY")
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-2 md:p-3">
+                        <div className="text-[10px] md:text-xs">
+                          <div>{employee.emirates_id || "N/A"}</div>
+                          <div
+                            className={getExpiryStatus(
+                              employee.emirates_id_expiry
+                            )}
+                          >
+                            {employee.emirates_id_expiry
+                              ? dayjs(employee.emirates_id_expiry).format(
+                                  "DD/MM/YYYY"
+                                )
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-2 md:p-3">
+                        <div className="text-[10px] md:text-xs">
+                          <div>{employee.residence_no || "N/A"}</div>
+                          <div
+                            className={getExpiryStatus(
+                              employee.residence_expiry
+                            )}
+                          >
+                            {employee.residence_expiry
+                              ? dayjs(employee.residence_expiry).format(
+                                  "DD/MM/YYYY"
+                                )
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
+                          {t(`employees.status.${employee.status}`)}
+                        </Badge>
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        {employee.added_date ? dayjs(employee.added_date).format('DD/MM/YYYY') : '-'}
+                      </td>
+                      <td className="p-2 md:p-3">
+                        <div className="flex gap-1 md:gap-2 justify-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(employee)}
+                            className="h-8 w-8 p-0 touch-manipulation"
+                          >
+                            <Edit className="w-3 h-3 md:w-4 md:h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(employee.id)}
+                            className="h-8 w-8 p-0 touch-manipulation"
+                          >
+                            <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {(!filteredEmployees || filteredEmployees.length === 0) && (
+                <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
+                  <div className="text-center">
+                    <p className="text-lg font-medium">No employees found</p>
+                    <p className="text-sm mt-2">
+                      Try adjusting your filters or search terms
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </Card>
+            {/* Table info footer */}
+            {filteredEmployees && filteredEmployees.length > 0 && (
+              <div className="border-t p-3 bg-muted/20 text-center text-sm text-muted-foreground">
+                Showing {filteredEmployees.length} employee
+                {filteredEmployees.length !== 1 ? "s" : ""} • Scroll to view all
+              </div>
+            )}
+          </Card>
         </>
       )}
 
@@ -1535,10 +1839,14 @@ interface EmployeeDialogProps {
   isOpen: boolean;
   onClose: () => void;
   employee: Employee | null;
-  companies: any[];
-  departments: any[];
-  jobs: any[];
-  nationalities: any[];
+  companies: Company[];
+  departments: Department[];
+  jobs: Job[];
+  nationalities: Nationality[];
+}
+
+interface EmployeeFormData extends Omit<Employee, 'id' | 'companies' | 'departments' | 'jobs'> {
+  id?: string;
 }
 
 function EmployeeDialog({
@@ -1552,14 +1860,34 @@ function EmployeeDialog({
 }: EmployeeDialogProps) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<any>(employee || {});
+  const [formData, setFormData] = useState<EmployeeFormData>(employee || {
+    employee_no: '',
+    name_en: '',
+    name_ar: '',
+    nationality: '',
+    company_id: '',
+    department_id: '',
+    job_id: '',
+    passport_no: null,
+    passport_expiry: null,
+    card_no: null,
+    card_expiry: null,
+    emirates_id: null,
+    emirates_id_expiry: null,
+    residence_no: null,
+    residence_expiry: null,
+    email: null,
+    phone: null,
+    status: 'active',
+    added_date: dayjs().format('YYYY-MM-DD')
+  });
 
   React.useEffect(() => {
     setFormData(employee || {});
   }, [employee]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: EmployeeFormData) => {
       // Clean data: remove nested objects and keep only valid columns
       const cleanData = {
         employee_no: data.employee_no,
@@ -1579,6 +1907,8 @@ function EmployeeDialog({
         residence_expiry: data.residence_expiry || null,
         email: data.email || null,
         phone: data.phone || null,
+        status: data.status || 'active',
+        added_date: data.added_date || dayjs().format('YYYY-MM-DD'),
       };
 
       if (employee) {
@@ -1596,7 +1926,7 @@ function EmployeeDialog({
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       alert(error.message || "An error occurred while saving the employee");
     },
   });
@@ -1630,7 +1960,8 @@ function EmployeeDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-2">
                 <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.employeeNo")} <span className="text-red-500">*</span> 🎤
+                  {t("employees.employeeNo")}{" "}
+                  <span className="text-red-500">*</span> 🎤
                 </Label>
                 <VoiceInput
                   value={formData.employee_no || ""}
@@ -1645,7 +1976,8 @@ function EmployeeDialog({
               </div>
               <div className="space-y-2">
                 <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.nameEn")} <span className="text-red-500">*</span> 🎤
+                  {t("employees.nameEn")}{" "}
+                  <span className="text-red-500">*</span> 🎤
                 </Label>
                 <VoiceInput
                   value={formData.name_en || ""}
@@ -1660,7 +1992,8 @@ function EmployeeDialog({
               </div>
               <div className="space-y-2">
                 <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.nameAr")} <span className="text-red-500">*</span> 🎤
+                  {t("employees.nameAr")}{" "}
+                  <span className="text-red-500">*</span> 🎤
                 </Label>
                 <VoiceInput
                   value={formData.name_ar || ""}
@@ -1702,6 +2035,43 @@ function EmployeeDialog({
                   }
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.status")}{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.status || "active"}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">
+                      {t("employees.status.active")}
+                    </SelectItem>
+                    <SelectItem value="inactive">
+                      {t("employees.status.inactive")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium">
+                  {t("employees.addedDate")}{" "}
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.added_date || dayjs().format('YYYY-MM-DD')}
+                  onChange={(e) =>
+                    setFormData({ ...formData, added_date: e.target.value })
+                  }
+                  className="h-11 md:h-10"
+                />
+              </div>
             </div>
           </div>
 
@@ -1728,7 +2098,9 @@ function EmployeeDialog({
                         : company.name_en,
                   }))}
                   placeholder={
-                    i18n.language === "ar" ? "اختر الشركة..." : "Select a company..."
+                    i18n.language === "ar"
+                      ? "اختر الشركة..."
+                      : "Select a company..."
                   }
                   searchPlaceholder={
                     i18n.language === "ar" ? "بحث..." : "Search..."
@@ -1751,8 +2123,7 @@ function EmployeeDialog({
                   }
                   options={departments.map((dept) => ({
                     value: dept.id,
-                    label:
-                      i18n.language === "ar" ? dept.name_ar : dept.name_en,
+                    label: i18n.language === "ar" ? dept.name_ar : dept.name_en,
                   }))}
                   placeholder={
                     i18n.language === "ar"
@@ -1783,7 +2154,9 @@ function EmployeeDialog({
                     label: i18n.language === "ar" ? job.name_ar : job.name_en,
                   }))}
                   placeholder={
-                    i18n.language === "ar" ? "اختر الوظيفة..." : "Select a job..."
+                    i18n.language === "ar"
+                      ? "اختر الوظيفة..."
+                      : "Select a job..."
                   }
                   searchPlaceholder={
                     i18n.language === "ar" ? "بحث..." : "Search..."
@@ -1826,7 +2199,10 @@ function EmployeeDialog({
                   type="date"
                   value={formData.passport_expiry || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, passport_expiry: e.target.value })
+                    setFormData({
+                      ...formData,
+                      passport_expiry: e.target.value,
+                    })
                   }
                   className="h-11 md:h-10"
                 />
@@ -1910,7 +2286,10 @@ function EmployeeDialog({
                   type="date"
                   value={formData.residence_expiry || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, residence_expiry: e.target.value })
+                    setFormData({
+                      ...formData,
+                      residence_expiry: e.target.value,
+                    })
                   }
                   className="h-11 md:h-10"
                 />
@@ -1958,16 +2337,16 @@ function EmployeeDialog({
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onClose}
               className="w-full sm:w-auto h-11 md:h-10 order-2 sm:order-1"
             >
               {t("common.cancel")}
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={saveMutation.isPending}
               className="w-full sm:w-auto h-11 md:h-10 order-1 sm:order-2"
             >

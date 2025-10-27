@@ -125,7 +125,8 @@ export interface Database {
           residence_expiry: string | null;
           email: string | null;
           phone: string | null;
-          added_at: string;
+          status: "active" | "inactive";
+          added_date: string;
           updated_at: string;
         };
         Insert: {
@@ -147,7 +148,8 @@ export interface Database {
           residence_expiry?: string | null;
           email?: string | null;
           phone?: string | null;
-          added_at?: string;
+          status?: "active" | "inactive";
+          added_date?: string;
           updated_at?: string;
         };
         Update: {
@@ -169,7 +171,8 @@ export interface Database {
           residence_expiry?: string | null;
           email?: string | null;
           phone?: string | null;
-          added_at?: string;
+          status?: "active" | "inactive";
+          added_date?: string;
           updated_at?: string;
         };
         Relationships: [];

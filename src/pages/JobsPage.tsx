@@ -105,7 +105,7 @@ export function JobsPage() {
       .from("employees")
       .select("*", { count: "exact", head: true })
       .eq("job_id", item.id);
-    
+
     setAffectedEmployeesCount(count || 0);
     setItemToDelete(item);
     setIsDeleteDialogOpen(true);
@@ -134,7 +134,7 @@ export function JobsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl md:text-3xl font-bold">{t("jobs.title")}</h1>
-        <Button 
+        <Button
           onClick={handleAdd}
           className="w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-95 transition-transform"
         >

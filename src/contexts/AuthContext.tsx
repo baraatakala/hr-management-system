@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Ignore errors
     }
     // Always redirect to login
-    globalThis.location.href = '/login';
+    globalThis.location.href = "/login";
   };
 
   return (

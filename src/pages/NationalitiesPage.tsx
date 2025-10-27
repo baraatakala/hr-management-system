@@ -129,7 +129,7 @@ export function NationalitiesPage() {
       .from("employees")
       .select("*", { count: "exact", head: true })
       .eq("nationality", item.name_en);
-    
+
     setAffectedEmployeesCount(count || 0);
     setItemToDelete(item);
     setIsDeleteDialogOpen(true);
@@ -159,8 +159,8 @@ export function NationalitiesPage() {
               : `${items?.length || 0} nationalities`}
           </p>
         </div>
-        <Button 
-          onClick={handleAdd} 
+        <Button
+          onClick={handleAdd}
           className="gap-2 w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-95 transition-transform"
         >
           <Plus className="w-4 h-4" />
@@ -179,10 +179,7 @@ export function NationalitiesPage() {
                 <p className="text-sm text-gray-500 mt-1">{item.code}</p>
               </div>
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handleEdit(item)}
-                >
+                <Button size="sm" onClick={() => handleEdit(item)}>
                   <Edit className="w-4 h-4" />
                 </Button>
                 <Button

@@ -89,7 +89,7 @@ export function Layout() {
         <div
           className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
           onClick={() => setMobileMenuOpen(false)}
-          style={{ pointerEvents: 'auto' }}
+          style={{ pointerEvents: "auto" }}
         />
       )}
 
@@ -106,11 +106,15 @@ export function Layout() {
             ? "translate-x-full lg:translate-x-0"
             : "-translate-x-full lg:translate-x-0"
         }`}
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: "auto" }}
       >
-        <div className="flex flex-col h-full" style={{ pointerEvents: 'auto' }}>
+        <div className="flex flex-col h-full" style={{ pointerEvents: "auto" }}>
           <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 relative">
-            <h1 className={`text-xl font-bold text-primary ${sidebarCollapsed ? "hidden" : "hidden lg:block"}`}>
+            <h1
+              className={`text-xl font-bold text-primary ${
+                sidebarCollapsed ? "hidden" : "hidden lg:block"
+              }`}
+            >
               {t("app.title")}
             </h1>
             {sidebarCollapsed && (
@@ -138,14 +142,24 @@ export function Layout() {
               className={`w-full flex items-center ${
                 sidebarCollapsed ? "justify-center" : "justify-between"
               } px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 transition-colors border border-blue-200 dark:border-blue-800`}
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={
+                sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              }
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {!sidebarCollapsed && <span className="text-xs font-semibold">Collapse</span>}
+              {!sidebarCollapsed && (
+                <span className="text-xs font-semibold">Collapse</span>
+              )}
               {sidebarCollapsed ? (
-                isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />
+                isRTL ? (
+                  <ChevronLeft className="w-5 h-5" />
+                ) : (
+                  <ChevronRight className="w-5 h-5" />
+                )
+              ) : isRTL ? (
+                <ChevronRight className="w-5 h-5" />
               ) : (
-                isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -168,28 +182,49 @@ export function Layout() {
                   }`}
                   title={sidebarCollapsed ? item.name : undefined}
                 >
-                  <Icon className={`w-5 h-5 ${sidebarCollapsed ? "" : isRTL ? "ml-3" : "mr-3"}`} />
+                  <Icon
+                    className={`w-5 h-5 ${
+                      sidebarCollapsed ? "" : isRTL ? "ml-3" : "mr-3"
+                    }`}
+                  />
                   {!sidebarCollapsed && item.name}
                 </Link>
               );
             })}
           </nav>
 
-          <div className={`p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800`}>
+          <div
+            className={`p-4 space-y-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800`}
+          >
             <button
               onClick={toggleTheme}
               className={`w-full flex items-center ${
                 sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
               } py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11`}
               type="button"
-              title={sidebarCollapsed ? (theme === "light" ? t("settings.dark") : t("settings.light")) : undefined}
+              title={
+                sidebarCollapsed
+                  ? theme === "light"
+                    ? t("settings.dark")
+                    : t("settings.light")
+                  : undefined
+              }
             >
               {theme === "light" ? (
-                <Moon className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
+                <Moon
+                  className={`w-4 h-4 ${
+                    sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"
+                  }`}
+                />
               ) : (
-                <Sun className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
+                <Sun
+                  className={`w-4 h-4 ${
+                    sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"
+                  }`}
+                />
               )}
-              {!sidebarCollapsed && (theme === "light" ? t("settings.dark") : t("settings.light"))}
+              {!sidebarCollapsed &&
+                (theme === "light" ? t("settings.dark") : t("settings.light"))}
             </button>
             <button
               onClick={toggleLanguage}
@@ -197,10 +232,21 @@ export function Layout() {
                 sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
               } py-3 text-sm font-medium rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11`}
               type="button"
-              title={sidebarCollapsed ? (i18n.language === "en" ? "العربية" : "English") : undefined}
+              title={
+                sidebarCollapsed
+                  ? i18n.language === "en"
+                    ? "العربية"
+                    : "English"
+                  : undefined
+              }
             >
-              <Languages className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
-              {!sidebarCollapsed && (i18n.language === "en" ? "العربية" : "English")}
+              <Languages
+                className={`w-4 h-4 ${
+                  sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"
+                }`}
+              />
+              {!sidebarCollapsed &&
+                (i18n.language === "en" ? "العربية" : "English")}
             </button>
             <button
               onClick={() => signOut()}
@@ -210,7 +256,11 @@ export function Layout() {
               type="button"
               title={sidebarCollapsed ? t("auth.logout") : undefined}
             >
-              <LogOut className={`w-4 h-4 ${sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"}`} />
+              <LogOut
+                className={`w-4 h-4 ${
+                  sidebarCollapsed ? "" : isRTL ? "ml-2" : "mr-2"
+                }`}
+              />
               {!sidebarCollapsed && t("auth.logout")}
             </button>
           </div>
@@ -220,9 +270,13 @@ export function Layout() {
       {/* Main content - Responsive padding */}
       <div
         className={`${
-          isRTL 
-            ? (sidebarCollapsed ? "lg:pr-16" : "lg:pr-64")
-            : (sidebarCollapsed ? "lg:pl-16" : "lg:pl-64")
+          isRTL
+            ? sidebarCollapsed
+              ? "lg:pr-16"
+              : "lg:pr-64"
+            : sidebarCollapsed
+            ? "lg:pl-16"
+            : "lg:pl-64"
         } pt-16 lg:pt-0 min-h-screen transition-all duration-300 ease-in-out`}
       >
         <main className="p-4 sm:p-6 lg:p-8 w-full">

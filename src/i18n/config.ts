@@ -70,8 +70,16 @@ const resources = {
       "employees.residenceExpiry": "Residence Expiry",
       "employees.email": "Email",
       "employees.phone": "Phone",
+      "employees.status": "Status",
+      "employees.addedDate": "Added Date",
       "employees.deleteConfirm":
         "Are you sure you want to delete this employee?",
+
+      // Employee Status
+      "employees.status.active": "Active",
+      "employees.status.inactive": "Inactive",
+      "employees.statusFilter": "Status Filter",
+      "employees.allStatus": "All Status",
 
       // Table Column Headers
       "table.employeeNo": "Employee No",
@@ -211,7 +219,15 @@ const resources = {
       "employees.residenceExpiry": "انتهاء الإقامة",
       "employees.email": "البريد الإلكتروني",
       "employees.phone": "الهاتف",
+      "employees.status": "الحالة",
+      "employees.addedDate": "تاريخ الإضافة",
       "employees.deleteConfirm": "هل أنت متأكد من حذف هذا الموظف؟",
+
+      // Employee Status
+      "employees.status.active": "نشط",
+      "employees.status.inactive": "غير نشط",
+      "employees.statusFilter": "تصفية الحالة",
+      "employees.allStatus": "جميع الحالات",
 
       // Table Column Headers
       "table.employeeNo": "رقم الموظف",
