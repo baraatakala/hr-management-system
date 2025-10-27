@@ -2050,30 +2050,31 @@ function EmployeeDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
-        <DialogHeader className="space-y-2 md:space-y-3">
-          <DialogTitle className="text-xl md:text-2xl">
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[92vh] sm:max-h-[90vh] overflow-hidden flex flex-col p-3 sm:p-4 md:p-6 gap-0">
+        <DialogHeader className="space-y-1.5 sm:space-y-2 pb-3 sm:pb-4 border-b shrink-0">
+          <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold">
             {employee
               ? t("employees.editEmployee")
               : t("employees.addEmployee")}
           </DialogTitle>
-          <DialogDescription className="text-sm md:text-base">
+          <DialogDescription className="text-xs sm:text-sm md:text-base leading-relaxed">
             {employee
               ? "Edit employee information and document details"
               : "Add a new employee to the system with all required information"}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 mt-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Basic Information Section */}
-          <div className="space-y-3 md:space-y-4">
-            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
-              📋 Basic Information
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-bold text-primary border-b pb-2 flex items-center gap-2">
+              <span className="text-xl sm:text-2xl">📋</span>
+              <span>Basic Information</span>
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.employeeNo")}{" "}
-                  <span className="text-red-500">*</span> 🎤
+                  <span className="text-red-500">*</span>
                 </Label>
                 <VoiceInput
                   value={formData.employee_no || ""}
@@ -2083,13 +2084,13 @@ function EmployeeDialog({
                   voiceLanguage="en-US"
                   placeholder="Type or say numbers"
                   required
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.nameEn")}{" "}
-                  <span className="text-red-500">*</span> 🎤
+                  <span className="text-red-500">*</span>
                 </Label>
                 <VoiceInput
                   value={formData.name_en || ""}
@@ -2099,13 +2100,13 @@ function EmployeeDialog({
                   voiceLanguage="en-US"
                   placeholder="Type or click mic to speak"
                   required
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.nameAr")}{" "}
-                  <span className="text-red-500">*</span> 🎤
+                  <span className="text-red-500">*</span>
                 </Label>
                 <VoiceInput
                   value={formData.name_ar || ""}
@@ -2115,11 +2116,11 @@ function EmployeeDialog({
                   voiceLanguage="ar-SA"
                   placeholder="اكتب أو انقر على الميكروفون للتحدث"
                   required
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.nationality")}{" "}
                   <span className="text-red-500">*</span>
                 </Label>
@@ -2147,8 +2148,8 @@ function EmployeeDialog({
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.addedDate")}
                 </Label>
                 <Input
@@ -2157,20 +2158,21 @@ function EmployeeDialog({
                   onChange={(e) =>
                     setFormData({ ...formData, added_date: e.target.value })
                   }
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2 flex items-center gap-2 pt-6">
+              <div className="flex items-center gap-3 pt-2 sm:pt-6">
                 <Checkbox
                   id="is_active"
                   checked={formData.is_active !== false}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, is_active: checked === true })
                   }
+                  className="w-5 h-5 sm:w-4 sm:h-4"
                 />
                 <Label 
                   htmlFor="is_active" 
-                  className="text-xs md:text-sm font-medium cursor-pointer"
+                  className="text-sm sm:text-base font-semibold cursor-pointer text-gray-700 dark:text-gray-300"
                 >
                   {t("employees.isActive")}
                 </Label>
@@ -2179,13 +2181,14 @@ function EmployeeDialog({
           </div>
 
           {/* Company Information Section */}
-          <div className="space-y-3 md:space-y-4">
-            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
-              🏢 Company Information
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-bold text-primary border-b pb-2 flex items-center gap-2">
+              <span className="text-xl sm:text-2xl">🏢</span>
+              <span>Company Information</span>
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.company")}
                 </Label>
                 <SearchableSelect
@@ -2215,8 +2218,8 @@ function EmployeeDialog({
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.department")}
                 </Label>
                 <SearchableSelect
@@ -2243,8 +2246,8 @@ function EmployeeDialog({
                   }
                 />
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2 sm:col-span-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.job")}
                 </Label>
                 <SearchableSelect
@@ -2275,14 +2278,15 @@ function EmployeeDialog({
           </div>
 
           {/* Documents Section */}
-          <div className="space-y-3 md:space-y-4">
-            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
-              📄 Documents & IDs
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-bold text-primary border-b pb-2 flex items-center gap-2">
+              <span className="text-xl sm:text-2xl">📄</span>
+              <span>Documents & IDs</span>
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.passportNo")} 🎤
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
+                  {t("employees.passportNo")}
                 </Label>
                 <VoiceInput
                   value={formData.passport_no || ""}
@@ -2291,11 +2295,11 @@ function EmployeeDialog({
                   }
                   voiceLanguage="en-US"
                   placeholder="Speak passport number"
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.passportExpiry")}
                 </Label>
                 <Input
@@ -2307,12 +2311,12 @@ function EmployeeDialog({
                       passport_expiry: e.target.value,
                     })
                   }
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.cardNo")} 🎤
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
+                  {t("employees.cardNo")}
                 </Label>
                 <VoiceInput
                   value={formData.card_no || ""}
@@ -2321,11 +2325,11 @@ function EmployeeDialog({
                   }
                   voiceLanguage="en-US"
                   placeholder="Speak card number"
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.cardExpiry")}
                 </Label>
                 <Input
@@ -2334,12 +2338,12 @@ function EmployeeDialog({
                   onChange={(e) =>
                     setFormData({ ...formData, card_expiry: e.target.value })
                   }
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.emiratesId")} 🎤
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
+                  {t("employees.emiratesId")}
                 </Label>
                 <VoiceInput
                   value={formData.emirates_id || ""}
@@ -2348,11 +2352,11 @@ function EmployeeDialog({
                   }
                   voiceLanguage="en-US"
                   placeholder="Speak Emirates ID"
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.emiratesIdExpiry")}
                 </Label>
                 <Input
@@ -2364,12 +2368,12 @@ function EmployeeDialog({
                       emirates_id_expiry: e.target.value,
                     })
                   }
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.residenceNo")} 🎤
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
+                  {t("employees.residenceNo")}
                 </Label>
                 <VoiceInput
                   value={formData.residence_no || ""}
@@ -2378,11 +2382,11 @@ function EmployeeDialog({
                   }
                   voiceLanguage="en-US"
                   placeholder="Speak residence number"
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.residenceExpiry")}
                 </Label>
                 <Input
@@ -2394,21 +2398,22 @@ function EmployeeDialog({
                       residence_expiry: e.target.value,
                     })
                   }
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
             </div>
           </div>
 
           {/* Contact Information Section */}
-          <div className="space-y-3 md:space-y-4">
-            <h3 className="text-sm md:text-base font-semibold text-primary border-b pb-2">
-              📞 Contact Information
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-bold text-primary border-b pb-2 flex items-center gap-2">
+              <span className="text-xl sm:text-2xl">📞</span>
+              <span>Contact Information</span>
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.email")} 🎤
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
+                  {t("employees.email")}
                 </Label>
                 <VoiceInput
                   type="email"
@@ -2418,12 +2423,12 @@ function EmployeeDialog({
                   }
                   voiceLanguage="en-US"
                   placeholder="Speak email address"
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.phone")} 🎤
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
+                  {t("employees.phone")}
                 </Label>
                 <VoiceInput
                   value={formData.phone || ""}
@@ -2433,25 +2438,25 @@ function EmployeeDialog({
                   voiceLanguage="en-US"
                   placeholder="Speak phone number"
                   type="tel"
-                  className="h-11 md:h-10"
+                  className="h-12 sm:h-11 text-base sm:text-sm"
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 pt-4">
+          <DialogFooter className="sticky bottom-0 bg-background pt-4 pb-2 border-t -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 mt-6 flex-col sm:flex-row gap-3 sm:gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="w-full sm:w-auto h-11 md:h-10 order-2 sm:order-1"
+              className="w-full sm:w-auto h-12 sm:h-10 text-base sm:text-sm font-semibold order-2 sm:order-1"
             >
               {t("common.cancel")}
             </Button>
             <Button
               type="submit"
               disabled={saveMutation.isPending}
-              className="w-full sm:w-auto h-11 md:h-10 order-1 sm:order-2"
+              className="w-full sm:w-auto h-12 sm:h-10 text-base sm:text-sm font-semibold order-1 sm:order-2"
             >
               {saveMutation.isPending ? t("common.loading") : t("common.save")}
             </Button>
