@@ -125,6 +125,8 @@ export interface Database {
           residence_expiry: string | null;
           email: string | null;
           phone: string | null;
+          added_date: string | null;
+          is_active: boolean;
           added_at: string;
           updated_at: string;
         };
@@ -147,6 +149,8 @@ export interface Database {
           residence_expiry?: string | null;
           email?: string | null;
           phone?: string | null;
+          added_date?: string | null;
+          is_active?: boolean;
           added_at?: string;
           updated_at?: string;
         };
@@ -169,6 +173,8 @@ export interface Database {
           residence_expiry?: string | null;
           email?: string | null;
           phone?: string | null;
+          added_date?: string | null;
+          is_active?: boolean;
           added_at?: string;
           updated_at?: string;
         };

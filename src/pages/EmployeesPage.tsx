@@ -48,7 +48,11 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import * as XLSX from "xlsx";
+
+// Enable relative time plugin for dayjs
+dayjs.extend(relativeTime);
 
 interface Employee {
   id: string;
@@ -71,6 +75,7 @@ interface Employee {
   phone: string | null;
   added_date: string | null;
   is_active: boolean;
+  updated_at: string | null;
 }
 
 type ViewMode = "grid" | "table";
@@ -97,7 +102,7 @@ export function EmployeesPage() {
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [jobFilter, setJobFilter] = useState<string>("all");
-  const [activeStatusFilter, setActiveStatusFilter] = useState<string>("active"); // active, inactive, all
+  const [activeStatusFilter, setActiveStatusFilter] = useState<string>("all"); // active, inactive, all
   const [passportStatusFilter, setPassportStatusFilter] =
     useState<StatusFilter>("all");
   const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter>("all");
@@ -222,6 +227,38 @@ export function EmployeesPage() {
     },
   });
 
+  // Bulk activate mutation
+  const bulkActivateMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from("employees")
+        .update({ is_active: true })
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setSelectedIds([]);
+      setShowBulkActions(false);
+    },
+  });
+
+  // Bulk deactivate mutation
+  const bulkDeactivateMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from("employees")
+        .update({ is_active: false })
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setSelectedIds([]);
+      setShowBulkActions(false);
+    },
+  });
+
   // Helper function to check document status
   const getDocumentStatus = (
     expiryDate: string | null
@@ -231,6 +268,15 @@ export function EmployeesPage() {
     if (daysUntilExpiry < 0) return "expired";
     if (daysUntilExpiry <= 30) return "expiring";
     return "valid";
+  };
+
+  // Helper function to get localized nationality name
+  const getNationalityName = (nationalityCode: string): string => {
+    const nationality = nationalities.find(
+      (nat: any) => nat.name_en === nationalityCode || nat.code === nationalityCode
+    );
+    if (!nationality) return nationalityCode;
+    return i18n.language === "ar" ? nationality.name_ar : nationality.name_en;
   };
 
   // Comprehensive filtering
@@ -375,6 +421,14 @@ export function EmployeesPage() {
           aValue = i18n.language === "ar" ? a.jobs?.name_ar : a.jobs?.name_en;
           bValue = i18n.language === "ar" ? b.jobs?.name_ar : b.jobs?.name_en;
           break;
+        case "is_active":
+          aValue = a.is_active ? 1 : 0;
+          bValue = b.is_active ? 1 : 0;
+          break;
+        case "added_date":
+          aValue = a.added_date || "";
+          bValue = b.added_date || "";
+          break;
         case "passport":
           aValue = a.passport_expiry || "";
           bValue = b.passport_expiry || "";
@@ -493,6 +547,26 @@ export function EmployeesPage() {
     }
   };
 
+  const handleBulkActivate = () => {
+    if (
+      confirm(
+        `Are you sure you want to activate ${selectedIds.length} selected employee(s)?`
+      )
+    ) {
+      bulkActivateMutation.mutate(selectedIds);
+    }
+  };
+
+  const handleBulkDeactivate = () => {
+    if (
+      confirm(
+        `Are you sure you want to deactivate ${selectedIds.length} selected employee(s)?`
+      )
+    ) {
+      bulkDeactivateMutation.mutate(selectedIds);
+    }
+  };
+
   const handleBulkExport = () => {
     const selectedEmployees = filteredEmployees?.filter((emp: any) =>
       selectedIds.includes(emp.id)
@@ -505,6 +579,13 @@ export function EmployeesPage() {
       "Name (EN)": emp.name_en,
       "Name (AR)": emp.name_ar,
       Nationality: emp.nationality,
+      Status: emp.is_active ? "Active" : "Inactive",
+      "Added Date": emp.added_date
+        ? dayjs(emp.added_date).format("DD/MM/YYYY")
+        : "",
+      "Last Updated": emp.updated_at
+        ? dayjs(emp.updated_at).format("DD/MM/YYYY HH:mm")
+        : "",
       Company:
         i18n.language === "ar"
           ? emp.companies?.name_ar
@@ -515,13 +596,21 @@ export function EmployeesPage() {
           : emp.departments?.name_en,
       Job: i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
       "Passport No": emp.passport_no || "",
-      "Passport Expiry": emp.passport_expiry || "",
+      "Passport Expiry": emp.passport_expiry
+        ? dayjs(emp.passport_expiry).format("DD/MM/YYYY")
+        : "",
       "Card No": emp.card_no || "",
-      "Card Expiry": emp.card_expiry || "",
+      "Card Expiry": emp.card_expiry
+        ? dayjs(emp.card_expiry).format("DD/MM/YYYY")
+        : "",
       "Emirates ID": emp.emirates_id || "",
-      "Emirates ID Expiry": emp.emirates_id_expiry || "",
+      "Emirates ID Expiry": emp.emirates_id_expiry
+        ? dayjs(emp.emirates_id_expiry).format("DD/MM/YYYY")
+        : "",
       "Residence No": emp.residence_no || "",
-      "Residence Expiry": emp.residence_expiry || "",
+      "Residence Expiry": emp.residence_expiry
+        ? dayjs(emp.residence_expiry).format("DD/MM/YYYY")
+        : "",
       Email: emp.email || "",
       Phone: emp.phone || "",
     }));
@@ -549,7 +638,7 @@ export function EmployeesPage() {
     setCompanyFilter("all");
     setDepartmentFilter("all");
     setJobFilter("all");
-    setActiveStatusFilter("active");
+    setActiveStatusFilter("all");
     setPassportStatusFilter("all");
     setCardStatusFilter("all");
     setEmiratesIdStatusFilter("all");
@@ -567,6 +656,13 @@ export function EmployeesPage() {
       "Name (English)": emp.name_en,
       "Name (Arabic)": emp.name_ar,
       Nationality: emp.nationality,
+      Status: emp.is_active ? "Active" : "Inactive",
+      "Added Date": emp.added_date
+        ? dayjs(emp.added_date).format("DD/MM/YYYY")
+        : "",
+      "Last Updated": emp.updated_at
+        ? dayjs(emp.updated_at).format("DD/MM/YYYY HH:mm")
+        : "",
       Company:
         i18n.language === "ar"
           ? emp.companies?.name_ar
@@ -688,6 +784,24 @@ export function EmployeesPage() {
                 isRTL ? "flex-row-reverse" : ""
               }`}
             >
+              <Button
+                onClick={handleBulkActivate}
+                variant="outline"
+                className="gap-2 flex-1 md:flex-initial h-8 text-xs border-green-500 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-950"
+                size="sm"
+              >
+                <CheckSquare className="w-4 h-4" />
+                <span className="hidden sm:inline">Activate</span>
+              </Button>
+              <Button
+                onClick={handleBulkDeactivate}
+                variant="outline"
+                className="gap-2 flex-1 md:flex-initial h-8 text-xs border-gray-500 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-950"
+                size="sm"
+              >
+                <Square className="w-4 h-4" />
+                <span className="hidden sm:inline">Deactivate</span>
+              </Button>
               <Button
                 onClick={handleBulkExport}
                 variant="outline"
@@ -1212,6 +1326,10 @@ export function EmployeesPage() {
                     selectedIds.includes(employee.id)
                       ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950 shadow-md"
                       : ""
+                  } ${
+                    !employee.is_active
+                      ? "opacity-60 bg-gray-50 dark:bg-gray-900/50"
+                      : ""
                   }`}
                 >
                   <div className="flex justify-between items-start gap-2">
@@ -1233,9 +1351,26 @@ export function EmployeesPage() {
                             ? employee.name_ar
                             : employee.name_en}
                         </h3>
-                        <p className="text-xs md:text-sm text-muted-foreground truncate">
-                          {employee.employee_no}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs md:text-sm text-muted-foreground truncate">
+                            {employee.employee_no}
+                          </p>
+                          {employee.is_active !== undefined && (
+                            <Badge 
+                              variant={employee.is_active ? "default" : "secondary"}
+                              className="text-xs"
+                            >
+                              {employee.is_active 
+                                ? t("filters.activeEmployees") 
+                                : t("filters.inactiveEmployees")}
+                            </Badge>
+                          )}
+                        </div>
+                        {employee.added_date && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {t("employees.addedDate")}: {dayjs(employee.added_date).format("DD/MM/YYYY")}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
@@ -1261,10 +1396,10 @@ export function EmployeesPage() {
                   <div className="space-y-2 text-sm md:text-base">
                     <p className="truncate">
                       <span className="font-medium text-xs md:text-sm">
-                        Nationality:
+                        {t("employees.nationality")}:
                       </span>{" "}
                       <span className="text-muted-foreground">
-                        {employee.nationality || "N/A"}
+                        {getNationalityName(employee.nationality) || "N/A"}
                       </span>
                     </p>
                     <p className="truncate">
@@ -1388,6 +1523,32 @@ export function EmployeesPage() {
                       </span>
                     </p>
                   </div>
+
+                  {/* Timeline Footer - Added & Updated Info */}
+                  {(employee.added_date || employee.updated_at) && (
+                    <div className="mt-3 pt-3 border-t border-muted">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        {employee.added_date && (
+                          <div className="flex items-center gap-1">
+                            <Plus className="w-3 h-3" />
+                            <span>
+                              {i18n.language === "ar" ? "أضيف" : "Added"}{" "}
+                              {dayjs(employee.added_date).format("DD/MM/YYYY")}
+                            </span>
+                          </div>
+                        )}
+                        {employee.updated_at && (
+                          <div className="flex items-center gap-1">
+                            <Edit className="w-3 h-3" />
+                            <span className="truncate">
+                              {i18n.language === "ar" ? "آخر تحديث" : "Updated"}{" "}
+                              {dayjs(employee.updated_at).fromNow()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>
@@ -1558,6 +1719,15 @@ export function EmployeesPage() {
                     </th>
                     <th
                       className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      onClick={() => handleSort("added_date")}
+                    >
+                      <div className="flex items-center gap-1">
+                        {t("employees.addedDate")}
+                        <SortIcon column="added_date" />
+                      </div>
+                    </th>
+                    <th
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
                       onClick={() => handleSort("passport")}
                     >
                       <div className="flex items-center gap-1">
@@ -1620,12 +1790,24 @@ export function EmployeesPage() {
                         {employee.employee_no}
                       </td>
                       <td className="p-2 md:p-3 text-xs md:text-sm">
-                        {i18n.language === "ar"
-                          ? employee.name_ar
-                          : employee.name_en}
+                        <div className="flex items-center gap-2">
+                          <span>
+                            {i18n.language === "ar"
+                              ? employee.name_ar
+                              : employee.name_en}
+                          </span>
+                          <span 
+                            className={`inline-block w-2 h-2 rounded-full ${
+                              employee.is_active ? "bg-green-500" : "bg-gray-400"
+                            }`}
+                            title={employee.is_active 
+                              ? t("filters.activeEmployees") 
+                              : t("filters.inactiveEmployees")}
+                          />
+                        </div>
                       </td>
                       <td className="p-2 md:p-3 text-xs md:text-sm">
-                        {employee.nationality}
+                        {getNationalityName(employee.nationality)}
                       </td>
                       <td className="p-2 md:p-3 text-xs md:text-sm">
                         {i18n.language === "ar"
@@ -1641,6 +1823,23 @@ export function EmployeesPage() {
                         {i18n.language === "ar"
                           ? employee.jobs?.name_ar
                           : employee.jobs?.name_en}
+                      </td>
+                      <td className="p-2 md:p-3 text-xs md:text-sm">
+                        <div className="space-y-0.5">
+                          <div className="font-medium">
+                            {employee.added_date
+                              ? dayjs(employee.added_date).format("DD/MM/YYYY")
+                              : "N/A"}
+                          </div>
+                          {employee.updated_at && (
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Edit className="w-2.5 h-2.5" />
+                              <span title={dayjs(employee.updated_at).format("DD/MM/YYYY HH:mm")}>
+                                {dayjs(employee.updated_at).fromNow()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="p-2 md:p-3">
                         <div className="text-[10px] md:text-xs">
@@ -1783,10 +1982,20 @@ function EmployeeDialog({
 }: EmployeeDialogProps) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<any>(employee || {});
+  const [formData, setFormData] = useState<any>(employee || {
+    added_date: dayjs().format("YYYY-MM-DD"),
+    is_active: true,
+  });
 
   React.useEffect(() => {
-    setFormData(employee || {});
+    if (employee) {
+      setFormData(employee);
+    } else {
+      setFormData({
+        added_date: dayjs().format("YYYY-MM-DD"),
+        is_active: true,
+      });
+    }
   }, [employee]);
 
   const saveMutation = useMutation({
