@@ -99,7 +99,13 @@ export function SearchableSelect({
               />
             </div>
           </div>
-          <div className="max-h-[300px] overflow-y-auto px-1 pb-1">
+          <div 
+            className="max-h-[300px] overflow-y-auto px-1 pb-1 overscroll-contain touch-pan-y"
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y'
+            }}
+          >
             {filteredOptions.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 {emptyText}
@@ -111,7 +117,7 @@ export function SearchableSelect({
                     key={option.value}
                     onClick={() => handleSelect(option.value)}
                     className={cn(
-                      "relative flex w-full cursor-pointer items-center rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                      "relative flex w-full cursor-pointer items-center rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground touch-manipulation",
                       value === option.value && "bg-accent"
                     )}
                     type="button"
