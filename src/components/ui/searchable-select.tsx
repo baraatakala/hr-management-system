@@ -24,6 +24,7 @@ export function SearchableSelect({
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -42,6 +43,28 @@ export function SearchableSelect({
   };
 
   const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Prevent touch events from propagating to parent
+  React.useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || !open) return;
+
+    const preventScroll = (e: TouchEvent) => {
+      // Allow scrolling within the container
+      const target = e.target as HTMLElement;
+      if (scrollContainer.contains(target)) {
+        e.stopPropagation();
+      }
+    };
+
+    scrollContainer.addEventListener('touchstart', preventScroll, { passive: true });
+    scrollContainer.addEventListener('touchmove', preventScroll, { passive: true });
+
+    return () => {
+      scrollContainer.removeEventListener('touchstart', preventScroll);
+      scrollContainer.removeEventListener('touchmove', preventScroll);
+    };
+  }, [open]);
 
   // Focus search input when dropdown opens
   React.useEffect(() => {
@@ -100,11 +123,15 @@ export function SearchableSelect({
             </div>
           </div>
           <div 
-            className="max-h-[300px] overflow-y-auto px-1 pb-1 overscroll-contain touch-pan-y"
+            ref={scrollContainerRef}
+            className="max-h-[300px] overflow-y-scroll px-1 pb-1 overscroll-contain"
             style={{ 
               WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-y'
+              touchAction: 'pan-y',
+              scrollbarWidth: 'thin'
             }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
           >
             {filteredOptions.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
