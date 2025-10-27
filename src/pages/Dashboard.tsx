@@ -1075,45 +1075,6 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Active vs Inactive Employees Trend */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Active vs Inactive Employees Trend
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={stats?.employeeStatusTrend || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="active"
-                stackId="1"
-                stroke="#10b981"
-                fill="#10b981"
-                fillOpacity={0.8}
-                name="Active"
-              />
-              <Area
-                type="monotone"
-                dataKey="inactive"
-                stackId="1"
-                stroke="#6b7280"
-                fill="#6b7280"
-                fillOpacity={0.6}
-                name="Inactive"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
       {/* Document Expiry Timeline */}
       <Card>
         <CardHeader>
