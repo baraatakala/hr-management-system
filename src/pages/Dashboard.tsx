@@ -583,45 +583,235 @@ export function Dashboard() {
 
     const wb = XLSX.utils.book_new();
 
-    // Sheet 1: Overview
-    const overviewData = [
-      ["HR Management System Dashboard"],
-      ["Generated on", dayjs().format("DD/MM/YYYY HH:mm")],
+    // Sheet 1: Executive Summary
+    const summaryData = [
+      ["HR MANAGEMENT SYSTEM - DASHBOARD REPORT"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm:ss")],
+      ["Report Period:", "Current Status"],
       [""],
-      ["Overview Statistics"],
+      ["EXECUTIVE SUMMARY"],
+      [""],
+      ["Employee Overview"],
       ["Total Employees", stats.totalEmployees],
-      ["Document Health Score", `${stats.healthScore}%`],
-      ["Critical Employees", stats.criticalEmployees?.length || 0],
+      ["Active Employees", stats.activeEmployees],
+      ["Inactive Employees", stats.inactiveEmployees],
+      ["Active Rate", `${stats.totalEmployees > 0 ? Math.round((stats.activeEmployees / stats.totalEmployees) * 100) : 0}%`],
       [""],
-      ["Document Status"],
-      ["Expiring Soon (30 days)", stats.totalExpiringDocs],
-      ["Expired Passports", stats.expiredPassports],
-      ["Expired Cards", stats.expiredCards],
-      ["Expired Emirates ID", stats.expiredEmiratesId],
-      ["Expired Residence", stats.expiredResidence],
+      ["Document Compliance"],
+      ["Overall Health Score", `${stats.healthScore}%`],
+      ["Critical Employees (Multiple Expired)", stats.criticalEmployees?.length || 0],
+      ["Documents Expiring Soon (30 days)", stats.totalExpiringDocs],
+      ["Total Expired Documents", (stats.expiredPassports || 0) + (stats.expiredCards || 0) + (stats.expiredEmiratesId || 0) + (stats.expiredResidence || 0)],
+      ["Total Missing Documents", (stats.missingPassports || 0) + (stats.missingCard || 0) + (stats.missingEmiratesId || 0) + (stats.missingResidence || 0)],
       [""],
-      ["Missing Documents"],
-      ["Missing Passports", stats.missingPassports],
-      ["Missing Cards", stats.missingCard],
-      ["Missing Emirates ID", stats.missingEmiratesId],
-      ["Missing Residence", stats.missingResidence],
+      ["Active Filters Applied"],
+      ["Company Filter", selectedCompany !== "all" ? companies.find((c: { id: string; name_en: string }) => c.id === selectedCompany)?.name_en || "N/A" : "All Companies"],
+      ["Department Filter", selectedDepartment !== "all" ? departments.find((d: { id: string; name_en: string }) => d.id === selectedDepartment)?.name_en || "N/A" : "All Departments"],
+      ["Nationality Filter", selectedNationality !== "all" ? nationalities.find((n: { code: string; name_en: string }) => n.code === selectedNationality)?.name_en || "N/A" : "All Nationalities"],
+      ["Date Range", dateRange === "30days" ? "Last 30 Days" : dateRange === "60days" ? "Last 60 Days" : dateRange === "90days" ? "Last 90 Days" : "All Time"],
+      ["Status Filter", statusFilter === "active" ? "Active Only" : statusFilter === "inactive" ? "Inactive Only" : "All Employees"],
     ];
-    const ws1 = XLSX.utils.aoa_to_sheet(overviewData);
-    XLSX.utils.book_append_sheet(wb, ws1, "Overview");
+    const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+    
+    // Set column widths
+    ws1['!cols'] = [{ wch: 40 }, { wch: 25 }];
+    
+    XLSX.utils.book_append_sheet(wb, ws1, "Executive Summary");
 
-    // Sheet 2: Company Statistics
-    const ws2 = XLSX.utils.json_to_sheet(stats.companyStats);
-    XLSX.utils.book_append_sheet(wb, ws2, "Companies");
+    // Sheet 2: Document Status Details
+    const documentData = [
+      ["DOCUMENT STATUS BREAKDOWN"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+      [""],
+      ["Document Type", "Expiring Soon", "Expired", "Missing", "Total Issues"],
+      ["Passports", stats.expiringSoonPassports || 0, stats.expiredPassports || 0, stats.missingPassports || 0, (stats.expiringSoonPassports || 0) + (stats.expiredPassports || 0) + (stats.missingPassports || 0)],
+      ["Work Cards", stats.expiringSoonCards || 0, stats.expiredCards || 0, stats.missingCard || 0, (stats.expiringSoonCards || 0) + (stats.expiredCards || 0) + (stats.missingCard || 0)],
+      ["Emirates ID", stats.expiringSoonEmiratesId || 0, stats.expiredEmiratesId || 0, stats.missingEmiratesId || 0, (stats.expiringSoonEmiratesId || 0) + (stats.expiredEmiratesId || 0) + (stats.missingEmiratesId || 0)],
+      ["Residence Permit", stats.expiringSoonResidence || 0, stats.expiredResidence || 0, stats.missingResidence || 0, (stats.expiringSoonResidence || 0) + (stats.expiredResidence || 0) + (stats.missingResidence || 0)],
+      [""],
+      ["TOTAL", stats.totalExpiringDocs || 0, 
+        (stats.expiredPassports || 0) + (stats.expiredCards || 0) + (stats.expiredEmiratesId || 0) + (stats.expiredResidence || 0),
+        (stats.missingPassports || 0) + (stats.missingCard || 0) + (stats.missingEmiratesId || 0) + (stats.missingResidence || 0),
+        (stats.totalExpiringDocs || 0) + (stats.expiredPassports || 0) + (stats.expiredCards || 0) + (stats.expiredEmiratesId || 0) + (stats.expiredResidence || 0) + (stats.missingPassports || 0) + (stats.missingCard || 0) + (stats.missingEmiratesId || 0) + (stats.missingResidence || 0)],
+    ];
+    const ws2 = XLSX.utils.aoa_to_sheet(documentData);
+    ws2['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "Document Status");
 
-    // Sheet 3: Department Statistics
-    const ws3 = XLSX.utils.json_to_sheet(stats.departmentStats);
-    XLSX.utils.book_append_sheet(wb, ws3, "Departments");
+    // Sheet 3: Document Expiry Timeline
+    const timelineData = [
+      ["DOCUMENT EXPIRY TIMELINE (Next 90 Days)"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+      [""],
+      ["Time Period", "Passports", "Work Cards", "Emirates ID", "Residence", "Total"],
+    ];
+    
+    stats.documentTimeline?.forEach((period: { period: string; passports: number; cards: number; emiratesId: number; residence: number }) => {
+      timelineData.push([
+        period.period,
+        period.passports,
+        period.cards,
+        period.emiratesId,
+        period.residence,
+        period.passports + period.cards + period.emiratesId + period.residence
+      ]);
+    });
+    
+    const ws3 = XLSX.utils.aoa_to_sheet(timelineData);
+    ws3['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws3, "Expiry Timeline");
 
-    // Sheet 4: Nationality Statistics
-    const ws4 = XLSX.utils.json_to_sheet(stats.nationalityStats);
-    XLSX.utils.book_append_sheet(wb, ws4, "Nationalities");
+    // Sheet 4: Company Statistics
+    const companyData = [
+      ["EMPLOYEES BY COMPANY"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+      [""],
+      ["Company Name", "Employee Count", "Percentage"],
+    ];
+    
+    const totalEmp = stats.totalEmployees || 1;
+    stats.companyStats?.forEach((company: { name: string; count: number }) => {
+      companyData.push([
+        company.name,
+        company.count,
+        `${Math.round((company.count / totalEmp) * 100)}%`
+      ]);
+    });
+    
+    companyData.push(["", "", ""]);
+    companyData.push(["TOTAL", totalEmp, "100%"]);
+    
+    const ws4 = XLSX.utils.aoa_to_sheet(companyData);
+    ws4['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws4, "Companies");
 
-    XLSX.writeFile(wb, `Dashboard_Report_${dayjs().format("YYYY-MM-DD")}.xlsx`);
+    // Sheet 5: Department Statistics
+    const deptData = [
+      ["EMPLOYEES BY DEPARTMENT"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+      [""],
+      ["Department Name", "Employee Count", "Percentage"],
+    ];
+    
+    stats.departmentStats?.forEach((dept: { name: string; count: number }) => {
+      deptData.push([
+        dept.name,
+        dept.count,
+        `${Math.round((dept.count / totalEmp) * 100)}%`
+      ]);
+    });
+    
+    deptData.push(["", "", ""]);
+    deptData.push(["TOTAL", totalEmp, "100%"]);
+    
+    const ws5 = XLSX.utils.aoa_to_sheet(deptData);
+    ws5['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws5, "Departments");
+
+    // Sheet 6: Nationality Statistics
+    const natData = [
+      ["EMPLOYEES BY NATIONALITY (Top 10)"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+      [""],
+      ["Nationality", "Employee Count", "Percentage"],
+    ];
+    
+    stats.nationalityStats?.forEach((nat: { name: string; count: number }) => {
+      natData.push([
+        nat.name,
+        nat.count,
+        `${Math.round((nat.count / totalEmp) * 100)}%`
+      ]);
+    });
+    
+    const ws6 = XLSX.utils.aoa_to_sheet(natData);
+    ws6['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws6, "Nationalities");
+
+    // Sheet 7: Job Positions
+    const jobData = [
+      ["EMPLOYEES BY JOB POSITION (Top 10)"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+      [""],
+      ["Job Position", "Employee Count", "Percentage"],
+    ];
+    
+    stats.jobStats?.forEach((job: { name: string; count: number }) => {
+      jobData.push([
+        job.name,
+        job.count,
+        `${Math.round((job.count / totalEmp) * 100)}%`
+      ]);
+    });
+    
+    const ws7 = XLSX.utils.aoa_to_sheet(jobData);
+    ws7['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws7, "Job Positions");
+
+    // Sheet 8: Critical Employees
+    if (stats.criticalEmployees && stats.criticalEmployees.length > 0) {
+      const criticalData = [
+        ["CRITICAL EMPLOYEES - IMMEDIATE ACTION REQUIRED"],
+        ["Employees with Multiple Expired Documents"],
+        ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+        [""],
+        ["Employee No", "Name (English)", "Name (Arabic)", "Company"],
+      ];
+      
+      stats.criticalEmployees.forEach((emp: { employee_no: string; name_en: string; name_ar: string; companies?: { name_en: string } }) => {
+        criticalData.push([
+          emp.employee_no,
+          emp.name_en,
+          emp.name_ar,
+          emp.companies?.name_en || "N/A"
+        ]);
+      });
+      
+      criticalData.push(["", "", "", ""]);
+      criticalData.push(["Total Critical Employees:", stats.criticalEmployees.length, "", ""]);
+      
+      const ws8 = XLSX.utils.aoa_to_sheet(criticalData);
+      ws8['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 25 }];
+      XLSX.utils.book_append_sheet(wb, ws8, "Critical Employees");
+    }
+
+    // Sheet 9: Active vs Inactive Summary
+    const statusData = [
+      ["EMPLOYEE STATUS BREAKDOWN"],
+      ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
+      [""],
+      ["Status", "Count", "Percentage"],
+      ["Active Employees", stats.activeEmployees, `${Math.round((stats.activeEmployees / totalEmp) * 100)}%`],
+      ["Inactive Employees", stats.inactiveEmployees, `${Math.round((stats.inactiveEmployees / totalEmp) * 100)}%`],
+      [""],
+      ["TOTAL", stats.totalEmployees, "100%"],
+      [""],
+      [""],
+      ["EMPLOYEE STATUS TREND (Last 6 Months)"],
+      ["Month", "Active", "Inactive", "Total"],
+    ];
+    
+    stats.employeeStatusTrend?.forEach((month: { month: string; active: number; inactive: number }) => {
+      statusData.push([
+        month.month,
+        month.active,
+        month.inactive,
+        month.active + month.inactive
+      ]);
+    });
+    
+    const ws9 = XLSX.utils.aoa_to_sheet(statusData);
+    ws9['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, ws9, "Employee Status");
+
+    // Generate filename with filters applied
+    let filename = `Dashboard_Report_${dayjs().format("YYYY-MM-DD_HHmm")}`;
+    if (hasActiveFilters) {
+      filename += "_Filtered";
+    }
+    filename += ".xlsx";
+
+    XLSX.writeFile(wb, filename);
   };
 
   if (isLoading) {
