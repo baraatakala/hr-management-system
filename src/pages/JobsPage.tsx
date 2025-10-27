@@ -246,21 +246,21 @@ export function JobsPage() {
               {i18n.language === "ar"
                 ? `هل أنت متأكد من حذف الوظيفة "${itemToDelete?.name_ar}"؟`
                 : `Are you sure you want to delete job "${itemToDelete?.name_en}"?`}
-              {affectedEmployeesCount > 0 && (
-                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-sm font-semibold text-yellow-800">
-                    {i18n.language === "ar"
-                      ? `⚠️ تحذير: ${affectedEmployeesCount} موظف مرتبط بهذه الوظيفة`
-                      : `⚠️ Warning: ${affectedEmployeesCount} employee(s) linked to this job`}
-                  </p>
-                  <p className="text-xs text-yellow-700 mt-1">
-                    {i18n.language === "ar"
-                      ? "سيتم إزالة حقل الوظيفة من سجلات الموظفين (لن يتم حذف بيانات الموظفين)"
-                      : "Job field will be removed from employee records (employees won't be deleted)"}
-                  </p>
-                </div>
-              )}
             </DialogDescription>
+            {affectedEmployeesCount > 0 && (
+              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-sm font-semibold text-yellow-800">
+                  {i18n.language === "ar"
+                    ? `⚠️ تحذير: ${affectedEmployeesCount} موظف مرتبط بهذه الوظيفة`
+                    : `⚠️ Warning: ${affectedEmployeesCount} employee(s) linked to this job`}
+                </p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  {i18n.language === "ar"
+                    ? "سيتم إزالة حقل الوظيفة من سجلات الموظفين (لن يتم حذف بيانات الموظفين)"
+                    : "Job field will be removed from employee records (employees won't be deleted)"}
+                </p>
+              </div>
+            )}
           </DialogHeader>
           <DialogFooter>
             <Button
