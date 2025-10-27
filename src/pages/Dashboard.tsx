@@ -1164,7 +1164,8 @@ export function Dashboard() {
               {stats.criticalEmployees.slice(0, 5).map((emp: { id: string; name_en: string; name_ar: string; employee_no: string; companies?: { name_en: string } }) => (
                 <div
                   key={emp.id}
-                  className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg"
+                  onClick={() => navigate("/employees")}
+                  className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 hover:shadow-md border border-transparent hover:border-red-300 active:scale-[0.98]"
                 >
                   <div>
                     <p className="font-medium">
