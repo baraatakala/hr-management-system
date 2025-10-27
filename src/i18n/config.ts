@@ -70,16 +70,10 @@ const resources = {
       "employees.residenceExpiry": "Residence Expiry",
       "employees.email": "Email",
       "employees.phone": "Phone",
-      "employees.status": "Status",
       "employees.addedDate": "Added Date",
+      "employees.isActive": "Active Employee",
       "employees.deleteConfirm":
         "Are you sure you want to delete this employee?",
-
-      // Employee Status
-      "employees.status.active": "Active",
-      "employees.status.inactive": "Inactive",
-      "employees.statusFilter": "Status Filter",
-      "employees.allStatus": "All Status",
 
       // Table Column Headers
       "table.employeeNo": "Employee No",
@@ -116,6 +110,10 @@ const resources = {
       "filters.allCompanies": "All Companies",
       "filters.allJobs": "All Jobs",
       "filters.allDepartments": "All Departments",
+      "filters.activeStatus": "Employee Status",
+      "filters.activeEmployees": "Active Employees",
+      "filters.inactiveEmployees": "Inactive Employees",
+      "filters.allEmployees": "All Employees",
 
       // Companies
       "companies.title": "Companies",
@@ -219,15 +217,9 @@ const resources = {
       "employees.residenceExpiry": "انتهاء الإقامة",
       "employees.email": "البريد الإلكتروني",
       "employees.phone": "الهاتف",
-      "employees.status": "الحالة",
       "employees.addedDate": "تاريخ الإضافة",
+      "employees.isActive": "موظف نشط",
       "employees.deleteConfirm": "هل أنت متأكد من حذف هذا الموظف؟",
-
-      // Employee Status
-      "employees.status.active": "نشط",
-      "employees.status.inactive": "غير نشط",
-      "employees.statusFilter": "تصفية الحالة",
-      "employees.allStatus": "جميع الحالات",
 
       // Table Column Headers
       "table.employeeNo": "رقم الموظف",
@@ -264,6 +256,10 @@ const resources = {
       "filters.allCompanies": "جميع الشركات",
       "filters.allJobs": "جميع الوظائف",
       "filters.allDepartments": "جميع الأقسام",
+      "filters.activeStatus": "حالة الموظف",
+      "filters.activeEmployees": "الموظفون النشطون",
+      "filters.inactiveEmployees": "الموظفون غير النشطين",
+      "filters.allEmployees": "جميع الموظفين",
 
       // Companies
       "companies.title": "الشركات",

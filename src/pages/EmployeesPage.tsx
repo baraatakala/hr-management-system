@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Plus,
   Edit,
@@ -49,29 +50,6 @@ import {
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 
-interface Company {
-  id: string;
-  name_en: string;
-  name_ar: string;
-}
-
-interface Department {
-  id: string;
-  name_en: string;
-  name_ar: string;
-}
-
-interface Job {
-  id: string;
-  name_en: string;
-  name_ar: string;
-}
-
-interface Nationality {
-  name_en: string;
-  name_ar: string;
-}
-
 interface Employee {
   id: string;
   employee_no: string;
@@ -91,11 +69,8 @@ interface Employee {
   residence_expiry: string | null;
   email: string | null;
   phone: string | null;
-  status: 'active' | 'inactive';
   added_date: string | null;
-  companies?: Company;
-  departments?: Department;
-  jobs?: Job;
+  is_active: boolean;
 }
 
 type ViewMode = "grid" | "table";
@@ -122,6 +97,7 @@ export function EmployeesPage() {
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [jobFilter, setJobFilter] = useState<string>("all");
+  const [activeStatusFilter, setActiveStatusFilter] = useState<string>("active"); // active, inactive, all
   const [passportStatusFilter, setPassportStatusFilter] =
     useState<StatusFilter>("all");
   const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter>("all");
@@ -129,9 +105,6 @@ export function EmployeesPage() {
     useState<StatusFilter>("all");
   const [residenceStatusFilter, setResidenceStatusFilter] =
     useState<StatusFilter>("all");
-    
-  // Employee status filter
-  const [employeeStatusFilter, setEmployeeStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -262,7 +235,7 @@ export function EmployeesPage() {
 
   // Comprehensive filtering
   const filteredEmployees = useMemo(() => {
-    const filtered = employees?.filter((emp: Employee) => {
+    const filtered = employees?.filter((emp: any) => {
       // Search filter - Enhanced for Arabic
       const searchLower = searchTerm.toLowerCase().trim();
       const searchOriginal = searchTerm.trim();
@@ -304,6 +277,12 @@ export function EmployeesPage() {
       // Job filter
       const matchesJob = jobFilter === "all" || emp.job_id === jobFilter;
 
+      // Active status filter
+      const matchesActiveStatus =
+        activeStatusFilter === "all" ||
+        (activeStatusFilter === "active" && emp.is_active === true) ||
+        (activeStatusFilter === "inactive" && emp.is_active === false);
+
       // Passport status filter
       const passportStatus = getDocumentStatus(emp.passport_expiry);
       const matchesPassport =
@@ -337,29 +316,26 @@ export function EmployeesPage() {
         (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
         (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
-      // Employee status filter
-      const matchesStatus = employeeStatusFilter === "all" || emp.status === employeeStatusFilter;
-
       return (
         matchesSearch &&
         matchesNationality &&
         matchesCompany &&
         matchesDepartment &&
         matchesJob &&
+        matchesActiveStatus &&
         matchesPassport &&
         matchesCard &&
         matchesEmiratesId &&
-        matchesResidence &&
-        matchesStatus
+        matchesResidence
       );
     });
 
     // Apply sorting
     if (!sortColumn || !filtered) return filtered;
 
-    return [...filtered].sort((a: Employee, b: Employee) => {
-      let aValue: string;
-      let bValue: string;
+    return [...filtered].sort((a: any, b: any) => {
+      let aValue: any;
+      let bValue: any;
 
       // Get values based on column
       switch (sortColumn) {
@@ -415,14 +391,6 @@ export function EmployeesPage() {
           aValue = a.residence_expiry || "";
           bValue = b.residence_expiry || "";
           break;
-        case "status":
-          aValue = a.status || "";
-          bValue = b.status || "";
-          break;
-        case "added_date":
-          aValue = a.added_date || "";
-          bValue = b.added_date || "";
-          break;
         default:
           return 0;
       }
@@ -444,11 +412,11 @@ export function EmployeesPage() {
     companyFilter,
     departmentFilter,
     jobFilter,
+    activeStatusFilter,
     passportStatusFilter,
     cardStatusFilter,
     emiratesIdStatusFilter,
     residenceStatusFilter,
-    employeeStatusFilter,
     sortColumn,
     sortDirection,
     i18n.language,
@@ -471,13 +439,14 @@ export function EmployeesPage() {
     companyFilter,
     departmentFilter,
     jobFilter,
+    activeStatusFilter,
     passportStatusFilter,
     cardStatusFilter,
     emiratesIdStatusFilter,
     residenceStatusFilter,
   ]);
 
-  const handleEdit = (employee: Employee) => {
+  const handleEdit = (employee: any) => {
     setEditingEmployee(employee);
     setIsDialogOpen(true);
   };
@@ -499,7 +468,7 @@ export function EmployeesPage() {
       setSelectedIds([]);
       setShowBulkActions(false);
     } else {
-      const allIds = filteredEmployees?.map((emp: Employee) => emp.id) || [];
+      const allIds = filteredEmployees?.map((emp: any) => emp.id) || [];
       setSelectedIds(allIds);
       setShowBulkActions(true);
     }
@@ -525,13 +494,13 @@ export function EmployeesPage() {
   };
 
   const handleBulkExport = () => {
-    const selectedEmployees = filteredEmployees?.filter((emp: Employee) =>
+    const selectedEmployees = filteredEmployees?.filter((emp: any) =>
       selectedIds.includes(emp.id)
     );
 
     if (!selectedEmployees || selectedEmployees.length === 0) return;
 
-    const exportData = selectedEmployees.map((emp: Employee) => ({
+    const exportData = selectedEmployees.map((emp: any) => ({
       "Employee No": emp.employee_no,
       "Name (EN)": emp.name_en,
       "Name (AR)": emp.name_ar,
@@ -580,11 +549,11 @@ export function EmployeesPage() {
     setCompanyFilter("all");
     setDepartmentFilter("all");
     setJobFilter("all");
+    setActiveStatusFilter("active");
     setPassportStatusFilter("all");
     setCardStatusFilter("all");
     setEmiratesIdStatusFilter("all");
     setResidenceStatusFilter("all");
-    setEmployeeStatusFilter("all");
   };
 
   const exportToExcel = () => {
@@ -593,7 +562,7 @@ export function EmployeesPage() {
       return;
     }
 
-    const exportData = filteredEmployees.map((emp: Employee) => ({
+    const exportData = filteredEmployees.map((emp: any) => ({
       "Employee No": emp.employee_no,
       "Name (English)": emp.name_en,
       "Name (Arabic)": emp.name_ar,
@@ -919,7 +888,7 @@ export function EmployeesPage() {
                   onValueChange={setNationalityFilter}
                   options={[
                     { value: "all", label: t("filters.allNationalities") },
-                    ...nationalities.map((nat: Nationality) => ({
+                    ...nationalities.map((nat: any) => ({
                       value: nat.name_en,
                       label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
                     })),
@@ -1019,6 +988,32 @@ export function EmployeesPage() {
                       : "No results found"
                   }
                 />
+              </div>
+
+              {/* Active Status Filter */}
+              <div>
+                <Label className="text-xs font-medium mb-1 block">
+                  {t("filters.activeStatus")}
+                </Label>
+                <Select
+                  value={activeStatusFilter}
+                  onValueChange={setActiveStatusFilter}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("filters.activeEmployees")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">
+                      {t("filters.activeEmployees")}
+                    </SelectItem>
+                    <SelectItem value="inactive">
+                      {t("filters.inactiveEmployees")}
+                    </SelectItem>
+                    <SelectItem value="all">
+                      {t("filters.allEmployees")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Passport Status Filter */}
@@ -1160,30 +1155,6 @@ export function EmployeesPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Employee Status Filter */}
-              <div>
-                <Label className="text-xs md:text-sm font-medium mb-1 block">
-                  {t("employees.statusFilter")}
-                </Label>
-                <Select
-                  value={employeeStatusFilter}
-                  onValueChange={(value) =>
-                    setEmployeeStatusFilter(value as "all" | "active" | "inactive")
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("employees.allStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      {t("employees.allStatus")}
-                    </SelectItem>
-                    <SelectItem value="active">{t("employees.status.active")}</SelectItem>
-                    <SelectItem value="inactive">{t("employees.status.inactive")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
             {/* Quick Search - Mobile Optimized */}
@@ -1234,7 +1205,7 @@ export function EmployeesPage() {
         <>
           {paginatedEmployees && paginatedEmployees.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 min-h-[500px]">
-              {paginatedEmployees.map((employee: Employee) => (
+              {paginatedEmployees.map((employee: any) => (
                 <Card
                   key={employee.id}
                   className={`p-4 md:p-5 space-y-3 transition-all duration-200 hover:shadow-lg ${
@@ -1414,24 +1385,6 @@ export function EmployeesPage() {
                       </span>{" "}
                       <span className="text-muted-foreground">
                         {employee.phone || "N/A"}
-                      </span>
-                    </p>
-                    <p className="truncate">
-                      <span className="font-medium text-xs md:text-sm">
-                        {t("employees.status")}:
-                      </span>{" "}
-                      <span className="text-muted-foreground">
-                        <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
-                          {t(`employees.status.${employee.status}`)}
-                        </Badge>
-                      </span>
-                    </p>
-                    <p className="truncate">
-                      <span className="font-medium text-xs md:text-sm">
-                        {t("employees.addedDate")}:
-                      </span>{" "}
-                      <span className="text-muted-foreground">
-                        {employee.added_date ? dayjs(employee.added_date).format('DD/MM/YYYY') : '-'}
                       </span>
                     </p>
                   </div>
@@ -1639,31 +1592,13 @@ export function EmployeesPage() {
                         <SortIcon column="residence" />
                       </div>
                     </th>
-                    <th
-                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                      onClick={() => handleSort("status")}
-                    >
-                      <div className="flex items-center gap-1">
-                        {t("employees.status")}
-                        <SortIcon column="status" />
-                      </div>
-                    </th>
-                    <th
-                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
-                      onClick={() => handleSort("added_date")}
-                    >
-                      <div className="flex items-center gap-1">
-                        {t("employees.addedDate")}
-                        <SortIcon column="added_date" />
-                      </div>
-                    </th>
                     <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm bg-muted dark:bg-gray-800">
                       {t("table.actions")}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredEmployees?.map((employee: Employee) => (
+                  {filteredEmployees?.map((employee: any) => (
                     <tr
                       key={employee.id}
                       className="border-b hover:bg-muted/30 transition-colors"
@@ -1767,14 +1702,6 @@ export function EmployeesPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-2 md:p-3 text-xs md:text-sm">
-                        <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
-                          {t(`employees.status.${employee.status}`)}
-                        </Badge>
-                      </td>
-                      <td className="p-2 md:p-3 text-xs md:text-sm">
-                        {employee.added_date ? dayjs(employee.added_date).format('DD/MM/YYYY') : '-'}
-                      </td>
                       <td className="p-2 md:p-3">
                         <div className="flex gap-1 md:gap-2 justify-end">
                           <Button
@@ -1839,14 +1766,10 @@ interface EmployeeDialogProps {
   isOpen: boolean;
   onClose: () => void;
   employee: Employee | null;
-  companies: Company[];
-  departments: Department[];
-  jobs: Job[];
-  nationalities: Nationality[];
-}
-
-interface EmployeeFormData extends Omit<Employee, 'id' | 'companies' | 'departments' | 'jobs'> {
-  id?: string;
+  companies: any[];
+  departments: any[];
+  jobs: any[];
+  nationalities: any[];
 }
 
 function EmployeeDialog({
@@ -1860,34 +1783,14 @@ function EmployeeDialog({
 }: EmployeeDialogProps) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<EmployeeFormData>(employee || {
-    employee_no: '',
-    name_en: '',
-    name_ar: '',
-    nationality: '',
-    company_id: '',
-    department_id: '',
-    job_id: '',
-    passport_no: null,
-    passport_expiry: null,
-    card_no: null,
-    card_expiry: null,
-    emirates_id: null,
-    emirates_id_expiry: null,
-    residence_no: null,
-    residence_expiry: null,
-    email: null,
-    phone: null,
-    status: 'active',
-    added_date: dayjs().format('YYYY-MM-DD')
-  });
+  const [formData, setFormData] = useState<any>(employee || {});
 
   React.useEffect(() => {
     setFormData(employee || {});
   }, [employee]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: EmployeeFormData) => {
+    mutationFn: async (data: any) => {
       // Clean data: remove nested objects and keep only valid columns
       const cleanData = {
         employee_no: data.employee_no,
@@ -1907,8 +1810,8 @@ function EmployeeDialog({
         residence_expiry: data.residence_expiry || null,
         email: data.email || null,
         phone: data.phone || null,
-        status: data.status || 'active',
-        added_date: data.added_date || dayjs().format('YYYY-MM-DD'),
+        added_date: data.added_date || null,
+        is_active: data.is_active !== false,
       };
 
       if (employee) {
@@ -1926,7 +1829,7 @@ function EmployeeDialog({
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       onClose();
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       alert(error.message || "An error occurred while saving the employee");
     },
   });
@@ -2037,40 +1940,31 @@ function EmployeeDialog({
               </div>
               <div className="space-y-2">
                 <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.status")}{" "}
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.status || "active"}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, status: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">
-                      {t("employees.status.active")}
-                    </SelectItem>
-                    <SelectItem value="inactive">
-                      {t("employees.status.inactive")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm font-medium">
-                  {t("employees.addedDate")}{" "}
+                  {t("employees.addedDate")}
                 </Label>
                 <Input
                   type="date"
-                  value={formData.added_date || dayjs().format('YYYY-MM-DD')}
+                  value={formData.added_date || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, added_date: e.target.value })
                   }
                   className="h-11 md:h-10"
                 />
+              </div>
+              <div className="space-y-2 flex items-center gap-2 pt-6">
+                <Checkbox
+                  id="is_active"
+                  checked={formData.is_active !== false}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, is_active: checked === true })
+                  }
+                />
+                <Label 
+                  htmlFor="is_active" 
+                  className="text-xs md:text-sm font-medium cursor-pointer"
+                >
+                  {t("employees.isActive")}
+                </Label>
               </div>
             </div>
           </div>
