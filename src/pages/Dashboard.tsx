@@ -607,7 +607,7 @@ export function Dashboard() {
       ["Active Filters Applied"],
       ["Company Filter", selectedCompany !== "all" ? companies.find((c: { id: string; name_en: string }) => c.id === selectedCompany)?.name_en || "N/A" : "All Companies"],
       ["Department Filter", selectedDepartment !== "all" ? departments.find((d: { id: string; name_en: string }) => d.id === selectedDepartment)?.name_en || "N/A" : "All Departments"],
-      ["Nationality Filter", selectedNationality !== "all" ? nationalities.find((n: { code: string; name_en: string }) => n.code === selectedNationality)?.name_en || "N/A" : "All Nationalities"],
+      ["Nationality Filter", selectedNationality !== "all" ? selectedNationality : "All Nationalities"],
       ["Date Range", dateRange === "30days" ? "Last 30 Days" : dateRange === "60days" ? "Last 60 Days" : dateRange === "90days" ? "Last 90 Days" : "All Time"],
       ["Status Filter", statusFilter === "active" ? "Active Only" : statusFilter === "inactive" ? "Inactive Only" : "All Employees"],
     ];
@@ -1005,7 +1005,7 @@ export function Dashboard() {
                 >
                   <option value="all">All Nationalities</option>
                   {nationalities.map((nat: { code: string; name_en: string; name_ar: string }) => (
-                    <option key={nat.code} value={nat.code}>
+                    <option key={nat.code} value={nat.name_en}>
                       {i18n.language === "ar" ? nat.name_ar : nat.name_en}
                     </option>
                   ))}
@@ -1068,7 +1068,7 @@ export function Dashboard() {
                   {selectedNationality !== "all" && (
                     <Badge variant="secondary" className="gap-1">
                       <Globe className="w-3 h-3" />
-                      Nationality: {nationalities.find((n: { code: string; name_en: string }) => n.code === selectedNationality)?.name_en}
+                      Nationality: {selectedNationality}
                     </Badge>
                   )}
                   {dateRange !== "all" && (
