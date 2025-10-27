@@ -273,7 +273,8 @@ export function EmployeesPage() {
   // Helper function to get localized nationality name
   const getNationalityName = (nationalityCode: string): string => {
     const nationality = nationalities.find(
-      (nat: any) => nat.name_en === nationalityCode || nat.code === nationalityCode
+      (nat: any) =>
+        nat.name_en === nationalityCode || nat.code === nationalityCode
     );
     if (!nationality) return nationalityCode;
     return i18n.language === "ar" ? nationality.name_ar : nationality.name_en;
@@ -1356,19 +1357,22 @@ export function EmployeesPage() {
                             {employee.employee_no}
                           </p>
                           {employee.is_active !== undefined && (
-                            <Badge 
-                              variant={employee.is_active ? "default" : "secondary"}
+                            <Badge
+                              variant={
+                                employee.is_active ? "default" : "secondary"
+                              }
                               className="text-xs"
                             >
-                              {employee.is_active 
-                                ? t("filters.activeEmployees") 
+                              {employee.is_active
+                                ? t("filters.activeEmployees")
                                 : t("filters.inactiveEmployees")}
                             </Badge>
                           )}
                         </div>
                         {employee.added_date && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            {t("employees.addedDate")}: {dayjs(employee.added_date).format("DD/MM/YYYY")}
+                            {t("employees.addedDate")}:{" "}
+                            {dayjs(employee.added_date).format("DD/MM/YYYY")}
                           </p>
                         )}
                       </div>
@@ -1796,13 +1800,17 @@ export function EmployeesPage() {
                               ? employee.name_ar
                               : employee.name_en}
                           </span>
-                          <span 
+                          <span
                             className={`inline-block w-2 h-2 rounded-full ${
-                              employee.is_active ? "bg-green-500" : "bg-gray-400"
+                              employee.is_active
+                                ? "bg-green-500"
+                                : "bg-gray-400"
                             }`}
-                            title={employee.is_active 
-                              ? t("filters.activeEmployees") 
-                              : t("filters.inactiveEmployees")}
+                            title={
+                              employee.is_active
+                                ? t("filters.activeEmployees")
+                                : t("filters.inactiveEmployees")
+                            }
                           />
                         </div>
                       </td>
@@ -1834,7 +1842,11 @@ export function EmployeesPage() {
                           {employee.updated_at && (
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                               <Edit className="w-2.5 h-2.5" />
-                              <span title={dayjs(employee.updated_at).format("DD/MM/YYYY HH:mm")}>
+                              <span
+                                title={dayjs(employee.updated_at).format(
+                                  "DD/MM/YYYY HH:mm"
+                                )}
+                              >
                                 {dayjs(employee.updated_at).fromNow()}
                               </span>
                             </div>
@@ -1982,10 +1994,12 @@ function EmployeeDialog({
 }: EmployeeDialogProps) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<any>(employee || {
-    added_date: dayjs().format("YYYY-MM-DD"),
-    is_active: true,
-  });
+  const [formData, setFormData] = useState<any>(
+    employee || {
+      added_date: dayjs().format("YYYY-MM-DD"),
+      is_active: true,
+    }
+  );
 
   React.useEffect(() => {
     if (employee) {
@@ -2063,7 +2077,11 @@ function EmployeeDialog({
               : "Add a new employee to the system with all required information"}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           {/* Basic Information Section */}
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-base sm:text-lg font-bold text-primary border-b pb-2 flex items-center gap-2">
@@ -2170,8 +2188,8 @@ function EmployeeDialog({
                   }
                   className="w-5 h-5 sm:w-4 sm:h-4"
                 />
-                <Label 
-                  htmlFor="is_active" 
+                <Label
+                  htmlFor="is_active"
                   className="text-sm sm:text-base font-semibold cursor-pointer text-gray-700 dark:text-gray-300"
                 >
                   {t("employees.isActive")}

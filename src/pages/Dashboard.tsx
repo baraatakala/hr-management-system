@@ -1,4 +1,5 @@
 // @ts-nocheck: Supabase type generation issue with relations
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -57,12 +58,20 @@ export function Dashboard() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
+  // Filter states
+  const [selectedCompany, setSelectedCompany] = React.useState<string>("all");
+  const [selectedDepartment, setSelectedDepartment] = React.useState<string>("all");
+  const [selectedNationality, setSelectedNationality] = React.useState<string>("all");
+  const [dateRange, setDateRange] = React.useState<string>("all"); // all, 30days, 60days, 90days
+  const [statusFilter, setStatusFilter] = React.useState<string>("all"); // all, active, inactive
+  const [showFilters, setShowFilters] = React.useState(false);
+
   const {
     data: stats,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["dashboard-stats"],
+    queryKey: ["dashboard-stats", selectedCompany, selectedDepartment, selectedNationality, dateRange, statusFilter],
     queryFn: async () => {
       const today = dayjs().format("YYYY-MM-DD");
       const thirtyDaysFromNow = dayjs().add(30, "day").format("YYYY-MM-DD");
@@ -76,41 +85,75 @@ export function Dashboard() {
           "*, companies(name_en, name_ar), departments(name_en, name_ar), jobs(name_en, name_ar)"
         );
 
-      const totalEmployees = allEmployees?.length || 0;
+      // Apply filters
+      let filteredEmployees = allEmployees || [];
+      
+      if (selectedCompany !== "all") {
+        filteredEmployees = filteredEmployees.filter(emp => emp.company_id === selectedCompany);
+      }
+      
+      if (selectedDepartment !== "all") {
+        filteredEmployees = filteredEmployees.filter(emp => emp.department_id === selectedDepartment);
+      }
+      
+      if (selectedNationality !== "all") {
+        filteredEmployees = filteredEmployees.filter(emp => emp.nationality === selectedNationality);
+      }
+      
+      if (statusFilter === "active") {
+        filteredEmployees = filteredEmployees.filter(emp => emp.is_active === true);
+      } else if (statusFilter === "inactive") {
+        filteredEmployees = filteredEmployees.filter(emp => emp.is_active === false);
+      }
+      
+      if (dateRange !== "all" && filteredEmployees) {
+        const rangeDate = dateRange === "30days" ? dayjs().subtract(30, "day") :
+                         dateRange === "60days" ? dayjs().subtract(60, "day") :
+                         dateRange === "90days" ? dayjs().subtract(90, "day") : null;
+        if (rangeDate) {
+          filteredEmployees = filteredEmployees.filter(emp => 
+            emp.added_date && dayjs(emp.added_date).isAfter(rangeDate)
+          );
+        }
+      }
+
+      const totalEmployees = filteredEmployees?.length || 0;
+      const activeEmployees = filteredEmployees?.filter(emp => emp.is_active === true).length || 0;
+      const inactiveEmployees = filteredEmployees?.filter(emp => emp.is_active === false).length || 0;
 
       // Missing documents analysis
       const missingPassports =
-        allEmployees?.filter((emp) => !emp.passport_no).length || 0;
+        filteredEmployees?.filter((emp) => !emp.passport_no).length || 0;
       const missingEmiratesId =
-        allEmployees?.filter((emp) => !emp.emirates_id).length || 0;
+        filteredEmployees?.filter((emp) => !emp.emirates_id).length || 0;
       const missingResidence =
-        allEmployees?.filter((emp) => !emp.residence_no).length || 0;
+        filteredEmployees?.filter((emp) => !emp.residence_no).length || 0;
       const missingCard =
-        allEmployees?.filter((emp) => !emp.card_no).length || 0;
+        filteredEmployees?.filter((emp) => !emp.card_no).length || 0;
 
       // Expired documents
       const expiredPassports =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.passport_expiry &&
             dayjs(emp.passport_expiry).isBefore(dayjs(), "day")
         ).length || 0;
 
       const expiredCards =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.card_expiry && dayjs(emp.card_expiry).isBefore(dayjs(), "day")
         ).length || 0;
 
       const expiredEmiratesId =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.emirates_id_expiry &&
             dayjs(emp.emirates_id_expiry).isBefore(dayjs(), "day")
         ).length || 0;
 
       const expiredResidence =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.residence_expiry &&
             dayjs(emp.residence_expiry).isBefore(dayjs(), "day")
@@ -118,7 +161,7 @@ export function Dashboard() {
 
       // Expiring soon (within 30 days)
       const expiringSoonPassports =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.passport_expiry &&
             dayjs(emp.passport_expiry).isAfter(dayjs(), "day") &&
@@ -126,7 +169,7 @@ export function Dashboard() {
         ).length || 0;
 
       const expiringSoonCards =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.card_expiry &&
             dayjs(emp.card_expiry).isAfter(dayjs(), "day") &&
@@ -134,7 +177,7 @@ export function Dashboard() {
         ).length || 0;
 
       const expiringSoonEmiratesId =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.emirates_id_expiry &&
             dayjs(emp.emirates_id_expiry).isAfter(dayjs(), "day") &&
@@ -145,7 +188,7 @@ export function Dashboard() {
         ).length || 0;
 
       const expiringSoonResidence =
-        allEmployees?.filter(
+        filteredEmployees?.filter(
           (emp) =>
             emp.residence_expiry &&
             dayjs(emp.residence_expiry).isAfter(dayjs(), "day") &&
@@ -165,7 +208,7 @@ export function Dashboard() {
       }
 
       const companyStats =
-        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+        filteredEmployees?.reduce((acc: CompanyStat[], emp) => {
           const companyName =
             i18n.language === "ar"
               ? emp.companies?.name_ar || "Unknown"
@@ -181,7 +224,7 @@ export function Dashboard() {
 
       // Department statistics
       const departmentStats =
-        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+        filteredEmployees?.reduce((acc: CompanyStat[], emp) => {
           const deptName =
             i18n.language === "ar"
               ? emp.departments?.name_ar || "Unknown"
@@ -197,7 +240,7 @@ export function Dashboard() {
 
       // Job statistics
       const jobStats =
-        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+        filteredEmployees?.reduce((acc: CompanyStat[], emp) => {
           const jobName =
             i18n.language === "ar"
               ? emp.jobs?.name_ar || "Unknown"
@@ -213,7 +256,7 @@ export function Dashboard() {
 
       // Nationality statistics
       const nationalityStats =
-        allEmployees?.reduce((acc: CompanyStat[], emp) => {
+        filteredEmployees?.reduce((acc: CompanyStat[], emp) => {
           const nationality = emp.nationality || "Unknown";
           const existing = acc.find((item) => item.name === nationality);
           if (existing) {
@@ -236,7 +279,7 @@ export function Dashboard() {
         {
           period: "31-60 days",
           passports:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.passport_expiry &&
                 dayjs(emp.passport_expiry).isAfter(
@@ -249,14 +292,14 @@ export function Dashboard() {
                 )
             ).length || 0,
           cards:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.card_expiry &&
                 dayjs(emp.card_expiry).isAfter(dayjs().add(30, "day"), "day") &&
                 dayjs(emp.card_expiry).isBefore(dayjs().add(60, "day"), "day")
             ).length || 0,
           emiratesId:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.emirates_id_expiry &&
                 dayjs(emp.emirates_id_expiry).isAfter(
@@ -269,7 +312,7 @@ export function Dashboard() {
                 )
             ).length || 0,
           residence:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.residence_expiry &&
                 dayjs(emp.residence_expiry).isAfter(
@@ -285,7 +328,7 @@ export function Dashboard() {
         {
           period: "61-90 days",
           passports:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.passport_expiry &&
                 dayjs(emp.passport_expiry).isAfter(
@@ -298,14 +341,14 @@ export function Dashboard() {
                 )
             ).length || 0,
           cards:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.card_expiry &&
                 dayjs(emp.card_expiry).isAfter(dayjs().add(60, "day"), "day") &&
                 dayjs(emp.card_expiry).isBefore(dayjs().add(90, "day"), "day")
             ).length || 0,
           emiratesId:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.emirates_id_expiry &&
                 dayjs(emp.emirates_id_expiry).isAfter(
@@ -318,7 +361,7 @@ export function Dashboard() {
                 )
             ).length || 0,
           residence:
-            allEmployees?.filter(
+            filteredEmployees?.filter(
               (emp) =>
                 emp.residence_expiry &&
                 dayjs(emp.residence_expiry).isAfter(
@@ -349,7 +392,7 @@ export function Dashboard() {
 
       // Critical alerts (employees with multiple expired docs)
       const criticalEmployees =
-        allEmployees?.filter((emp) => {
+        filteredEmployees?.filter((emp) => {
           let expiredCount = 0;
           if (
             emp.passport_expiry &&
@@ -374,8 +417,84 @@ export function Dashboard() {
           return expiredCount >= 2;
         }) || [];
 
+      // Active/Inactive employee trend (simulated by added_date distribution)
+      const employeeStatusTrend = [
+        {
+          month: dayjs().subtract(5, "month").format("MMM"),
+          active: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(5, "month")) && 
+            emp.is_active
+          ).length || 0,
+          inactive: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(5, "month")) && 
+            !emp.is_active
+          ).length || 0,
+        },
+        {
+          month: dayjs().subtract(4, "month").format("MMM"),
+          active: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(4, "month")) && 
+            emp.is_active
+          ).length || 0,
+          inactive: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(4, "month")) && 
+            !emp.is_active
+          ).length || 0,
+        },
+        {
+          month: dayjs().subtract(3, "month").format("MMM"),
+          active: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(3, "month")) && 
+            emp.is_active
+          ).length || 0,
+          inactive: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(3, "month")) && 
+            !emp.is_active
+          ).length || 0,
+        },
+        {
+          month: dayjs().subtract(2, "month").format("MMM"),
+          active: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(2, "month")) && 
+            emp.is_active
+          ).length || 0,
+          inactive: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(2, "month")) && 
+            !emp.is_active
+          ).length || 0,
+        },
+        {
+          month: dayjs().subtract(1, "month").format("MMM"),
+          active: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(1, "month")) && 
+            emp.is_active
+          ).length || 0,
+          inactive: filteredEmployees?.filter(emp => 
+            emp.added_date && 
+            dayjs(emp.added_date).isBefore(dayjs().subtract(1, "month")) && 
+            !emp.is_active
+          ).length || 0,
+        },
+        {
+          month: dayjs().format("MMM"),
+          active: activeEmployees,
+          inactive: inactiveEmployees,
+        },
+      ];
+
       return {
         totalEmployees,
+        activeEmployees,
+        inactiveEmployees,
         missingPassports,
         missingEmiratesId,
         missingResidence,
@@ -400,11 +519,63 @@ export function Dashboard() {
           .sort((a, b) => b.count - a.count)
           .slice(0, 10),
         documentTimeline,
+        employeeStatusTrend,
         healthScore,
         criticalEmployees,
       };
     },
   });
+
+  // Fetch companies, departments, nationalities for filters
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("companies")
+        .select("*")
+        .order("name_en");
+      return data || [];
+    },
+  });
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("departments")
+        .select("*")
+        .order("name_en");
+      return data || [];
+    },
+  });
+
+  const { data: nationalities = [] } = useQuery({
+    queryKey: ["nationalities"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("nationalities")
+        .select("*")
+        .order("name_en");
+      return data || [];
+    },
+  });
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedCompany("all");
+    setSelectedDepartment("all");
+    setSelectedNationality("all");
+    setDateRange("all");
+    setStatusFilter("all");
+  };
+
+  // Check if any filter is active
+  const hasActiveFilters = 
+    selectedCompany !== "all" || 
+    selectedDepartment !== "all" || 
+    selectedNationality !== "all" || 
+    dateRange !== "all" || 
+    statusFilter !== "all";
 
   // Export dashboard to Excel
   const exportDashboard = () => {
@@ -471,15 +642,33 @@ export function Dashboard() {
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100 dark:bg-blue-900/20",
-      subtitle: "Total workforce",
+      subtitle: `${stats?.activeEmployees || 0} active • ${stats?.inactiveEmployees || 0} inactive`,
+      onClick: () => navigate("/employees"),
+    },
+    {
+      title: "Active Employees",
+      value: stats?.activeEmployees || 0,
+      icon: UserCheck,
+      color: "text-green-600",
+      bgColor: "bg-green-100 dark:bg-green-900/20",
+      subtitle: "Currently working",
+      onClick: () => navigate("/employees"),
+    },
+    {
+      title: "Inactive Employees",
+      value: stats?.inactiveEmployees || 0,
+      icon: UserX,
+      color: "text-gray-600",
+      bgColor: "bg-gray-100 dark:bg-gray-900/20",
+      subtitle: "Not currently active",
       onClick: () => navigate("/employees"),
     },
     {
       title: "Document Health Score",
-      value: stats?.healthScore || 0,
+      value: `${stats?.healthScore || 0}%`,
       icon: Shield,
-      color: "text-green-600",
-      bgColor: "bg-green-100 dark:bg-green-900/20",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-100 dark:bg-emerald-900/20",
       subtitle: "Overall compliance",
     },
     {
@@ -522,6 +711,15 @@ export function Dashboard() {
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button
+            onClick={() => setShowFilters(!showFilters)}
+            variant={hasActiveFilters ? "default" : "outline"}
+            size="sm"
+            className="flex-1 sm:flex-initial h-11 md:h-9 touch-manipulation active:scale-95 transition-transform"
+          >
+            <Shield className="w-4 h-4 mr-2" />
+            Filters {hasActiveFilters && `(${[selectedCompany, selectedDepartment, selectedNationality, dateRange, statusFilter].filter(f => f !== "all").length})`}
+          </Button>
+          <Button
             onClick={() => refetch()}
             variant="outline"
             size="sm"
@@ -536,10 +734,171 @@ export function Dashboard() {
             className="flex-1 sm:flex-initial h-11 md:h-9 touch-manipulation active:scale-95 transition-transform"
           >
             <Download className="w-4 h-4 mr-2" />
-            Export Report
+            Export
           </Button>
         </div>
       </div>
+
+      {/* Advanced Filters Panel */}
+      {showFilters && (
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="w-5 h-5" />
+                Advanced Dashboard Filters
+              </CardTitle>
+              {hasActiveFilters && (
+                <Button
+                  onClick={clearFilters}
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs"
+                >
+                  Clear All
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* Company Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Company
+                </label>
+                <select
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">All Companies</option>
+                  {companies.map((company: { id: string; name_en: string; name_ar: string }) => (
+                    <option key={company.id} value={company.id}>
+                      {i18n.language === "ar" ? company.name_ar : company.name_en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Department Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Briefcase className="w-4 h-4" />
+                  Department
+                </label>
+                <select
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">All Departments</option>
+                  {departments.map((dept: { id: string; name_en: string; name_ar: string }) => (
+                    <option key={dept.id} value={dept.id}>
+                      {i18n.language === "ar" ? dept.name_ar : dept.name_en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Nationality Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  Nationality
+                </label>
+                <select
+                  value={selectedNationality}
+                  onChange={(e) => setSelectedNationality(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">All Nationalities</option>
+                  {nationalities.map((nat: { code: string; name_en: string; name_ar: string }) => (
+                    <option key={nat.code} value={nat.code}>
+                      {i18n.language === "ar" ? nat.name_ar : nat.name_en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date Range Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Added Date
+                </label>
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">All Time</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="60days">Last 60 Days</option>
+                  <option value="90days">Last 90 Days</option>
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <UserCheck className="w-4 h-4" />
+                  Status
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">All Employees</option>
+                  <option value="active">Active Only</option>
+                  <option value="inactive">Inactive Only</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Active Filters Summary */}
+            {hasActiveFilters && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-2 font-medium">Active Filters:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCompany !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Building2 className="w-3 h-3" />
+                      Company: {companies.find((c: { id: string; name_en: string }) => c.id === selectedCompany)?.name_en}
+                    </Badge>
+                  )}
+                  {selectedDepartment !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Briefcase className="w-3 h-3" />
+                      Dept: {departments.find((d: { id: string; name_en: string }) => d.id === selectedDepartment)?.name_en}
+                    </Badge>
+                  )}
+                  {selectedNationality !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Globe className="w-3 h-3" />
+                      Nationality: {nationalities.find((n: { code: string; name_en: string }) => n.code === selectedNationality)?.name_en}
+                    </Badge>
+                  )}
+                  {dateRange !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {dateRange === "30days" ? "Last 30 Days" : dateRange === "60days" ? "Last 60 Days" : "Last 90 Days"}
+                    </Badge>
+                  )}
+                  {statusFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      <UserCheck className="w-3 h-3" />
+                      {statusFilter === "active" ? "Active Only" : "Inactive Only"}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -559,7 +918,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {stats.criticalEmployees.slice(0, 5).map((emp: any) => (
+              {stats.criticalEmployees.slice(0, 5).map((emp: { id: string; name_en: string; name_ar: string; employee_no: string; companies?: { name_en: string } }) => (
                 <div
                   key={emp.id}
                   className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg"
@@ -715,6 +1074,45 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Active vs Inactive Employees Trend */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Active vs Inactive Employees Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={stats?.employeeStatusTrend || []}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="active"
+                stackId="1"
+                stroke="#10b981"
+                fill="#10b981"
+                fillOpacity={0.8}
+                name="Active"
+              />
+              <Area
+                type="monotone"
+                dataKey="inactive"
+                stackId="1"
+                stroke="#6b7280"
+                fill="#6b7280"
+                fillOpacity={0.6}
+                name="Inactive"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Document Expiry Timeline */}
       <Card>

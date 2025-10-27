@@ -57,12 +57,16 @@ export function SearchableSelect({
       }
     };
 
-    scrollContainer.addEventListener('touchstart', preventScroll, { passive: true });
-    scrollContainer.addEventListener('touchmove', preventScroll, { passive: true });
+    scrollContainer.addEventListener("touchstart", preventScroll, {
+      passive: true,
+    });
+    scrollContainer.addEventListener("touchmove", preventScroll, {
+      passive: true,
+    });
 
     return () => {
-      scrollContainer.removeEventListener('touchstart', preventScroll);
-      scrollContainer.removeEventListener('touchmove', preventScroll);
+      scrollContainer.removeEventListener("touchstart", preventScroll);
+      scrollContainer.removeEventListener("touchmove", preventScroll);
     };
   }, [open]);
 
@@ -122,13 +126,13 @@ export function SearchableSelect({
               />
             </div>
           </div>
-          <div 
+          <div
             ref={scrollContainerRef}
             className="max-h-[300px] overflow-y-scroll px-1 pb-1 overscroll-contain"
-            style={{ 
-              WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-y',
-              scrollbarWidth: 'thin'
+            style={{
+              WebkitOverflowScrolling: "touch",
+              touchAction: "pan-y",
+              scrollbarWidth: "thin",
             }}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
