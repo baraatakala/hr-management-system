@@ -1149,26 +1149,22 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.nationality")}
                 </Label>
-                <SearchableSelect
+                <Select
                   value={nationalityFilter}
                   onValueChange={setNationalityFilter}
-                  options={[
-                    { value: "all", label: t("filters.allNationalities") },
-                    ...nationalities.map((nat: any) => ({
-                      value: nat.name_en,
-                      label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
-                    })),
-                  ]}
-                  placeholder={t("filters.allNationalities")}
-                  searchPlaceholder={
-                    i18n.language === "ar" ? "بحث..." : "Search..."
-                  }
-                  emptyText={
-                    i18n.language === "ar"
-                      ? "لا توجد نتائج"
-                      : "No results found"
-                  }
-                />
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder={t("filters.allNationalities")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allNationalities")}</SelectItem>
+                    {nationalities.map((nat: any) => (
+                      <SelectItem key={nat.name_en} value={nat.name_en}>
+                        {i18n.language === "ar" ? nat.name_ar : nat.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Company Filter */}
@@ -1176,29 +1172,22 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.company")}
                 </Label>
-                <SearchableSelect
+                <Select
                   value={companyFilter}
                   onValueChange={setCompanyFilter}
-                  options={[
-                    { value: "all", label: t("filters.allCompanies") },
-                    ...companies.map((company) => ({
-                      value: company.id,
-                      label:
-                        i18n.language === "ar"
-                          ? company.name_ar
-                          : company.name_en,
-                    })),
-                  ]}
-                  placeholder={t("filters.allCompanies")}
-                  searchPlaceholder={
-                    i18n.language === "ar" ? "بحث..." : "Search..."
-                  }
-                  emptyText={
-                    i18n.language === "ar"
-                      ? "لا توجد نتائج"
-                      : "No results found"
-                  }
-                />
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder={t("filters.allCompanies")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allCompanies")}</SelectItem>
+                    {companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {i18n.language === "ar" ? company.name_ar : company.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Job Filter */}
@@ -1206,26 +1195,22 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.job")}
                 </Label>
-                <SearchableSelect
+                <Select
                   value={jobFilter}
                   onValueChange={setJobFilter}
-                  options={[
-                    { value: "all", label: t("filters.allJobs") },
-                    ...jobs.map((job) => ({
-                      value: job.id,
-                      label: i18n.language === "ar" ? job.name_ar : job.name_en,
-                    })),
-                  ]}
-                  placeholder={t("filters.allJobs")}
-                  searchPlaceholder={
-                    i18n.language === "ar" ? "بحث..." : "Search..."
-                  }
-                  emptyText={
-                    i18n.language === "ar"
-                      ? "لا توجد نتائج"
-                      : "No results found"
-                  }
-                />
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder={t("filters.allJobs")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allJobs")}</SelectItem>
+                    {jobs.map((job) => (
+                      <SelectItem key={job.id} value={job.id}>
+                        {i18n.language === "ar" ? job.name_ar : job.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Department Filter */}
@@ -1233,27 +1218,22 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.department")}
                 </Label>
-                <SearchableSelect
+                <Select
                   value={departmentFilter}
                   onValueChange={setDepartmentFilter}
-                  options={[
-                    { value: "all", label: t("filters.allDepartments") },
-                    ...departments.map((dept) => ({
-                      value: dept.id,
-                      label:
-                        i18n.language === "ar" ? dept.name_ar : dept.name_en,
-                    })),
-                  ]}
-                  placeholder={t("filters.allDepartments")}
-                  searchPlaceholder={
-                    i18n.language === "ar" ? "بحث..." : "Search..."
-                  }
-                  emptyText={
-                    i18n.language === "ar"
-                      ? "لا توجد نتائج"
-                      : "No results found"
-                  }
-                />
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder={t("filters.allDepartments")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allDepartments")}</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {i18n.language === "ar" ? dept.name_ar : dept.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Active Status Filter */}
