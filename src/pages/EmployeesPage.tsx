@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,11 +86,13 @@ type StatusFilter =
   | "expiring"
   | "expired"
   | "missing"
-  | "missing_number";
+  | "missing_number"
+  | "missing_date";
 
 export function EmployeesPage() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -110,6 +113,36 @@ export function EmployeesPage() {
     useState<StatusFilter>("all");
   const [residenceStatusFilter, setResidenceStatusFilter] =
     useState<StatusFilter>("all");
+
+  // Apply URL parameters on mount
+  useEffect(() => {
+    const passport = searchParams.get("passport") as StatusFilter;
+    const card = searchParams.get("card") as StatusFilter;
+    const emiratesId = searchParams.get("emiratesId") as StatusFilter;
+    const residence = searchParams.get("residence") as StatusFilter;
+    const company = searchParams.get("company");
+    const department = searchParams.get("department");
+    const nationality = searchParams.get("nationality");
+    const status = searchParams.get("status");
+
+    // Convert "missing" from URL to "missing_number" for filtering by document number
+    // Keep "missing_date" as is for filtering by missing expiry date
+    if (passport) setPassportStatusFilter(passport === "missing" ? "missing_number" : passport);
+    if (card) setCardStatusFilter(card === "missing" ? "missing_number" : card);
+    if (emiratesId) setEmiratesIdStatusFilter(emiratesId === "missing" ? "missing_number" : emiratesId);
+    if (residence) setResidenceStatusFilter(residence === "missing" ? "missing_number" : residence);
+    
+    // Apply dashboard filters
+    if (company) setCompanyFilter(company);
+    if (department) setDepartmentFilter(department);
+    if (nationality) setNationalityFilter(nationality);
+    if (status) setActiveStatusFilter(status); // active, inactive, or all
+
+    // Show filters panel if any URL filter is present
+    if (passport || card || emiratesId || residence || company || department || nationality || status) {
+      setShowFilters(true);
+    }
+  }, [searchParams]);
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -336,6 +369,7 @@ export function EmployeesPage() {
         passportStatusFilter === "all" ||
         (passportStatusFilter === "missing" && passportStatus === null) ||
         (passportStatusFilter === "missing_number" && !emp.passport_no) ||
+        (passportStatusFilter === "missing_date" && emp.passport_no && !emp.passport_expiry) ||
         (passportStatus !== null && passportStatus === passportStatusFilter);
 
       // Card status filter
@@ -344,6 +378,7 @@ export function EmployeesPage() {
         cardStatusFilter === "all" ||
         (cardStatusFilter === "missing" && cardStatus === null) ||
         (cardStatusFilter === "missing_number" && !emp.card_no) ||
+        (cardStatusFilter === "missing_date" && emp.card_no && !emp.card_expiry) ||
         (cardStatus !== null && cardStatus === cardStatusFilter);
 
       // Emirates ID status filter
@@ -352,6 +387,7 @@ export function EmployeesPage() {
         emiratesIdStatusFilter === "all" ||
         (emiratesIdStatusFilter === "missing" && emiratesIdStatus === null) ||
         (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
+        (emiratesIdStatusFilter === "missing_date" && emp.emirates_id && !emp.emirates_id_expiry) ||
         (emiratesIdStatus !== null &&
           emiratesIdStatus === emiratesIdStatusFilter);
 
@@ -361,6 +397,7 @@ export function EmployeesPage() {
         residenceStatusFilter === "all" ||
         (residenceStatusFilter === "missing" && residenceStatus === null) ||
         (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
+        (residenceStatusFilter === "missing_date" && emp.residence_no && !emp.residence_expiry) ||
         (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
       return (

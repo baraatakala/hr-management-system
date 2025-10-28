@@ -859,6 +859,20 @@ export function Dashboard() {
     XLSX.writeFile(wb, filename);
   };
 
+  // Helper function to build navigation URL with active filters
+  const buildEmployeeUrl = (documentFilter: string) => {
+    const params = new URLSearchParams();
+    params.append(documentFilter.split('=')[0], documentFilter.split('=')[1]);
+    
+    // Add active dashboard filters
+    if (selectedCompany !== "all") params.append("company", selectedCompany);
+    if (selectedDepartment !== "all") params.append("department", selectedDepartment);
+    if (selectedNationality !== "all") params.append("nationality", selectedNationality);
+    if (statusFilter !== "all") params.append("status", statusFilter);
+    
+    return `/employees?${params.toString()}`;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -1206,7 +1220,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div 
-              onClick={() => navigate("/employees?passport=expiring")}
+              onClick={() => navigate(buildEmployeeUrl("passport=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
@@ -1217,7 +1231,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?passport=expired")}
+              onClick={() => navigate(buildEmployeeUrl("passport=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
@@ -1226,7 +1240,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?passport=missing")}
+              onClick={() => navigate(buildEmployeeUrl("passport=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
@@ -1235,7 +1249,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?passport=missing_date")}
+              onClick={() => navigate(buildEmployeeUrl("passport=missing_date"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
@@ -1255,7 +1269,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div 
-              onClick={() => navigate("/employees?card=expiring")}
+              onClick={() => navigate(buildEmployeeUrl("card=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
@@ -1266,7 +1280,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?card=expired")}
+              onClick={() => navigate(buildEmployeeUrl("card=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
@@ -1275,7 +1289,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?card=missing")}
+              onClick={() => navigate(buildEmployeeUrl("card=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
@@ -1284,7 +1298,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?card=missing_date")}
+              onClick={() => navigate(buildEmployeeUrl("card=missing_date"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
@@ -1304,7 +1318,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div 
-              onClick={() => navigate("/employees?emiratesId=expiring")}
+              onClick={() => navigate(buildEmployeeUrl("emiratesId=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
@@ -1315,7 +1329,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?emiratesId=expired")}
+              onClick={() => navigate(buildEmployeeUrl("emiratesId=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
@@ -1324,7 +1338,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?emiratesId=missing")}
+              onClick={() => navigate(buildEmployeeUrl("emiratesId=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
@@ -1333,7 +1347,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?emiratesId=missing_date")}
+              onClick={() => navigate(buildEmployeeUrl("emiratesId=missing_date"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
@@ -1353,7 +1367,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div 
-              onClick={() => navigate("/employees?residence=expiring")}
+              onClick={() => navigate(buildEmployeeUrl("residence=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
@@ -1364,7 +1378,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?residence=expired")}
+              onClick={() => navigate(buildEmployeeUrl("residence=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
@@ -1373,7 +1387,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?residence=missing")}
+              onClick={() => navigate(buildEmployeeUrl("residence=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
@@ -1382,7 +1396,7 @@ export function Dashboard() {
               </span>
             </div>
             <div 
-              onClick={() => navigate("/employees?residence=missing_date")}
+              onClick={() => navigate(buildEmployeeUrl("residence=missing_date"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
               <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
