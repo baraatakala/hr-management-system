@@ -59,19 +59,27 @@ export function Dashboard() {
 
   // Filter states
   const [selectedCompany, setSelectedCompany] = React.useState<string>("all");
-  const [selectedDepartment, setSelectedDepartment] = React.useState<string>("all");
-  const [selectedNationality, setSelectedNationality] = React.useState<string>("all");
+  const [selectedDepartment, setSelectedDepartment] =
+    React.useState<string>("all");
+  const [selectedNationality, setSelectedNationality] =
+    React.useState<string>("all");
   const [dateRange, setDateRange] = React.useState<string>("all"); // all, 30days, 60days, 90days, custom
   const [customStartDate, setCustomStartDate] = React.useState<string>("");
   const [customEndDate, setCustomEndDate] = React.useState<string>("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all"); // all, active, inactive
   const [showFilters, setShowFilters] = React.useState(false);
 
-  const {
-    data: stats,
-    isLoading,
-  } = useQuery({
-    queryKey: ["dashboard-stats", selectedCompany, selectedDepartment, selectedNationality, dateRange, customStartDate, customEndDate, statusFilter],
+  const { data: stats, isLoading } = useQuery({
+    queryKey: [
+      "dashboard-stats",
+      selectedCompany,
+      selectedDepartment,
+      selectedNationality,
+      dateRange,
+      customStartDate,
+      customEndDate,
+      statusFilter,
+    ],
     queryFn: async () => {
       const today = dayjs().format("YYYY-MM-DD");
       const thirtyDaysFromNow = dayjs().add(30, "day").format("YYYY-MM-DD");
@@ -87,61 +95,90 @@ export function Dashboard() {
 
       // Apply filters
       let filteredEmployees = allEmployees || [];
-      
+
       if (selectedCompany !== "all") {
-        filteredEmployees = filteredEmployees.filter(emp => emp.company_id === selectedCompany);
+        filteredEmployees = filteredEmployees.filter(
+          (emp) => emp.company_id === selectedCompany
+        );
       }
-      
+
       if (selectedDepartment !== "all") {
-        filteredEmployees = filteredEmployees.filter(emp => emp.department_id === selectedDepartment);
+        filteredEmployees = filteredEmployees.filter(
+          (emp) => emp.department_id === selectedDepartment
+        );
       }
-      
+
       if (selectedNationality !== "all") {
-        filteredEmployees = filteredEmployees.filter(emp => emp.nationality === selectedNationality);
+        filteredEmployees = filteredEmployees.filter(
+          (emp) => emp.nationality === selectedNationality
+        );
       }
-      
+
       if (statusFilter === "active") {
-        filteredEmployees = filteredEmployees.filter(emp => emp.is_active === true);
+        filteredEmployees = filteredEmployees.filter(
+          (emp) => emp.is_active === true
+        );
       } else if (statusFilter === "inactive") {
-        filteredEmployees = filteredEmployees.filter(emp => emp.is_active === false);
+        filteredEmployees = filteredEmployees.filter(
+          (emp) => emp.is_active === false
+        );
       }
-      
+
       if (dateRange !== "all" && filteredEmployees) {
         if (dateRange === "custom") {
           // Custom date range
           if (customStartDate && customEndDate) {
-            filteredEmployees = filteredEmployees.filter(emp => 
-              emp.added_date && 
-              dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day')) &&
-              dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'))
+            filteredEmployees = filteredEmployees.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isAfter(
+                  dayjs(customStartDate).subtract(1, "day")
+                ) &&
+                dayjs(emp.added_date).isBefore(
+                  dayjs(customEndDate).add(1, "day")
+                )
             );
           } else if (customStartDate) {
-            filteredEmployees = filteredEmployees.filter(emp => 
-              emp.added_date && 
-              dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day'))
+            filteredEmployees = filteredEmployees.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isAfter(
+                  dayjs(customStartDate).subtract(1, "day")
+                )
             );
           } else if (customEndDate) {
-            filteredEmployees = filteredEmployees.filter(emp => 
-              emp.added_date && 
-              dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'))
+            filteredEmployees = filteredEmployees.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(
+                  dayjs(customEndDate).add(1, "day")
+                )
             );
           }
         } else {
           // Preset ranges (30, 60, 90 days)
-          const rangeDate = dateRange === "30days" ? dayjs().subtract(30, "day") :
-                           dateRange === "60days" ? dayjs().subtract(60, "day") :
-                           dateRange === "90days" ? dayjs().subtract(90, "day") : null;
+          const rangeDate =
+            dateRange === "30days"
+              ? dayjs().subtract(30, "day")
+              : dateRange === "60days"
+              ? dayjs().subtract(60, "day")
+              : dateRange === "90days"
+              ? dayjs().subtract(90, "day")
+              : null;
           if (rangeDate) {
-            filteredEmployees = filteredEmployees.filter(emp => 
-              emp.added_date && dayjs(emp.added_date).isAfter(rangeDate)
+            filteredEmployees = filteredEmployees.filter(
+              (emp) =>
+                emp.added_date && dayjs(emp.added_date).isAfter(rangeDate)
             );
           }
         }
       }
 
       const totalEmployees = filteredEmployees?.length || 0;
-      const activeEmployees = filteredEmployees?.filter(emp => emp.is_active === true).length || 0;
-      const inactiveEmployees = filteredEmployees?.filter(emp => emp.is_active === false).length || 0;
+      const activeEmployees =
+        filteredEmployees?.filter((emp) => emp.is_active === true).length || 0;
+      const inactiveEmployees =
+        filteredEmployees?.filter((emp) => emp.is_active === false).length || 0;
 
       // Missing documents analysis
       const missingPassports =
@@ -183,13 +220,20 @@ export function Dashboard() {
 
       // Missing expiry dates (have document number but no expiry date)
       const missingPassportDate =
-        filteredEmployees?.filter((emp) => emp.passport_no && !emp.passport_expiry).length || 0;
+        filteredEmployees?.filter(
+          (emp) => emp.passport_no && !emp.passport_expiry
+        ).length || 0;
       const missingCardDate =
-        filteredEmployees?.filter((emp) => emp.card_no && !emp.card_expiry).length || 0;
+        filteredEmployees?.filter((emp) => emp.card_no && !emp.card_expiry)
+          .length || 0;
       const missingEmiratesIdDate =
-        filteredEmployees?.filter((emp) => emp.emirates_id && !emp.emirates_id_expiry).length || 0;
+        filteredEmployees?.filter(
+          (emp) => emp.emirates_id && !emp.emirates_id_expiry
+        ).length || 0;
       const missingResidenceDate =
-        filteredEmployees?.filter((emp) => emp.residence_no && !emp.residence_expiry).length || 0;
+        filteredEmployees?.filter(
+          (emp) => emp.residence_no && !emp.residence_expiry
+        ).length || 0;
 
       // Expiring soon (within 30 days)
       const expiringSoonPassports =
@@ -453,68 +497,88 @@ export function Dashboard() {
       const employeeStatusTrend = [
         {
           month: dayjs().subtract(5, "month").format("MMM"),
-          active: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(5, "month")) && 
-            emp.is_active
-          ).length || 0,
-          inactive: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(5, "month")) && 
-            !emp.is_active
-          ).length || 0,
+          active:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(5, "month")) &&
+                emp.is_active
+            ).length || 0,
+          inactive:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(5, "month")) &&
+                !emp.is_active
+            ).length || 0,
         },
         {
           month: dayjs().subtract(4, "month").format("MMM"),
-          active: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(4, "month")) && 
-            emp.is_active
-          ).length || 0,
-          inactive: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(4, "month")) && 
-            !emp.is_active
-          ).length || 0,
+          active:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(4, "month")) &&
+                emp.is_active
+            ).length || 0,
+          inactive:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(4, "month")) &&
+                !emp.is_active
+            ).length || 0,
         },
         {
           month: dayjs().subtract(3, "month").format("MMM"),
-          active: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(3, "month")) && 
-            emp.is_active
-          ).length || 0,
-          inactive: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(3, "month")) && 
-            !emp.is_active
-          ).length || 0,
+          active:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(3, "month")) &&
+                emp.is_active
+            ).length || 0,
+          inactive:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(3, "month")) &&
+                !emp.is_active
+            ).length || 0,
         },
         {
           month: dayjs().subtract(2, "month").format("MMM"),
-          active: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(2, "month")) && 
-            emp.is_active
-          ).length || 0,
-          inactive: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(2, "month")) && 
-            !emp.is_active
-          ).length || 0,
+          active:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(2, "month")) &&
+                emp.is_active
+            ).length || 0,
+          inactive:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(2, "month")) &&
+                !emp.is_active
+            ).length || 0,
         },
         {
           month: dayjs().subtract(1, "month").format("MMM"),
-          active: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(1, "month")) && 
-            emp.is_active
-          ).length || 0,
-          inactive: filteredEmployees?.filter(emp => 
-            emp.added_date && 
-            dayjs(emp.added_date).isBefore(dayjs().subtract(1, "month")) && 
-            !emp.is_active
-          ).length || 0,
+          active:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(1, "month")) &&
+                emp.is_active
+            ).length || 0,
+          inactive:
+            filteredEmployees?.filter(
+              (emp) =>
+                emp.added_date &&
+                dayjs(emp.added_date).isBefore(dayjs().subtract(1, "month")) &&
+                !emp.is_active
+            ).length || 0,
         },
         {
           month: dayjs().format("MMM"),
@@ -608,11 +672,11 @@ export function Dashboard() {
   };
 
   // Check if any filter is active
-  const hasActiveFilters = 
-    selectedCompany !== "all" || 
-    selectedDepartment !== "all" || 
-    selectedNationality !== "all" || 
-    dateRange !== "all" || 
+  const hasActiveFilters =
+    selectedCompany !== "all" ||
+    selectedDepartment !== "all" ||
+    selectedNationality !== "all" ||
+    dateRange !== "all" ||
     statusFilter !== "all";
 
   // Export dashboard to Excel
@@ -633,34 +697,95 @@ export function Dashboard() {
       ["Total Employees", stats.totalEmployees],
       ["Active Employees", stats.activeEmployees],
       ["Inactive Employees", stats.inactiveEmployees],
-      ["Active Rate", `${stats.totalEmployees > 0 ? Math.round((stats.activeEmployees / stats.totalEmployees) * 100) : 0}%`],
+      [
+        "Active Rate",
+        `${
+          stats.totalEmployees > 0
+            ? Math.round((stats.activeEmployees / stats.totalEmployees) * 100)
+            : 0
+        }%`,
+      ],
       [""],
       ["Document Compliance"],
       ["Overall Health Score", `${stats.healthScore}%`],
-      ["Critical Employees (Multiple Expired)", stats.criticalEmployees?.length || 0],
+      [
+        "Critical Employees (Multiple Expired)",
+        stats.criticalEmployees?.length || 0,
+      ],
       ["Documents Expiring Soon (30 days)", stats.totalExpiringDocs],
-      ["Total Expired Documents", (stats.expiredPassports || 0) + (stats.expiredCards || 0) + (stats.expiredEmiratesId || 0) + (stats.expiredResidence || 0)],
-      ["Total Missing Documents", (stats.missingPassports || 0) + (stats.missingCard || 0) + (stats.missingEmiratesId || 0) + (stats.missingResidence || 0)],
+      [
+        "Total Expired Documents",
+        (stats.expiredPassports || 0) +
+          (stats.expiredCards || 0) +
+          (stats.expiredEmiratesId || 0) +
+          (stats.expiredResidence || 0),
+      ],
+      [
+        "Total Missing Documents",
+        (stats.missingPassports || 0) +
+          (stats.missingCard || 0) +
+          (stats.missingEmiratesId || 0) +
+          (stats.missingResidence || 0),
+      ],
       [""],
       ["Active Filters Applied"],
-      ["Company Filter", selectedCompany !== "all" ? companies.find((c: { id: string; name_en: string }) => c.id === selectedCompany)?.name_en || "N/A" : "All Companies"],
-      ["Department Filter", selectedDepartment !== "all" ? departments.find((d: { id: string; name_en: string }) => d.id === selectedDepartment)?.name_en || "N/A" : "All Departments"],
-      ["Nationality Filter", selectedNationality !== "all" ? selectedNationality : "All Nationalities"],
-      ["Date Range", 
-        dateRange === "custom" 
-          ? `Custom: ${customStartDate ? dayjs(customStartDate).format("DD/MM/YYYY") : "Not Set"} to ${customEndDate ? dayjs(customEndDate).format("DD/MM/YYYY") : "Not Set"}`
-          : dateRange === "30days" ? "Last 30 Days" 
-          : dateRange === "60days" ? "Last 60 Days" 
-          : dateRange === "90days" ? "Last 90 Days" 
-          : "All Time"
+      [
+        "Company Filter",
+        selectedCompany !== "all"
+          ? companies.find(
+              (c: { id: string; name_en: string }) => c.id === selectedCompany
+            )?.name_en || "N/A"
+          : "All Companies",
       ],
-      ["Status Filter", statusFilter === "active" ? "Active Only" : statusFilter === "inactive" ? "Inactive Only" : "All Employees"],
+      [
+        "Department Filter",
+        selectedDepartment !== "all"
+          ? departments.find(
+              (d: { id: string; name_en: string }) =>
+                d.id === selectedDepartment
+            )?.name_en || "N/A"
+          : "All Departments",
+      ],
+      [
+        "Nationality Filter",
+        selectedNationality !== "all"
+          ? selectedNationality
+          : "All Nationalities",
+      ],
+      [
+        "Date Range",
+        dateRange === "custom"
+          ? `Custom: ${
+              customStartDate
+                ? dayjs(customStartDate).format("DD/MM/YYYY")
+                : "Not Set"
+            } to ${
+              customEndDate
+                ? dayjs(customEndDate).format("DD/MM/YYYY")
+                : "Not Set"
+            }`
+          : dateRange === "30days"
+          ? "Last 30 Days"
+          : dateRange === "60days"
+          ? "Last 60 Days"
+          : dateRange === "90days"
+          ? "Last 90 Days"
+          : "All Time",
+      ],
+      [
+        "Status Filter",
+        statusFilter === "active"
+          ? "Active Only"
+          : statusFilter === "inactive"
+          ? "Inactive Only"
+          : "All Employees",
+      ],
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-    
+
     // Set column widths
-    ws1['!cols'] = [{ wch: 40 }, { wch: 25 }];
-    
+    ws1["!cols"] = [{ wch: 40 }, { wch: 25 }];
+
     XLSX.utils.book_append_sheet(wb, ws1, "Executive Summary");
 
     // Sheet 2: Document Status Details
@@ -669,18 +794,73 @@ export function Dashboard() {
       ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
       [""],
       ["Document Type", "Expiring Soon", "Expired", "Missing", "Total Issues"],
-      ["Passports", stats.expiringSoonPassports || 0, stats.expiredPassports || 0, stats.missingPassports || 0, (stats.expiringSoonPassports || 0) + (stats.expiredPassports || 0) + (stats.missingPassports || 0)],
-      ["Work Cards", stats.expiringSoonCards || 0, stats.expiredCards || 0, stats.missingCard || 0, (stats.expiringSoonCards || 0) + (stats.expiredCards || 0) + (stats.missingCard || 0)],
-      ["Emirates ID", stats.expiringSoonEmiratesId || 0, stats.expiredEmiratesId || 0, stats.missingEmiratesId || 0, (stats.expiringSoonEmiratesId || 0) + (stats.expiredEmiratesId || 0) + (stats.missingEmiratesId || 0)],
-      ["Residence Permit", stats.expiringSoonResidence || 0, stats.expiredResidence || 0, stats.missingResidence || 0, (stats.expiringSoonResidence || 0) + (stats.expiredResidence || 0) + (stats.missingResidence || 0)],
+      [
+        "Passports",
+        stats.expiringSoonPassports || 0,
+        stats.expiredPassports || 0,
+        stats.missingPassports || 0,
+        (stats.expiringSoonPassports || 0) +
+          (stats.expiredPassports || 0) +
+          (stats.missingPassports || 0),
+      ],
+      [
+        "Work Cards",
+        stats.expiringSoonCards || 0,
+        stats.expiredCards || 0,
+        stats.missingCard || 0,
+        (stats.expiringSoonCards || 0) +
+          (stats.expiredCards || 0) +
+          (stats.missingCard || 0),
+      ],
+      [
+        "Emirates ID",
+        stats.expiringSoonEmiratesId || 0,
+        stats.expiredEmiratesId || 0,
+        stats.missingEmiratesId || 0,
+        (stats.expiringSoonEmiratesId || 0) +
+          (stats.expiredEmiratesId || 0) +
+          (stats.missingEmiratesId || 0),
+      ],
+      [
+        "Residence Permit",
+        stats.expiringSoonResidence || 0,
+        stats.expiredResidence || 0,
+        stats.missingResidence || 0,
+        (stats.expiringSoonResidence || 0) +
+          (stats.expiredResidence || 0) +
+          (stats.missingResidence || 0),
+      ],
       [""],
-      ["TOTAL", stats.totalExpiringDocs || 0, 
-        (stats.expiredPassports || 0) + (stats.expiredCards || 0) + (stats.expiredEmiratesId || 0) + (stats.expiredResidence || 0),
-        (stats.missingPassports || 0) + (stats.missingCard || 0) + (stats.missingEmiratesId || 0) + (stats.missingResidence || 0),
-        (stats.totalExpiringDocs || 0) + (stats.expiredPassports || 0) + (stats.expiredCards || 0) + (stats.expiredEmiratesId || 0) + (stats.expiredResidence || 0) + (stats.missingPassports || 0) + (stats.missingCard || 0) + (stats.missingEmiratesId || 0) + (stats.missingResidence || 0)],
+      [
+        "TOTAL",
+        stats.totalExpiringDocs || 0,
+        (stats.expiredPassports || 0) +
+          (stats.expiredCards || 0) +
+          (stats.expiredEmiratesId || 0) +
+          (stats.expiredResidence || 0),
+        (stats.missingPassports || 0) +
+          (stats.missingCard || 0) +
+          (stats.missingEmiratesId || 0) +
+          (stats.missingResidence || 0),
+        (stats.totalExpiringDocs || 0) +
+          (stats.expiredPassports || 0) +
+          (stats.expiredCards || 0) +
+          (stats.expiredEmiratesId || 0) +
+          (stats.expiredResidence || 0) +
+          (stats.missingPassports || 0) +
+          (stats.missingCard || 0) +
+          (stats.missingEmiratesId || 0) +
+          (stats.missingResidence || 0),
+      ],
     ];
     const ws2 = XLSX.utils.aoa_to_sheet(documentData);
-    ws2['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    ws2["!cols"] = [
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+    ];
     XLSX.utils.book_append_sheet(wb, ws2, "Document Status");
 
     // Sheet 3: Document Expiry Timeline
@@ -688,22 +868,47 @@ export function Dashboard() {
       ["DOCUMENT EXPIRY TIMELINE (Next 90 Days)"],
       ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
       [""],
-      ["Time Period", "Passports", "Work Cards", "Emirates ID", "Residence", "Total"],
+      [
+        "Time Period",
+        "Passports",
+        "Work Cards",
+        "Emirates ID",
+        "Residence",
+        "Total",
+      ],
     ];
-    
-    stats.documentTimeline?.forEach((period: { period: string; passports: number; cards: number; emiratesId: number; residence: number }) => {
-      timelineData.push([
-        period.period,
-        period.passports,
-        period.cards,
-        period.emiratesId,
-        period.residence,
-        period.passports + period.cards + period.emiratesId + period.residence
-      ]);
-    });
-    
+
+    stats.documentTimeline?.forEach(
+      (period: {
+        period: string;
+        passports: number;
+        cards: number;
+        emiratesId: number;
+        residence: number;
+      }) => {
+        timelineData.push([
+          period.period,
+          period.passports,
+          period.cards,
+          period.emiratesId,
+          period.residence,
+          period.passports +
+            period.cards +
+            period.emiratesId +
+            period.residence,
+        ]);
+      }
+    );
+
     const ws3 = XLSX.utils.aoa_to_sheet(timelineData);
-    ws3['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+    ws3["!cols"] = [
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+    ];
     XLSX.utils.book_append_sheet(wb, ws3, "Expiry Timeline");
 
     // Sheet 4: Company Statistics
@@ -713,21 +918,21 @@ export function Dashboard() {
       [""],
       ["Company Name", "Employee Count", "Percentage"],
     ];
-    
+
     const totalEmp = stats.totalEmployees || 1;
     stats.companyStats?.forEach((company: { name: string; count: number }) => {
       companyData.push([
         company.name,
         company.count,
-        `${Math.round((company.count / totalEmp) * 100)}%`
+        `${Math.round((company.count / totalEmp) * 100)}%`,
       ]);
     });
-    
+
     companyData.push(["", "", ""]);
     companyData.push(["TOTAL", totalEmp, "100%"]);
-    
+
     const ws4 = XLSX.utils.aoa_to_sheet(companyData);
-    ws4['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
+    ws4["!cols"] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws4, "Companies");
 
     // Sheet 5: Department Statistics
@@ -737,20 +942,20 @@ export function Dashboard() {
       [""],
       ["Department Name", "Employee Count", "Percentage"],
     ];
-    
+
     stats.departmentStats?.forEach((dept: { name: string; count: number }) => {
       deptData.push([
         dept.name,
         dept.count,
-        `${Math.round((dept.count / totalEmp) * 100)}%`
+        `${Math.round((dept.count / totalEmp) * 100)}%`,
       ]);
     });
-    
+
     deptData.push(["", "", ""]);
     deptData.push(["TOTAL", totalEmp, "100%"]);
-    
+
     const ws5 = XLSX.utils.aoa_to_sheet(deptData);
-    ws5['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
+    ws5["!cols"] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws5, "Departments");
 
     // Sheet 6: Nationality Statistics
@@ -760,17 +965,17 @@ export function Dashboard() {
       [""],
       ["Nationality", "Employee Count", "Percentage"],
     ];
-    
+
     stats.nationalityStats?.forEach((nat: { name: string; count: number }) => {
       natData.push([
         nat.name,
         nat.count,
-        `${Math.round((nat.count / totalEmp) * 100)}%`
+        `${Math.round((nat.count / totalEmp) * 100)}%`,
       ]);
     });
-    
+
     const ws6 = XLSX.utils.aoa_to_sheet(natData);
-    ws6['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 12 }];
+    ws6["!cols"] = [{ wch: 25 }, { wch: 15 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws6, "Nationalities");
 
     // Sheet 7: Job Positions
@@ -780,17 +985,17 @@ export function Dashboard() {
       [""],
       ["Job Position", "Employee Count", "Percentage"],
     ];
-    
+
     stats.jobStats?.forEach((job: { name: string; count: number }) => {
       jobData.push([
         job.name,
         job.count,
-        `${Math.round((job.count / totalEmp) * 100)}%`
+        `${Math.round((job.count / totalEmp) * 100)}%`,
       ]);
     });
-    
+
     const ws7 = XLSX.utils.aoa_to_sheet(jobData);
-    ws7['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
+    ws7["!cols"] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws7, "Job Positions");
 
     // Sheet 8: Critical Employees
@@ -802,21 +1007,33 @@ export function Dashboard() {
         [""],
         ["Employee No", "Name (English)", "Name (Arabic)", "Company"],
       ];
-      
-      stats.criticalEmployees.forEach((emp: { employee_no: string; name_en: string; name_ar: string; companies?: { name_en: string } }) => {
-        criticalData.push([
-          emp.employee_no,
-          emp.name_en,
-          emp.name_ar,
-          emp.companies?.name_en || "N/A"
-        ]);
-      });
-      
+
+      stats.criticalEmployees.forEach(
+        (emp: {
+          employee_no: string;
+          name_en: string;
+          name_ar: string;
+          companies?: { name_en: string };
+        }) => {
+          criticalData.push([
+            emp.employee_no,
+            emp.name_en,
+            emp.name_ar,
+            emp.companies?.name_en || "N/A",
+          ]);
+        }
+      );
+
       criticalData.push(["", "", "", ""]);
-      criticalData.push(["Total Critical Employees:", stats.criticalEmployees.length, "", ""]);
-      
+      criticalData.push([
+        "Total Critical Employees:",
+        stats.criticalEmployees.length,
+        "",
+        "",
+      ]);
+
       const ws8 = XLSX.utils.aoa_to_sheet(criticalData);
-      ws8['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 25 }];
+      ws8["!cols"] = [{ wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 25 }];
       XLSX.utils.book_append_sheet(wb, ws8, "Critical Employees");
     }
 
@@ -826,8 +1043,16 @@ export function Dashboard() {
       ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
       [""],
       ["Status", "Count", "Percentage"],
-      ["Active Employees", stats.activeEmployees, `${Math.round((stats.activeEmployees / totalEmp) * 100)}%`],
-      ["Inactive Employees", stats.inactiveEmployees, `${Math.round((stats.inactiveEmployees / totalEmp) * 100)}%`],
+      [
+        "Active Employees",
+        stats.activeEmployees,
+        `${Math.round((stats.activeEmployees / totalEmp) * 100)}%`,
+      ],
+      [
+        "Inactive Employees",
+        stats.inactiveEmployees,
+        `${Math.round((stats.inactiveEmployees / totalEmp) * 100)}%`,
+      ],
       [""],
       ["TOTAL", stats.totalEmployees, "100%"],
       [""],
@@ -835,18 +1060,20 @@ export function Dashboard() {
       ["EMPLOYEE STATUS TREND (Last 6 Months)"],
       ["Month", "Active", "Inactive", "Total"],
     ];
-    
-    stats.employeeStatusTrend?.forEach((month: { month: string; active: number; inactive: number }) => {
-      statusData.push([
-        month.month,
-        month.active,
-        month.inactive,
-        month.active + month.inactive
-      ]);
-    });
-    
+
+    stats.employeeStatusTrend?.forEach(
+      (month: { month: string; active: number; inactive: number }) => {
+        statusData.push([
+          month.month,
+          month.active,
+          month.inactive,
+          month.active + month.inactive,
+        ]);
+      }
+    );
+
     const ws9 = XLSX.utils.aoa_to_sheet(statusData);
-    ws9['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    ws9["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(wb, ws9, "Employee Status");
 
     // Generate filename with filters applied
@@ -862,19 +1089,21 @@ export function Dashboard() {
   // Helper function to build navigation URL with active filters
   const buildEmployeeUrl = (documentFilter: string) => {
     const params = new URLSearchParams();
-    params.append(documentFilter.split('=')[0], documentFilter.split('=')[1]);
-    
+    params.append(documentFilter.split("=")[0], documentFilter.split("=")[1]);
+
     // Add active dashboard filters
     if (selectedCompany !== "all") params.append("company", selectedCompany);
-    if (selectedDepartment !== "all") params.append("department", selectedDepartment);
-    if (selectedNationality !== "all") params.append("nationality", selectedNationality);
+    if (selectedDepartment !== "all")
+      params.append("department", selectedDepartment);
+    if (selectedNationality !== "all")
+      params.append("nationality", selectedNationality);
     if (statusFilter !== "all") params.append("status", statusFilter);
-    
+
     // Add date range filters
     if (dateRange !== "all") params.append("dateRange", dateRange);
     if (customStartDate) params.append("startDate", customStartDate);
     if (customEndDate) params.append("endDate", customEndDate);
-    
+
     return `/employees?${params.toString()}`;
   };
 
@@ -896,7 +1125,9 @@ export function Dashboard() {
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100 dark:bg-blue-900/20",
-      subtitle: `${stats?.activeEmployees || 0} active • ${stats?.inactiveEmployees || 0} inactive`,
+      subtitle: `${stats?.activeEmployees || 0} active • ${
+        stats?.inactiveEmployees || 0
+      } inactive`,
       onClick: () => navigate("/employees"),
     },
     {
@@ -953,7 +1184,17 @@ export function Dashboard() {
             className="flex-1 sm:flex-initial h-11 md:h-9 touch-manipulation active:scale-95 transition-transform"
           >
             <Shield className="w-4 h-4 mr-2" />
-            Filters {hasActiveFilters && `(${[selectedCompany, selectedDepartment, selectedNationality, dateRange, statusFilter].filter(f => f !== "all").length})`}
+            Filters{" "}
+            {hasActiveFilters &&
+              `(${
+                [
+                  selectedCompany,
+                  selectedDepartment,
+                  selectedNationality,
+                  dateRange,
+                  statusFilter,
+                ].filter((f) => f !== "all").length
+              })`}
           </Button>
           <Button
             onClick={exportDashboard}
@@ -1001,11 +1242,19 @@ export function Dashboard() {
                   className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="all">All Companies</option>
-                  {companies.map((company: { id: string; name_en: string; name_ar: string }) => (
-                    <option key={company.id} value={company.id}>
-                      {i18n.language === "ar" ? company.name_ar : company.name_en}
-                    </option>
-                  ))}
+                  {companies.map(
+                    (company: {
+                      id: string;
+                      name_en: string;
+                      name_ar: string;
+                    }) => (
+                      <option key={company.id} value={company.id}>
+                        {i18n.language === "ar"
+                          ? company.name_ar
+                          : company.name_en}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
 
@@ -1021,11 +1270,17 @@ export function Dashboard() {
                   className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="all">All Departments</option>
-                  {departments.map((dept: { id: string; name_en: string; name_ar: string }) => (
-                    <option key={dept.id} value={dept.id}>
-                      {i18n.language === "ar" ? dept.name_ar : dept.name_en}
-                    </option>
-                  ))}
+                  {departments.map(
+                    (dept: {
+                      id: string;
+                      name_en: string;
+                      name_ar: string;
+                    }) => (
+                      <option key={dept.id} value={dept.id}>
+                        {i18n.language === "ar" ? dept.name_ar : dept.name_en}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
 
@@ -1041,11 +1296,17 @@ export function Dashboard() {
                   className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="all">All Nationalities</option>
-                  {nationalities.map((nat: { code: string; name_en: string; name_ar: string }) => (
-                    <option key={nat.code} value={nat.name_en}>
-                      {i18n.language === "ar" ? nat.name_ar : nat.name_en}
-                    </option>
-                  ))}
+                  {nationalities.map(
+                    (nat: {
+                      code: string;
+                      name_en: string;
+                      name_ar: string;
+                    }) => (
+                      <option key={nat.code} value={nat.name_en}>
+                        {i18n.language === "ar" ? nat.name_ar : nat.name_en}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
 
@@ -1071,7 +1332,10 @@ export function Dashboard() {
                 {dateRange === "custom" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <div className="space-y-1.5">
-                      <label htmlFor="startDate" className="text-xs text-muted-foreground">
+                      <label
+                        htmlFor="startDate"
+                        className="text-xs text-muted-foreground"
+                      >
                         From Date
                       </label>
                       <input
@@ -1084,7 +1348,10 @@ export function Dashboard() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label htmlFor="endDate" className="text-xs text-muted-foreground">
+                      <label
+                        htmlFor="endDate"
+                        className="text-xs text-muted-foreground"
+                      >
                         To Date
                       </label>
                       <input
@@ -1121,18 +1388,32 @@ export function Dashboard() {
             {/* Active Filters Summary */}
             {hasActiveFilters && (
               <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-2 font-medium">Active Filters:</p>
+                <p className="text-sm text-muted-foreground mb-2 font-medium">
+                  Active Filters:
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {selectedCompany !== "all" && (
                     <Badge variant="secondary" className="gap-1">
                       <Building2 className="w-3 h-3" />
-                      Company: {companies.find((c: { id: string; name_en: string }) => c.id === selectedCompany)?.name_en}
+                      Company:{" "}
+                      {
+                        companies.find(
+                          (c: { id: string; name_en: string }) =>
+                            c.id === selectedCompany
+                        )?.name_en
+                      }
                     </Badge>
                   )}
                   {selectedDepartment !== "all" && (
                     <Badge variant="secondary" className="gap-1">
                       <Briefcase className="w-3 h-3" />
-                      Dept: {departments.find((d: { id: string; name_en: string }) => d.id === selectedDepartment)?.name_en}
+                      Dept:{" "}
+                      {
+                        departments.find(
+                          (d: { id: string; name_en: string }) =>
+                            d.id === selectedDepartment
+                        )?.name_en
+                      }
                     </Badge>
                   )}
                   {selectedNationality !== "all" && (
@@ -1144,18 +1425,29 @@ export function Dashboard() {
                   {dateRange !== "all" && (
                     <Badge variant="secondary" className="gap-1">
                       <Calendar className="w-3 h-3" />
-                      {dateRange === "custom" 
-                        ? `${customStartDate ? dayjs(customStartDate).format("DD/MM/YYYY") : "Start"} - ${customEndDate ? dayjs(customEndDate).format("DD/MM/YYYY") : "End"}`
-                        : dateRange === "30days" ? "Last 30 Days" 
-                        : dateRange === "60days" ? "Last 60 Days" 
-                        : "Last 90 Days"
-                      }
+                      {dateRange === "custom"
+                        ? `${
+                            customStartDate
+                              ? dayjs(customStartDate).format("DD/MM/YYYY")
+                              : "Start"
+                          } - ${
+                            customEndDate
+                              ? dayjs(customEndDate).format("DD/MM/YYYY")
+                              : "End"
+                          }`
+                        : dateRange === "30days"
+                        ? "Last 30 Days"
+                        : dateRange === "60days"
+                        ? "Last 60 Days"
+                        : "Last 90 Days"}
                     </Badge>
                   )}
                   {statusFilter !== "all" && (
                     <Badge variant="secondary" className="gap-1">
                       <UserCheck className="w-3 h-3" />
-                      {statusFilter === "active" ? "Active Only" : "Inactive Only"}
+                      {statusFilter === "active"
+                        ? "Active Only"
+                        : "Inactive Only"}
                     </Badge>
                   )}
                 </div>
@@ -1183,23 +1475,33 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {stats.criticalEmployees.slice(0, 5).map((emp: { id: string; name_en: string; name_ar: string; employee_no: string; companies?: { name_en: string } }) => (
-                <div
-                  key={emp.id}
-                  onClick={() => navigate("/employees")}
-                  className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 hover:shadow-md border border-transparent hover:border-red-300 active:scale-[0.98]"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {i18n.language === "ar" ? emp.name_ar : emp.name_en}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {emp.employee_no} • {emp.companies?.name_en}
-                    </p>
-                  </div>
-                  <Badge variant="destructive">Multiple Expired Docs</Badge>
-                </div>
-              ))}
+              {stats.criticalEmployees
+                .slice(0, 5)
+                .map(
+                  (emp: {
+                    id: string;
+                    name_en: string;
+                    name_ar: string;
+                    employee_no: string;
+                    companies?: { name_en: string };
+                  }) => (
+                    <div
+                      key={emp.id}
+                      onClick={() => navigate("/employees")}
+                      className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 hover:shadow-md border border-transparent hover:border-red-300 active:scale-[0.98]"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {i18n.language === "ar" ? emp.name_ar : emp.name_en}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {emp.employee_no} • {emp.companies?.name_en}
+                        </p>
+                      </div>
+                      <Badge variant="destructive">Multiple Expired Docs</Badge>
+                    </div>
+                  )
+                )}
               {stats.criticalEmployees.length > 5 && (
                 <Button
                   variant="link"
@@ -1224,7 +1526,7 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("passport=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
@@ -1235,29 +1537,37 @@ export function Dashboard() {
                 {stats?.expiringSoonPassports || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("passport=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">
+                {t("dashboard.expired")}
+              </span>
               <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredPassports || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("passport=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">
+                {t("dashboard.missingNumber")}
+              </span>
               <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingPassports || 0}
               </span>
             </div>
-            <div 
-              onClick={() => navigate(buildEmployeeUrl("passport=missing_date"))}
+            <div
+              onClick={() =>
+                navigate(buildEmployeeUrl("passport=missing_date"))
+              }
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">
+                {t("dashboard.missingDate")}
+              </span>
               <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
                 {stats?.missingPassportDate || 0}
               </span>
@@ -1273,7 +1583,7 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("card=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
@@ -1284,29 +1594,35 @@ export function Dashboard() {
                 {stats?.expiringSoonCards || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("card=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">
+                {t("dashboard.expired")}
+              </span>
               <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredCards || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("card=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">
+                {t("dashboard.missingNumber")}
+              </span>
               <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingCard || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("card=missing_date"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">
+                {t("dashboard.missingDate")}
+              </span>
               <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
                 {stats?.missingCardDate || 0}
               </span>
@@ -1322,7 +1638,7 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("emiratesId=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
@@ -1333,29 +1649,37 @@ export function Dashboard() {
                 {stats?.expiringSoonEmiratesId || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("emiratesId=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">
+                {t("dashboard.expired")}
+              </span>
               <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredEmiratesId || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("emiratesId=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">
+                {t("dashboard.missingNumber")}
+              </span>
               <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingEmiratesId || 0}
               </span>
             </div>
-            <div 
-              onClick={() => navigate(buildEmployeeUrl("emiratesId=missing_date"))}
+            <div
+              onClick={() =>
+                navigate(buildEmployeeUrl("emiratesId=missing_date"))
+              }
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">
+                {t("dashboard.missingDate")}
+              </span>
               <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
                 {stats?.missingEmiratesIdDate || 0}
               </span>
@@ -1371,7 +1695,7 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("residence=expiring"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
             >
@@ -1382,29 +1706,37 @@ export function Dashboard() {
                 {stats?.expiringSoonResidence || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("residence=expired"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">
+                {t("dashboard.expired")}
+              </span>
               <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredResidence || 0}
               </span>
             </div>
-            <div 
+            <div
               onClick={() => navigate(buildEmployeeUrl("residence=missing"))}
               className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">
+                {t("dashboard.missingNumber")}
+              </span>
               <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingResidence || 0}
               </span>
             </div>
-            <div 
-              onClick={() => navigate(buildEmployeeUrl("residence=missing_date"))}
+            <div
+              onClick={() =>
+                navigate(buildEmployeeUrl("residence=missing_date"))
+              }
               className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
             >
-              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">
+                {t("dashboard.missingDate")}
+              </span>
               <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
                 {stats?.missingResidenceDate || 0}
               </span>

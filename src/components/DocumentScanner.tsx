@@ -3,6 +3,7 @@ import { createWorker } from "tesseract.js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Camera,
   Upload,
@@ -121,22 +122,24 @@ export function DocumentScanner({
 
     if (documentType === "passport") {
       // Try to extract from MRZ (Machine Readable Zone) first - most reliable
-      const mrzLines = text.split('\n').filter(line => 
-        line.replace(/[^A-Z0-9<]/g, '').length > 30 && 
-        line.includes('<')
-      );
+      const mrzLines = text
+        .split("\n")
+        .filter(
+          (line) =>
+            line.replace(/[^A-Z0-9<]/g, "").length > 30 && line.includes("<")
+        );
 
       let mrzExtracted = false;
 
       if (mrzLines.length >= 2) {
-        const mrz1 = mrzLines[0].replace(/[^A-Z0-9<]/g, '');
-        const mrz2 = mrzLines[1].replace(/[^A-Z0-9<]/g, '');
+        const mrz1 = mrzLines[0].replace(/[^A-Z0-9<]/g, "");
+        const mrz2 = mrzLines[1].replace(/[^A-Z0-9<]/g, "");
 
         // Extract name from MRZ line 1: P<SYRTAKALA<<BARAA<<<<<
         const mrzNameMatch = mrz1.match(/P<[A-Z]{3}([A-Z]+)<<([A-Z<]+)/);
         if (mrzNameMatch) {
-          const surname = mrzNameMatch[1].replace(/</g, ' ').trim();
-          const givenNames = mrzNameMatch[2].replace(/</g, ' ').trim();
+          const surname = mrzNameMatch[1].replace(/</g, " ").trim();
+          const givenNames = mrzNameMatch[2].replace(/</g, " ").trim();
           data.name_en = `${givenNames} ${surname}`.trim();
           mrzExtracted = true;
         }
@@ -160,31 +163,36 @@ export function DocumentScanner({
         }
 
         // Extract nationality from MRZ (3-letter country code)
-        const countryCodeMatch = mrz2.match(/SYR|IND|PAK|BGD|PHL|EGY|JOR|LBN|SDN|AFG|NPL|LKA|IDN/);
+        const countryCodeMatch = mrz2.match(
+          /SYR|IND|PAK|BGD|PHL|EGY|JOR|LBN|SDN|AFG|NPL|LKA|IDN/
+        );
         if (countryCodeMatch) {
           const countryMap: { [key: string]: string } = {
-            'SYR': 'Syrian',
-            'IND': 'Indian',
-            'PAK': 'Pakistani',
-            'BGD': 'Bangladeshi',
-            'PHL': 'Filipino',
-            'EGY': 'Egyptian',
-            'JOR': 'Jordanian',
-            'LBN': 'Lebanese',
-            'SDN': 'Sudanese',
-            'AFG': 'Afghan',
-            'NPL': 'Nepali',
-            'LKA': 'Sri Lankan',
-            'IDN': 'Indonesian',
+            SYR: "Syrian",
+            IND: "Indian",
+            PAK: "Pakistani",
+            BGD: "Bangladeshi",
+            PHL: "Filipino",
+            EGY: "Egyptian",
+            JOR: "Jordanian",
+            LBN: "Lebanese",
+            SDN: "Sudanese",
+            AFG: "Afghan",
+            NPL: "Nepali",
+            LKA: "Sri Lankan",
+            IDN: "Indonesian",
           };
-          data.nationality = countryMap[countryCodeMatch[0]] || countryCodeMatch[0];
+          data.nationality =
+            countryMap[countryCodeMatch[0]] || countryCodeMatch[0];
         }
       }
 
       // Fallback methods if MRZ extraction failed
       if (!data.passport_no) {
         // Look for "Passport No" label or pattern at top
-        const passportLabelMatch = text.match(/(?:Passport\s*No|Passeport|رقم\s*الجواز)[:\s]*([A-Z0-9]{8,10})/i);
+        const passportLabelMatch = text.match(
+          /(?:Passport\s*No|Passeport|رقم\s*الجواز)[:\s]*([A-Z0-9]{8,10})/i
+        );
         if (passportLabelMatch) {
           data.passport_no = passportLabelMatch[1];
         } else {
@@ -266,32 +274,40 @@ export function DocumentScanner({
       // Extract expiry date
       const dateMatches = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/g);
       if (dateMatches && dateMatches.length > 0) {
-        data.emirates_id_expiry = formatDate(dateMatches[dateMatches.length - 1]);
+        data.emirates_id_expiry = formatDate(
+          dateMatches[dateMatches.length - 1]
+        );
       }
 
       // Extract name - look for "Name:" label or the line after ID number
       let nameExtracted = false;
-      
+
       // Method 1: Look for "Name:" or "Name :" pattern
       const nameWithLabelMatch = text.match(/Name\s*:\s*([A-Z][a-zA-Z\s]+)/i);
       if (nameWithLabelMatch && nameWithLabelMatch[1]) {
         data.name_en = nameWithLabelMatch[1].trim();
         nameExtracted = true;
       }
-      
+
       // Method 2: If no label found, look for name between ID number and date of birth
       if (!nameExtracted) {
-        const lines = text.split('\n');
+        const lines = text.split("\n");
         for (let i = 0; i < lines.length; i++) {
           // Find line with ID number
-          if (lines[i].includes('784-')) {
+          if (lines[i].includes("784-")) {
             // Check next few lines for a name pattern (capital first letter, mixed case)
             for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
               const line = lines[j].trim();
               // Match name pattern: starts with capital, has spaces, 2-4 words
               const namePattern = /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})$/;
               const match = line.match(namePattern);
-              if (match && match[1] && !line.includes('UNITED') && !line.includes('ARAB') && !line.includes('EMIRATES')) {
+              if (
+                match &&
+                match[1] &&
+                !line.includes("UNITED") &&
+                !line.includes("ARAB") &&
+                !line.includes("EMIRATES")
+              ) {
                 data.name_en = match[1].trim();
                 nameExtracted = true;
                 break;
@@ -301,22 +317,32 @@ export function DocumentScanner({
           }
         }
       }
-      
+
       // Method 3: Fallback - look for capital letters pattern but exclude common header words
       if (!nameExtracted) {
-        const nameMatch = text.match(/[A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/);
+        const nameMatch = text.match(
+          /[A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/
+        );
         if (nameMatch) {
           const name = nameMatch[0].trim();
           // Exclude common header words
-          if (!name.includes('United') && !name.includes('Arab') && !name.includes('Emirates') && 
-              !name.includes('Federal') && !name.includes('Authority') && !name.includes('Card')) {
+          if (
+            !name.includes("United") &&
+            !name.includes("Arab") &&
+            !name.includes("Emirates") &&
+            !name.includes("Federal") &&
+            !name.includes("Authority") &&
+            !name.includes("Card")
+          ) {
             data.name_en = name;
           }
         }
       }
 
       // Extract nationality - look for "Nationality:" label or common patterns
-      const nationalityWithLabelMatch = text.match(/Nationality\s*:\s*([A-Za-z\s]+(?:Republic|Kingdom|Emirates)?)/i);
+      const nationalityWithLabelMatch = text.match(
+        /Nationality\s*:\s*([A-Za-z\s]+(?:Republic|Kingdom|Emirates)?)/i
+      );
       if (nationalityWithLabelMatch && nationalityWithLabelMatch[1]) {
         data.nationality = nationalityWithLabelMatch[1].trim();
       } else {
@@ -531,31 +557,48 @@ export function DocumentScanner({
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-sm text-muted-foreground">{progress}% complete</p>
+              <p className="text-sm text-muted-foreground">
+                {progress}% complete
+              </p>
             </Card>
           )}
 
-          {/* Results */}
+          {/* Results - Editable Fields */}
           {extractedText && !isProcessing && (
             <div className="space-y-4">
               <Card className="p-4 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
                 <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-3">
                   <CheckCircle className="w-5 h-5" />
-                  <span className="font-semibold">Data Extracted Successfully!</span>
+                  <span className="font-semibold">
+                    Data Extracted - Review & Edit Before Applying
+                  </span>
                 </div>
 
                 <div className="space-y-3">
                   {Object.entries(extractedData).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between text-sm">
-                      <Label className="font-medium capitalize">
-                        {key.replace(/_/g, " ")}:
+                    <div key={key} className="space-y-1">
+                      <Label className="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">
+                        {key.replace(/_/g, " ")}
                       </Label>
-                      <span className="text-green-700 dark:text-green-300 font-mono">
-                        {value || "Not found"}
-                      </span>
+                      <Input
+                        value={(value as string) || ""}
+                        onChange={(e) =>
+                          setExtractedData({
+                            ...extractedData,
+                            [key]: e.target.value,
+                          })
+                        }
+                        placeholder={`Enter ${key.replace(/_/g, " ")}`}
+                        className="bg-white dark:bg-gray-800 border-green-300 dark:border-green-700"
+                      />
                     </div>
                   ))}
                 </div>
+
+                <p className="text-xs text-green-700 dark:text-green-400 mt-3 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  You can edit the extracted values above before applying
+                </p>
               </Card>
 
               {/* Show raw extracted text in details */}

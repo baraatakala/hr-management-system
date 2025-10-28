@@ -137,24 +137,43 @@ export function EmployeesPage() {
 
     // Convert "missing" from URL to "missing_number" for filtering by document number
     // Keep "missing_date" as is for filtering by missing expiry date
-    if (passport) setPassportStatusFilter(passport === "missing" ? "missing_number" : passport);
+    if (passport)
+      setPassportStatusFilter(
+        passport === "missing" ? "missing_number" : passport
+      );
     if (card) setCardStatusFilter(card === "missing" ? "missing_number" : card);
-    if (emiratesId) setEmiratesIdStatusFilter(emiratesId === "missing" ? "missing_number" : emiratesId);
-    if (residence) setResidenceStatusFilter(residence === "missing" ? "missing_number" : residence);
-    
+    if (emiratesId)
+      setEmiratesIdStatusFilter(
+        emiratesId === "missing" ? "missing_number" : emiratesId
+      );
+    if (residence)
+      setResidenceStatusFilter(
+        residence === "missing" ? "missing_number" : residence
+      );
+
     // Apply dashboard filters
     if (company) setCompanyFilter(company);
     if (department) setDepartmentFilter(department);
     if (nationality) setNationalityFilter(nationality);
     if (status) setActiveStatusFilter(status); // active, inactive, or all
-    
+
     // Apply date range filters
     if (dateRange) setDateRangeFilter(dateRange);
     if (startDate) setCustomStartDate(startDate);
     if (endDate) setCustomEndDate(endDate);
 
     // Show filters panel if any URL filter is present
-    if (passport || card || emiratesId || residence || company || department || nationality || status || dateRange) {
+    if (
+      passport ||
+      card ||
+      emiratesId ||
+      residence ||
+      company ||
+      department ||
+      nationality ||
+      status ||
+      dateRange
+    ) {
       setShowFilters(true);
     }
   }, [searchParams]);
@@ -384,7 +403,9 @@ export function EmployeesPage() {
         passportStatusFilter === "all" ||
         (passportStatusFilter === "missing" && passportStatus === null) ||
         (passportStatusFilter === "missing_number" && !emp.passport_no) ||
-        (passportStatusFilter === "missing_date" && emp.passport_no && !emp.passport_expiry) ||
+        (passportStatusFilter === "missing_date" &&
+          emp.passport_no &&
+          !emp.passport_expiry) ||
         (passportStatus !== null && passportStatus === passportStatusFilter);
 
       // Card status filter
@@ -393,7 +414,9 @@ export function EmployeesPage() {
         cardStatusFilter === "all" ||
         (cardStatusFilter === "missing" && cardStatus === null) ||
         (cardStatusFilter === "missing_number" && !emp.card_no) ||
-        (cardStatusFilter === "missing_date" && emp.card_no && !emp.card_expiry) ||
+        (cardStatusFilter === "missing_date" &&
+          emp.card_no &&
+          !emp.card_expiry) ||
         (cardStatus !== null && cardStatus === cardStatusFilter);
 
       // Emirates ID status filter
@@ -402,7 +425,9 @@ export function EmployeesPage() {
         emiratesIdStatusFilter === "all" ||
         (emiratesIdStatusFilter === "missing" && emiratesIdStatus === null) ||
         (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
-        (emiratesIdStatusFilter === "missing_date" && emp.emirates_id && !emp.emirates_id_expiry) ||
+        (emiratesIdStatusFilter === "missing_date" &&
+          emp.emirates_id &&
+          !emp.emirates_id_expiry) ||
         (emiratesIdStatus !== null &&
           emiratesIdStatus === emiratesIdStatusFilter);
 
@@ -412,7 +437,9 @@ export function EmployeesPage() {
         residenceStatusFilter === "all" ||
         (residenceStatusFilter === "missing" && residenceStatus === null) ||
         (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
-        (residenceStatusFilter === "missing_date" && emp.residence_no && !emp.residence_expiry) ||
+        (residenceStatusFilter === "missing_date" &&
+          emp.residence_no &&
+          !emp.residence_expiry) ||
         (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
       // Date range filter (added_date)
@@ -422,18 +449,31 @@ export function EmployeesPage() {
           // Custom date range
           if (customStartDate && customEndDate) {
             matchesDateRange =
-              dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day')) &&
-              dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'));
+              dayjs(emp.added_date).isAfter(
+                dayjs(customStartDate).subtract(1, "day")
+              ) &&
+              dayjs(emp.added_date).isBefore(
+                dayjs(customEndDate).add(1, "day")
+              );
           } else if (customStartDate) {
-            matchesDateRange = dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day'));
+            matchesDateRange = dayjs(emp.added_date).isAfter(
+              dayjs(customStartDate).subtract(1, "day")
+            );
           } else if (customEndDate) {
-            matchesDateRange = dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'));
+            matchesDateRange = dayjs(emp.added_date).isBefore(
+              dayjs(customEndDate).add(1, "day")
+            );
           }
         } else {
           // Preset ranges (30, 60, 90 days)
-          const rangeDate = dateRangeFilter === "30days" ? dayjs().subtract(30, "day") :
-                           dateRangeFilter === "60days" ? dayjs().subtract(60, "day") :
-                           dateRangeFilter === "90days" ? dayjs().subtract(90, "day") : null;
+          const rangeDate =
+            dateRangeFilter === "30days"
+              ? dayjs().subtract(30, "day")
+              : dateRangeFilter === "60days"
+              ? dayjs().subtract(60, "day")
+              : dateRangeFilter === "90days"
+              ? dayjs().subtract(90, "day")
+              : null;
           if (rangeDate) {
             matchesDateRange = dayjs(emp.added_date).isAfter(rangeDate);
           }
@@ -1077,11 +1117,15 @@ export function EmployeesPage() {
                 )}
                 {dateRangeFilter !== "all" && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Date: {dateRangeFilter === "custom" 
-                      ? `${customStartDate || "?"} to ${customEndDate || "?"}` 
-                      : dateRangeFilter === "30days" ? "Last 30 Days" 
-                      : dateRangeFilter === "60days" ? "Last 60 Days" 
-                      : dateRangeFilter === "90days" ? "Last 90 Days" 
+                    Date:{" "}
+                    {dateRangeFilter === "custom"
+                      ? `${customStartDate || "?"} to ${customEndDate || "?"}`
+                      : dateRangeFilter === "30days"
+                      ? "Last 30 Days"
+                      : dateRangeFilter === "60days"
+                      ? "Last 60 Days"
+                      : dateRangeFilter === "90days"
+                      ? "Last 90 Days"
                       : dateRangeFilter}
                     <button
                       onClick={() => {
@@ -1406,7 +1450,10 @@ export function EmployeesPage() {
             {dateRangeFilter === "custom" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="customStartDate" className="text-xs font-medium">
+                  <Label
+                    htmlFor="customStartDate"
+                    className="text-xs font-medium"
+                  >
                     From Date
                   </Label>
                   <Input
@@ -1419,7 +1466,10 @@ export function EmployeesPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="customEndDate" className="text-xs font-medium">
+                  <Label
+                    htmlFor="customEndDate"
+                    className="text-xs font-medium"
+                  >
                     To Date
                   </Label>
                   <Input
@@ -2165,30 +2215,33 @@ function EmployeeDialog({
 
   // Scanner state
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannerType, setScannerType] = useState<"passport" | "emirates_id" | "work_card">("passport");
+  const [scannerType, setScannerType] = useState<
+    "passport" | "emirates_id" | "work_card"
+  >("passport");
 
-  // Handle data extracted from OCR
+  // Handle data extracted from OCR with smart merging
   const handleDataExtracted = (data: any) => {
     // Smart nationality matching - map OCR result to existing nationalities
     if (data.nationality && nationalities && nationalities.length > 0) {
       const extractedNat = data.nationality.toLowerCase();
-      
+
       // Try to find exact match first
-      let matchedNationality = nationalities.find((nat: any) => 
-        nat.name_en?.toLowerCase() === extractedNat
+      let matchedNationality = nationalities.find(
+        (nat: any) => nat.name_en?.toLowerCase() === extractedNat
       );
 
       // If no exact match, try partial matching (e.g., "Syrian Arab Republic" → "Syria")
       if (!matchedNationality) {
         matchedNationality = nationalities.find((nat: any) => {
-          const natName = nat.name_en?.toLowerCase() || '';
-          const natWords = natName.split(' ');
-          const extractedWords = extractedNat.split(' ');
-          
+          const natName = nat.name_en?.toLowerCase() || "";
+          const natWords = natName.split(" ");
+          const extractedWords = extractedNat.split(" ");
+
           // Check if any word matches (e.g., "Syrian" matches "Syria")
-          return natWords.some(word => 
-            extractedWords.some(extractedWord => 
-              word.includes(extractedWord) || extractedWord.includes(word)
+          return natWords.some((word) =>
+            extractedWords.some(
+              (extractedWord) =>
+                word.includes(extractedWord) || extractedWord.includes(word)
             )
           );
         });
@@ -2198,25 +2251,25 @@ function EmployeeDialog({
       if (!matchedNationality) {
         // Common nationality mappings
         const nationalityMappings: { [key: string]: string[] } = {
-          'syria': ['syrian', 'syrian arab republic', 'syr'],
-          'india': ['indian', 'ind'],
-          'pakistan': ['pakistani', 'pak'],
-          'bangladesh': ['bangladeshi', 'bgd'],
-          'philippines': ['filipino', 'phl'],
-          'egypt': ['egyptian', 'egy'],
-          'jordan': ['jordanian', 'jor'],
-          'lebanon': ['lebanese', 'lbn'],
-          'sudan': ['sudanese', 'sdn'],
-          'afghanistan': ['afghan', 'afg'],
-          'nepal': ['nepali', 'npl'],
-          'sri lanka': ['sri lankan', 'lka'],
-          'indonesia': ['indonesian', 'idn'],
+          syria: ["syrian", "syrian arab republic", "syr"],
+          india: ["indian", "ind"],
+          pakistan: ["pakistani", "pak"],
+          bangladesh: ["bangladeshi", "bgd"],
+          philippines: ["filipino", "phl"],
+          egypt: ["egyptian", "egy"],
+          jordan: ["jordanian", "jor"],
+          lebanon: ["lebanese", "lbn"],
+          sudan: ["sudanese", "sdn"],
+          afghanistan: ["afghan", "afg"],
+          nepal: ["nepali", "npl"],
+          "sri lanka": ["sri lankan", "lka"],
+          indonesia: ["indonesian", "idn"],
         };
 
         // Find match using mapping
         for (const [dbNat, variants] of Object.entries(nationalityMappings)) {
-          if (variants.some(variant => extractedNat.includes(variant))) {
-            matchedNationality = nationalities.find((nat: any) => 
+          if (variants.some((variant) => extractedNat.includes(variant))) {
+            matchedNationality = nationalities.find((nat: any) =>
               nat.name_en?.toLowerCase().includes(dbNat)
             );
             if (matchedNationality) break;
@@ -2233,7 +2286,24 @@ function EmployeeDialog({
       }
     }
 
-    setFormData({ ...formData, ...data });
+    // SMART MERGE: Only update fields that have new valid data
+    // Don't overwrite existing good data with empty/null values
+    const mergedData = { ...formData };
+    
+    for (const [key, value] of Object.entries(data)) {
+      // Only update if:
+      // 1. New value is not null/undefined/empty string
+      // 2. OR existing value is already empty (allow any update)
+      if (value !== null && value !== undefined && value !== '') {
+        mergedData[key] = value;
+      } else if (!formData[key]) {
+        // If existing field is empty, allow the update (even if new value is empty)
+        mergedData[key] = value;
+      }
+      // Otherwise skip - keeps existing good data
+    }
+
+    setFormData(mergedData);
     setScannerOpen(false);
   };
 
