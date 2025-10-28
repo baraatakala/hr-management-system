@@ -25,7 +25,6 @@ import {
   Globe,
   Award,
   UserCheck,
-  UserX,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -1548,51 +1547,6 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Stats Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Document Compliance Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
-              <UserCheck className="w-8 h-8 mx-auto mb-2 text-green-600" />
-              <p className="text-2xl font-bold text-green-600">
-                {stats?.healthScore || 0}%
-              </p>
-              <p className="text-sm text-muted-foreground">Compliance Rate</p>
-            </div>
-            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
-              <Clock className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
-              <p className="text-2xl font-bold text-yellow-600">
-                {stats?.totalExpiringDocs || 0}
-              </p>
-              <p className="text-sm text-muted-foreground">Expiring Soon</p>
-            </div>
-            <div className="text-center p-4 bg-red-50 dark:bg-red-900/10 rounded-lg">
-              <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-red-600" />
-              <p className="text-2xl font-bold text-red-600">
-                {(stats?.expiredPassports || 0) +
-                  (stats?.expiredCards || 0) +
-                  (stats?.expiredEmiratesId || 0) +
-                  (stats?.expiredResidence || 0)}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Expired</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <UserX className="w-8 h-8 mx-auto mb-2 text-gray-600" />
-              <p className="text-2xl font-bold text-gray-600">
-                {(stats?.missingPassports || 0) +
-                  (stats?.missingCard || 0) +
-                  (stats?.missingEmiratesId || 0) +
-                  (stats?.missingResidence || 0)}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Missing</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
