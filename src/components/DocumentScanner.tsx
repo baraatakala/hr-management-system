@@ -120,51 +120,140 @@ export function DocumentScanner({
     const data: ExtractedData = {};
 
     if (documentType === "passport") {
-      // Extract passport number (usually starts with letter followed by numbers)
-      const passportMatch = text.match(/[A-Z][0-9]{7,9}/);
-      if (passportMatch) data.passport_no = passportMatch[0];
+      // Try to extract from MRZ (Machine Readable Zone) first - most reliable
+      const mrzLines = text.split('\n').filter(line => 
+        line.replace(/[^A-Z0-9<]/g, '').length > 30 && 
+        line.includes('<')
+      );
 
-      // Extract expiry date (various formats: DD/MM/YYYY, DD-MM-YYYY, DDMMMYY, etc.)
-      const datePatterns = [
-        /\d{2}[\/\-]\d{2}[\/\-]\d{4}/g, // DD/MM/YYYY or DD-MM-YYYY
-        /\d{2}\s?\w{3}\s?\d{4}/g, // DD MMM YYYY
-        /\d{4}[\/\-]\d{2}[\/\-]\d{2}/g, // YYYY/MM/DD
-      ];
+      let mrzExtracted = false;
 
-      for (const pattern of datePatterns) {
-        const matches = text.match(pattern);
-        if (matches && matches.length > 0) {
-          // Usually the last date is the expiry date
-          const lastDate = matches[matches.length - 1];
-          data.passport_expiry = formatDate(lastDate);
-          break;
+      if (mrzLines.length >= 2) {
+        const mrz1 = mrzLines[0].replace(/[^A-Z0-9<]/g, '');
+        const mrz2 = mrzLines[1].replace(/[^A-Z0-9<]/g, '');
+
+        // Extract name from MRZ line 1: P<SYRTAKALA<<BARAA<<<<<
+        const mrzNameMatch = mrz1.match(/P<[A-Z]{3}([A-Z]+)<<([A-Z<]+)/);
+        if (mrzNameMatch) {
+          const surname = mrzNameMatch[1].replace(/</g, ' ').trim();
+          const givenNames = mrzNameMatch[2].replace(/</g, ' ').trim();
+          data.name_en = `${givenNames} ${surname}`.trim();
+          mrzExtracted = true;
+        }
+
+        // Extract passport number from MRZ line 2
+        // Format: N01206236 1 SYR 040630 3 M 261014 0 010107137 46 <<< 60
+        const mrzPassportMatch = mrz2.match(/^([A-Z0-9]{9})/);
+        if (mrzPassportMatch) {
+          data.passport_no = mrzPassportMatch[1];
+        }
+
+        // Extract expiry date from MRZ line 2 (YYMMDD format at position ~21-26)
+        const mrzExpiryMatch = mrz2.match(/[0-9]{6}[A-Z][0-9]{6}/);
+        if (mrzExpiryMatch) {
+          const expiryPart = mrzExpiryMatch[0].substring(7, 13); // Get YYMMDD after sex
+          const year = parseInt(expiryPart.substring(0, 2));
+          const month = expiryPart.substring(2, 4);
+          const day = expiryPart.substring(4, 6);
+          const fullYear = year > 50 ? 1900 + year : 2000 + year;
+          data.passport_expiry = `${fullYear}-${month}-${day}`;
+        }
+
+        // Extract nationality from MRZ (3-letter country code)
+        const countryCodeMatch = mrz2.match(/SYR|IND|PAK|BGD|PHL|EGY|JOR|LBN|SDN|AFG|NPL|LKA|IDN/);
+        if (countryCodeMatch) {
+          const countryMap: { [key: string]: string } = {
+            'SYR': 'Syrian',
+            'IND': 'Indian',
+            'PAK': 'Pakistani',
+            'BGD': 'Bangladeshi',
+            'PHL': 'Filipino',
+            'EGY': 'Egyptian',
+            'JOR': 'Jordanian',
+            'LBN': 'Lebanese',
+            'SDN': 'Sudanese',
+            'AFG': 'Afghan',
+            'NPL': 'Nepali',
+            'LKA': 'Sri Lankan',
+            'IDN': 'Indonesian',
+          };
+          data.nationality = countryMap[countryCodeMatch[0]] || countryCodeMatch[0];
         }
       }
 
-      // Extract name (usually in capital letters, look for surname and given name)
-      const nameMatch = text.match(/[A-Z]{2,}\s+[A-Z]{2,}[\s\w]*/);
-      if (nameMatch) data.name_en = nameMatch[0].trim();
+      // Fallback methods if MRZ extraction failed
+      if (!data.passport_no) {
+        // Look for "Passport No" label or pattern at top
+        const passportLabelMatch = text.match(/(?:Passport\s*No|Passeport|رقم\s*الجواز)[:\s]*([A-Z0-9]{8,10})/i);
+        if (passportLabelMatch) {
+          data.passport_no = passportLabelMatch[1];
+        } else {
+          // Generic pattern: letter followed by 7-9 digits
+          const passportMatch = text.match(/[A-Z][0-9]{7,9}/);
+          if (passportMatch) data.passport_no = passportMatch[0];
+        }
+      }
 
-      // Extract nationality (common patterns)
-      const nationalityKeywords = [
-        "INDIAN",
-        "PAKISTANI",
-        "BANGLADESHI",
-        "FILIPINO",
-        "EGYPTIAN",
-        "SYRIAN",
-        "JORDANIAN",
-        "LEBANESE",
-        "SUDANESE",
-        "AFGHAN",
-        "NEPAL",
-        "SRI LANKA",
-        "INDONESIA",
-      ];
-      for (const nat of nationalityKeywords) {
-        if (text.toUpperCase().includes(nat)) {
-          data.nationality = nat;
-          break;
+      if (!data.passport_expiry) {
+        // Extract expiry date (various formats: DD/MM/YYYY, DD-MM-YYYY, etc.)
+        const datePatterns = [
+          /\d{2}[\/\-]\d{2}[\/\-]\d{4}/g, // DD/MM/YYYY or DD-MM-YYYY
+          /\d{2}\s?\w{3}\s?\d{4}/g, // DD MMM YYYY
+          /\d{4}[\/\-]\d{2}[\/\-]\d{2}/g, // YYYY/MM/DD
+        ];
+
+        for (const pattern of datePatterns) {
+          const matches = text.match(pattern);
+          if (matches && matches.length > 0) {
+            // Usually the last date is the expiry date
+            const lastDate = matches[matches.length - 1];
+            data.passport_expiry = formatDate(lastDate);
+            break;
+          }
+        }
+      }
+
+      if (!data.name_en) {
+        // Extract name from "Name:" label
+        const nameLabelMatch = text.match(/Name\s*[:：]\s*([A-Z][a-zA-Z\s]+)/i);
+        if (nameLabelMatch) {
+          data.name_en = nameLabelMatch[1].trim();
+        } else {
+          // Look for surname/name pattern
+          const surnameMatch = text.match(/(?:Surname|اللقب)[:\s]*([A-Z]+)/i);
+          const nameMatch = text.match(/(?:Name|الاسم)[:\s]*([A-Z]+)/i);
+          if (surnameMatch && nameMatch) {
+            data.name_en = `${nameMatch[1]} ${surnameMatch[1]}`.trim();
+          } else {
+            // Generic: capital letters pattern
+            const genericNameMatch = text.match(/[A-Z]{2,}\s+[A-Z]{2,}[\s\w]*/);
+            if (genericNameMatch) data.name_en = genericNameMatch[0].trim();
+          }
+        }
+      }
+
+      if (!data.nationality) {
+        // Extract nationality (common patterns)
+        const nationalityKeywords = [
+          "SYRIAN",
+          "INDIAN",
+          "PAKISTANI",
+          "BANGLADESHI",
+          "FILIPINO",
+          "EGYPTIAN",
+          "JORDANIAN",
+          "LEBANESE",
+          "SUDANESE",
+          "AFGHAN",
+          "NEPALI",
+          "SRI LANKAN",
+          "INDONESIAN",
+        ];
+        for (const nat of nationalityKeywords) {
+          if (text.toUpperCase().includes(nat)) {
+            data.nationality = nat;
+            break;
+          }
         }
       }
     } else if (documentType === "emirates_id") {
