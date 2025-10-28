@@ -459,22 +459,65 @@ export function AuditTrailPage() {
                     <td className="px-4 py-3 text-sm">
                       {log.user_email || "System"}
                     </td>
-                    <td className="px-4 py-3 text-sm">
-                      {log.details?.changes && (
-                        <details className="cursor-pointer">
-                          <summary className="text-blue-600 hover:underline">
-                            View Changes
-                          </summary>
-                          <pre className="mt-2 text-xs bg-muted p-2 rounded max-w-md overflow-auto">
-                            {JSON.stringify(log.details.changes, null, 2)}
-                          </pre>
-                        </details>
+                    <td className="px-4 py-3 text-sm max-w-md">
+                      {/* Show formatted changes */}
+                      {log.details?.changes && Object.keys(log.details.changes).length > 0 && (
+                        <div className="space-y-1">
+                          {Object.entries(log.details.changes).map(([field, values]: [string, any]) => {
+                            // Skip updated_at timestamp field
+                            if (field === 'updated_at') return null;
+                            
+                            const oldVal = values.old === null ? '(empty)' : 
+                                          typeof values.old === 'boolean' ? (values.old ? 'Active' : 'Inactive') :
+                                          values.old;
+                            const newVal = values.new === null ? '(empty)' : 
+                                          typeof values.new === 'boolean' ? (values.new ? 'Active' : 'Inactive') :
+                                          values.new;
+                            
+                            return (
+                              <div key={field} className="text-xs border-l-2 border-blue-400 pl-2 py-1">
+                                <div className="font-semibold text-gray-700 dark:text-gray-300 capitalize">
+                                  {field.replace(/_/g, ' ')}:
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-red-600 dark:text-red-400 line-through">
+                                    {String(oldVal)}
+                                  </span>
+                                  <span className="text-gray-400">→</span>
+                                  <span className="text-green-600 dark:text-green-400 font-medium">
+                                    {String(newVal)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
-                      {!log.details?.changes && log.action === "CREATE" && (
-                        <span className="text-muted-foreground">New employee added</span>
+                      
+                      {/* New employee created */}
+                      {log.action === "CREATE" && (
+                        <span className="text-green-600 dark:text-green-400 text-xs font-medium">
+                          ✓ New employee added
+                        </span>
                       )}
-                      {!log.details?.changes && log.action === "DELETE" && (
-                        <span className="text-muted-foreground">Employee deleted</span>
+                      
+                      {/* Employee deleted */}
+                      {log.action === "DELETE" && (
+                        <span className="text-red-600 dark:text-red-400 text-xs font-medium">
+                          ✗ Employee deleted
+                        </span>
+                      )}
+                      
+                      {/* No changes detected (shouldn't happen but safety) */}
+                      {log.action === "UPDATE" && (!log.details?.changes || Object.keys(log.details.changes).length === 0) && (
+                        <span className="text-muted-foreground text-xs italic">No changes recorded</span>
+                      )}
+                      
+                      {/* Legacy status_change action */}
+                      {log.action === "status_change" && (
+                        <span className="text-blue-600 dark:text-blue-400 text-xs">
+                          Status changed
+                        </span>
                       )}
                     </td>
                   </tr>
