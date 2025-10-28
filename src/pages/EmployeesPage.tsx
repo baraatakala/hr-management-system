@@ -106,6 +106,9 @@ export function EmployeesPage() {
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [jobFilter, setJobFilter] = useState<string>("all");
   const [activeStatusFilter, setActiveStatusFilter] = useState<string>("all"); // active, inactive, all
+  const [dateRangeFilter, setDateRangeFilter] = useState<string>("all"); // all, 30days, 60days, 90days, custom
+  const [customStartDate, setCustomStartDate] = useState<string>("");
+  const [customEndDate, setCustomEndDate] = useState<string>("");
   const [passportStatusFilter, setPassportStatusFilter] =
     useState<StatusFilter>("all");
   const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter>("all");
@@ -124,6 +127,9 @@ export function EmployeesPage() {
     const department = searchParams.get("department");
     const nationality = searchParams.get("nationality");
     const status = searchParams.get("status");
+    const dateRange = searchParams.get("dateRange");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
     // Convert "missing" from URL to "missing_number" for filtering by document number
     // Keep "missing_date" as is for filtering by missing expiry date
@@ -137,9 +143,14 @@ export function EmployeesPage() {
     if (department) setDepartmentFilter(department);
     if (nationality) setNationalityFilter(nationality);
     if (status) setActiveStatusFilter(status); // active, inactive, or all
+    
+    // Apply date range filters
+    if (dateRange) setDateRangeFilter(dateRange);
+    if (startDate) setCustomStartDate(startDate);
+    if (endDate) setCustomEndDate(endDate);
 
     // Show filters panel if any URL filter is present
-    if (passport || card || emiratesId || residence || company || department || nationality || status) {
+    if (passport || card || emiratesId || residence || company || department || nationality || status || dateRange) {
       setShowFilters(true);
     }
   }, [searchParams]);
@@ -400,6 +411,31 @@ export function EmployeesPage() {
         (residenceStatusFilter === "missing_date" && emp.residence_no && !emp.residence_expiry) ||
         (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
+      // Date range filter (added_date)
+      let matchesDateRange = true;
+      if (dateRangeFilter !== "all" && emp.added_date) {
+        if (dateRangeFilter === "custom") {
+          // Custom date range
+          if (customStartDate && customEndDate) {
+            matchesDateRange =
+              dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day')) &&
+              dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'));
+          } else if (customStartDate) {
+            matchesDateRange = dayjs(emp.added_date).isAfter(dayjs(customStartDate).subtract(1, 'day'));
+          } else if (customEndDate) {
+            matchesDateRange = dayjs(emp.added_date).isBefore(dayjs(customEndDate).add(1, 'day'));
+          }
+        } else {
+          // Preset ranges (30, 60, 90 days)
+          const rangeDate = dateRangeFilter === "30days" ? dayjs().subtract(30, "day") :
+                           dateRangeFilter === "60days" ? dayjs().subtract(60, "day") :
+                           dateRangeFilter === "90days" ? dayjs().subtract(90, "day") : null;
+          if (rangeDate) {
+            matchesDateRange = dayjs(emp.added_date).isAfter(rangeDate);
+          }
+        }
+      }
+
       return (
         matchesSearch &&
         matchesNationality &&
@@ -410,7 +446,8 @@ export function EmployeesPage() {
         matchesPassport &&
         matchesCard &&
         matchesEmiratesId &&
-        matchesResidence
+        matchesResidence &&
+        matchesDateRange
       );
     });
 
@@ -509,6 +546,9 @@ export function EmployeesPage() {
     cardStatusFilter,
     emiratesIdStatusFilter,
     residenceStatusFilter,
+    dateRangeFilter,
+    customStartDate,
+    customEndDate,
     sortColumn,
     sortDirection,
     i18n.language,

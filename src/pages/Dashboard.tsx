@@ -870,6 +870,11 @@ export function Dashboard() {
     if (selectedNationality !== "all") params.append("nationality", selectedNationality);
     if (statusFilter !== "all") params.append("status", statusFilter);
     
+    // Add date range filters
+    if (dateRange !== "all") params.append("dateRange", dateRange);
+    if (customStartDate) params.append("startDate", customStartDate);
+    if (customEndDate) params.append("endDate", customEndDate);
+    
     return `/employees?${params.toString()}`;
   };
 
