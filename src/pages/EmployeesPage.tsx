@@ -26,6 +26,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DocumentScanner } from "@/components/DocumentScanner";
 import {
   Plus,
   Edit,
@@ -48,6 +49,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Calendar,
+  Camera,
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -2161,6 +2163,16 @@ function EmployeeDialog({
     }
   );
 
+  // Scanner state
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerType, setScannerType] = useState<"passport" | "emirates_id" | "work_card">("passport");
+
+  // Handle data extracted from OCR
+  const handleDataExtracted = (data: any) => {
+    setFormData({ ...formData, ...data });
+    setScannerOpen(false);
+  };
+
   React.useEffect(() => {
     if (employee) {
       setFormData(employee);
@@ -2466,15 +2478,30 @@ function EmployeeDialog({
                 <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.passportNo")}
                 </Label>
-                <VoiceInput
-                  value={formData.passport_no || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, passport_no: e.target.value })
-                  }
-                  voiceLanguage="en-US"
-                  placeholder="Speak passport number"
-                  className="h-12 sm:h-11 text-base sm:text-sm"
-                />
+                <div className="flex gap-2">
+                  <VoiceInput
+                    value={formData.passport_no || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, passport_no: e.target.value })
+                    }
+                    voiceLanguage="en-US"
+                    placeholder="Speak passport number"
+                    className="h-12 sm:h-11 text-base sm:text-sm flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setScannerType("passport");
+                      setScannerOpen(true);
+                    }}
+                    className="shrink-0 h-12 sm:h-11"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Scan
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
@@ -2496,15 +2523,30 @@ function EmployeeDialog({
                 <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.cardNo")}
                 </Label>
-                <VoiceInput
-                  value={formData.card_no || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, card_no: e.target.value })
-                  }
-                  voiceLanguage="en-US"
-                  placeholder="Speak card number"
-                  className="h-12 sm:h-11 text-base sm:text-sm"
-                />
+                <div className="flex gap-2">
+                  <VoiceInput
+                    value={formData.card_no || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, card_no: e.target.value })
+                    }
+                    voiceLanguage="en-US"
+                    placeholder="Speak card number"
+                    className="h-12 sm:h-11 text-base sm:text-sm flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setScannerType("work_card");
+                      setScannerOpen(true);
+                    }}
+                    className="shrink-0 h-12 sm:h-11"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Scan
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
@@ -2523,15 +2565,30 @@ function EmployeeDialog({
                 <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
                   {t("employees.emiratesId")}
                 </Label>
-                <VoiceInput
-                  value={formData.emirates_id || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, emirates_id: e.target.value })
-                  }
-                  voiceLanguage="en-US"
-                  placeholder="Speak Emirates ID"
-                  className="h-12 sm:h-11 text-base sm:text-sm"
-                />
+                <div className="flex gap-2">
+                  <VoiceInput
+                    value={formData.emirates_id || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, emirates_id: e.target.value })
+                    }
+                    voiceLanguage="en-US"
+                    placeholder="Speak Emirates ID"
+                    className="h-12 sm:h-11 text-base sm:text-sm flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setScannerType("emirates_id");
+                      setScannerOpen(true);
+                    }}
+                    className="shrink-0 h-12 sm:h-11"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Scan
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
@@ -2640,6 +2697,14 @@ function EmployeeDialog({
             </Button>
           </DialogFooter>
         </form>
+
+        {/* Document Scanner */}
+        <DocumentScanner
+          isOpen={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onDataExtracted={handleDataExtracted}
+          documentType={scannerType}
+        />
       </DialogContent>
     </Dialog>
   );
