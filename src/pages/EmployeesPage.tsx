@@ -1149,22 +1149,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.nationality")}
                 </Label>
-                <Select
+                <select
                   value={nationalityFilter}
-                  onValueChange={setNationalityFilter}
+                  onChange={(e) => setNationalityFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder={t("filters.allNationalities")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("filters.allNationalities")}</SelectItem>
-                    {nationalities.map((nat: any) => (
-                      <SelectItem key={nat.name_en} value={nat.name_en}>
-                        {i18n.language === "ar" ? nat.name_ar : nat.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="all">{t("filters.allNationalities")}</option>
+                  {nationalities.map((nat: any) => (
+                    <option key={nat.name_en} value={nat.name_en}>
+                      {i18n.language === "ar" ? nat.name_ar : nat.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Company Filter */}
@@ -1172,22 +1168,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.company")}
                 </Label>
-                <Select
+                <select
                   value={companyFilter}
-                  onValueChange={setCompanyFilter}
+                  onChange={(e) => setCompanyFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder={t("filters.allCompanies")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("filters.allCompanies")}</SelectItem>
-                    {companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {i18n.language === "ar" ? company.name_ar : company.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="all">{t("filters.allCompanies")}</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {i18n.language === "ar" ? company.name_ar : company.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Job Filter */}
@@ -1195,22 +1187,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.job")}
                 </Label>
-                <Select
+                <select
                   value={jobFilter}
-                  onValueChange={setJobFilter}
+                  onChange={(e) => setJobFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder={t("filters.allJobs")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("filters.allJobs")}</SelectItem>
-                    {jobs.map((job) => (
-                      <SelectItem key={job.id} value={job.id}>
-                        {i18n.language === "ar" ? job.name_ar : job.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="all">{t("filters.allJobs")}</option>
+                  {jobs.map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {i18n.language === "ar" ? job.name_ar : job.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Department Filter */}
@@ -1218,22 +1206,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.department")}
                 </Label>
-                <Select
+                <select
                   value={departmentFilter}
-                  onValueChange={setDepartmentFilter}
+                  onChange={(e) => setDepartmentFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder={t("filters.allDepartments")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("filters.allDepartments")}</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {i18n.language === "ar" ? dept.name_ar : dept.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="all">{t("filters.allDepartments")}</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {i18n.language === "ar" ? dept.name_ar : dept.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Active Status Filter */}
