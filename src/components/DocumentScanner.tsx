@@ -180,9 +180,82 @@ export function DocumentScanner({
         data.emirates_id_expiry = formatDate(dateMatches[dateMatches.length - 1]);
       }
 
-      // Extract name
-      const nameMatch = text.match(/[A-Z]{2,}\s+[A-Z]{2,}[\s\w]*/);
-      if (nameMatch) data.name_en = nameMatch[0].trim();
+      // Extract name - look for "Name:" label or the line after ID number
+      let nameExtracted = false;
+      
+      // Method 1: Look for "Name:" or "Name :" pattern
+      const nameWithLabelMatch = text.match(/Name\s*:\s*([A-Z][a-zA-Z\s]+)/i);
+      if (nameWithLabelMatch && nameWithLabelMatch[1]) {
+        data.name_en = nameWithLabelMatch[1].trim();
+        nameExtracted = true;
+      }
+      
+      // Method 2: If no label found, look for name between ID number and date of birth
+      if (!nameExtracted) {
+        const lines = text.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          // Find line with ID number
+          if (lines[i].includes('784-')) {
+            // Check next few lines for a name pattern (capital first letter, mixed case)
+            for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+              const line = lines[j].trim();
+              // Match name pattern: starts with capital, has spaces, 2-4 words
+              const namePattern = /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})$/;
+              const match = line.match(namePattern);
+              if (match && match[1] && !line.includes('UNITED') && !line.includes('ARAB') && !line.includes('EMIRATES')) {
+                data.name_en = match[1].trim();
+                nameExtracted = true;
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
+      
+      // Method 3: Fallback - look for capital letters pattern but exclude common header words
+      if (!nameExtracted) {
+        const nameMatch = text.match(/[A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/);
+        if (nameMatch) {
+          const name = nameMatch[0].trim();
+          // Exclude common header words
+          if (!name.includes('United') && !name.includes('Arab') && !name.includes('Emirates') && 
+              !name.includes('Federal') && !name.includes('Authority') && !name.includes('Card')) {
+            data.name_en = name;
+          }
+        }
+      }
+
+      // Extract nationality - look for "Nationality:" label or common patterns
+      const nationalityWithLabelMatch = text.match(/Nationality\s*:\s*([A-Za-z\s]+(?:Republic|Kingdom|Emirates)?)/i);
+      if (nationalityWithLabelMatch && nationalityWithLabelMatch[1]) {
+        data.nationality = nationalityWithLabelMatch[1].trim();
+      } else {
+        // Common nationalities on UAE Emirates IDs
+        const nationalityKeywords = [
+          "Syrian Arab Republic",
+          "Syrian",
+          "Indian",
+          "Pakistani",
+          "Bangladeshi",
+          "Filipino",
+          "Egyptian",
+          "Jordanian",
+          "Lebanese",
+          "Sudanese",
+          "Afghan",
+          "Nepali",
+          "Sri Lankan",
+          "Indonesian",
+          "United Arab Emirates",
+        ];
+        for (const nat of nationalityKeywords) {
+          if (text.includes(nat)) {
+            data.nationality = nat;
+            break;
+          }
+        }
+      }
     } else if (documentType === "work_card") {
       // Extract work card number
       const cardMatch = text.match(/[A-Z0-9]{8,15}/);
