@@ -48,6 +48,14 @@ const resources = {
       "dashboard.expiredCards": "Expired Cards",
       "dashboard.expiringDocuments": "Expiring Soon",
       "dashboard.recentActivity": "Recent Activity",
+      "dashboard.expiringSoon": "Expiring Soon",
+      "dashboard.expired": "Expired",
+      "dashboard.missingNumber": "Missing Number",
+      "dashboard.missingDate": "Missing Date",
+      "dashboard.passports": "Passports",
+      "dashboard.workCards": "Work Cards",
+      "dashboard.emiratesId": "Emirates ID",
+      "dashboard.residence": "Residence",
 
       // Employees
       "employees.title": "Employees",
@@ -195,6 +203,14 @@ const resources = {
       "dashboard.expiredCards": "البطاقات منتهية الصلاحية",
       "dashboard.expiringDocuments": "منتهية قريباً",
       "dashboard.recentActivity": "النشاط الأخير",
+      "dashboard.expiringSoon": "ينتهي قريباً",
+      "dashboard.expired": "منتهي",
+      "dashboard.missingNumber": "رقم مفقود",
+      "dashboard.missingDate": "تاريخ مفقود",
+      "dashboard.passports": "جوازات السفر",
+      "dashboard.workCards": "بطاقات العمل",
+      "dashboard.emiratesId": "الهوية الإماراتية",
+      "dashboard.residence": "الإقامة",
 
       // Employees
       "employees.title": "الموظفين",

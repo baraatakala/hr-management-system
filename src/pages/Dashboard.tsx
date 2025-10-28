@@ -183,6 +183,16 @@ export function Dashboard() {
             dayjs(emp.residence_expiry).isBefore(dayjs(), "day")
         ).length || 0;
 
+      // Missing expiry dates (have document number but no expiry date)
+      const missingPassportDate =
+        filteredEmployees?.filter((emp) => emp.passport_no && !emp.passport_expiry).length || 0;
+      const missingCardDate =
+        filteredEmployees?.filter((emp) => emp.card_no && !emp.card_expiry).length || 0;
+      const missingEmiratesIdDate =
+        filteredEmployees?.filter((emp) => emp.emirates_id && !emp.emirates_id_expiry).length || 0;
+      const missingResidenceDate =
+        filteredEmployees?.filter((emp) => emp.residence_no && !emp.residence_expiry).length || 0;
+
       // Expiring soon (within 30 days)
       const expiringSoonPassports =
         filteredEmployees?.filter(
@@ -532,6 +542,10 @@ export function Dashboard() {
         expiringSoonEmiratesId,
         expiringSoonResidence,
         totalExpiringDocs,
+        missingPassportDate,
+        missingCardDate,
+        missingEmiratesIdDate,
+        missingResidenceDate,
         companyStats: companyStats
           .sort((a, b) => b.count - a.count)
           .slice(0, 10),
@@ -1194,125 +1208,197 @@ export function Dashboard() {
 
       {/* Document Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileText className="w-4 h-4 text-blue-600" />
-              Passports
+              {t("dashboard.passports")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">
-                Expiring Soon
+            <div 
+              onClick={() => navigate("/employees?passport=expiring")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
+                {t("dashboard.expiringSoon")}
               </span>
-              <span className="font-semibold text-yellow-600">
+              <span className="font-semibold text-yellow-600 group-hover:scale-110 transition-transform">
                 {stats?.expiringSoonPassports || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expired</span>
-              <span className="font-semibold text-red-600">
+            <div 
+              onClick={() => navigate("/employees?passport=expired")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredPassports || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Missing</span>
-              <span className="font-semibold text-gray-600">
+            <div 
+              onClick={() => navigate("/employees?passport=missing")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingPassports || 0}
               </span>
             </div>
+            <div 
+              onClick={() => navigate("/employees?passport=missing_date")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
+                {stats?.missingPassportDate || 0}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <CreditCard className="w-4 h-4 text-green-600" />
-              Work Cards
+              {t("dashboard.workCards")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">
-                Expiring Soon
+            <div 
+              onClick={() => navigate("/employees?card=expiring")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
+                {t("dashboard.expiringSoon")}
               </span>
-              <span className="font-semibold text-yellow-600">
+              <span className="font-semibold text-yellow-600 group-hover:scale-110 transition-transform">
                 {stats?.expiringSoonCards || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expired</span>
-              <span className="font-semibold text-red-600">
+            <div 
+              onClick={() => navigate("/employees?card=expired")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredCards || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Missing</span>
-              <span className="font-semibold text-gray-600">
+            <div 
+              onClick={() => navigate("/employees?card=missing")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingCard || 0}
               </span>
             </div>
+            <div 
+              onClick={() => navigate("/employees?card=missing_date")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
+                {stats?.missingCardDate || 0}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Shield className="w-4 h-4 text-purple-600" />
-              Emirates ID
+              {t("dashboard.emiratesId")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">
-                Expiring Soon
+            <div 
+              onClick={() => navigate("/employees?emiratesId=expiring")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
+                {t("dashboard.expiringSoon")}
               </span>
-              <span className="font-semibold text-yellow-600">
+              <span className="font-semibold text-yellow-600 group-hover:scale-110 transition-transform">
                 {stats?.expiringSoonEmiratesId || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expired</span>
-              <span className="font-semibold text-red-600">
+            <div 
+              onClick={() => navigate("/employees?emiratesId=expired")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredEmiratesId || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Missing</span>
-              <span className="font-semibold text-gray-600">
+            <div 
+              onClick={() => navigate("/employees?emiratesId=missing")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingEmiratesId || 0}
+              </span>
+            </div>
+            <div 
+              onClick={() => navigate("/employees?emiratesId=missing_date")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
+                {stats?.missingEmiratesIdDate || 0}
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Home className="w-4 h-4 text-orange-600" />
-              Residence
+              {t("dashboard.residence")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">
-                Expiring Soon
+            <div 
+              onClick={() => navigate("/employees?residence=expiring")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-yellow-700">
+                {t("dashboard.expiringSoon")}
               </span>
-              <span className="font-semibold text-yellow-600">
+              <span className="font-semibold text-yellow-600 group-hover:scale-110 transition-transform">
                 {stats?.expiringSoonResidence || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Expired</span>
-              <span className="font-semibold text-red-600">
+            <div 
+              onClick={() => navigate("/employees?residence=expired")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-red-700">{t("dashboard.expired")}</span>
+              <span className="font-semibold text-red-600 group-hover:scale-110 transition-transform">
                 {stats?.expiredResidence || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Missing</span>
-              <span className="font-semibold text-gray-600">
+            <div 
+              onClick={() => navigate("/employees?residence=missing")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-gray-700">{t("dashboard.missingNumber")}</span>
+              <span className="font-semibold text-gray-600 group-hover:scale-110 transition-transform">
                 {stats?.missingResidence || 0}
+              </span>
+            </div>
+            <div 
+              onClick={() => navigate("/employees?residence=missing_date")}
+              className="flex justify-between items-center p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 cursor-pointer transition-colors group"
+            >
+              <span className="text-sm text-muted-foreground group-hover:text-orange-700">{t("dashboard.missingDate")}</span>
+              <span className="font-semibold text-orange-600 group-hover:scale-110 transition-transform">
+                {stats?.missingResidenceDate || 0}
               </span>
             </div>
           </CardContent>
