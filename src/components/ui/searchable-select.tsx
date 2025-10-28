@@ -44,29 +44,55 @@ export function SearchableSelect({
 
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Prevent touch events from propagating to parent
+  // Prevent touch events from propagating to parent - IMPROVED FOR MOBILE
   React.useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer || !open) return;
 
-    const preventScroll = (e: TouchEvent) => {
-      // Allow scrolling within the container
-      const target = e.target as HTMLElement;
-      if (scrollContainer.contains(target)) {
+    // Improved touch handling for mobile
+    let isScrolling = false;
+    let startY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+      isScrolling = true;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isScrolling) return;
+      
+      const currentY = e.touches[0].clientY;
+      const scrollTop = scrollContainer.scrollTop;
+      const scrollHeight = scrollContainer.scrollHeight;
+      const clientHeight = scrollContainer.clientHeight;
+      
+      // Prevent parent scroll only if we're scrolling within bounds
+      const atTop = scrollTop === 0 && currentY > startY;
+      const atBottom = scrollTop + clientHeight >= scrollHeight && currentY < startY;
+      
+      if (!atTop && !atBottom) {
         e.stopPropagation();
       }
     };
 
-    scrollContainer.addEventListener("touchstart", preventScroll, {
+    const handleTouchEnd = () => {
+      isScrolling = false;
+    };
+
+    scrollContainer.addEventListener("touchstart", handleTouchStart, {
       passive: true,
     });
-    scrollContainer.addEventListener("touchmove", preventScroll, {
+    scrollContainer.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+    scrollContainer.addEventListener("touchend", handleTouchEnd, {
       passive: true,
     });
 
     return () => {
-      scrollContainer.removeEventListener("touchstart", preventScroll);
-      scrollContainer.removeEventListener("touchmove", preventScroll);
+      scrollContainer.removeEventListener("touchstart", handleTouchStart);
+      scrollContainer.removeEventListener("touchmove", handleTouchMove);
+      scrollContainer.removeEventListener("touchend", handleTouchEnd);
     };
   }, [open]);
 
@@ -128,14 +154,13 @@ export function SearchableSelect({
           </div>
           <div
             ref={scrollContainerRef}
-            className="max-h-[300px] overflow-y-scroll px-1 pb-1 overscroll-contain"
+            className="max-h-[300px] overflow-y-auto px-1 pb-1"
             style={{
               WebkitOverflowScrolling: "touch",
               touchAction: "pan-y",
+              overscrollBehavior: "contain",
               scrollbarWidth: "thin",
             }}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
           >
             {filteredOptions.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
