@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Calendar,
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -93,6 +94,7 @@ export function EmployeesPage() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -721,6 +723,11 @@ export function EmployeesPage() {
     setCardStatusFilter("all");
     setEmiratesIdStatusFilter("all");
     setResidenceStatusFilter("all");
+    setDateRangeFilter("all");
+    setCustomStartDate("");
+    setCustomEndDate("");
+    // Clear URL parameters
+    navigate("/employees", { replace: true });
   };
 
   const exportToExcel = () => {
@@ -1004,6 +1011,7 @@ export function EmployeesPage() {
               companyFilter !== "all" ||
               jobFilter !== "all" ||
               departmentFilter !== "all" ||
+              dateRangeFilter !== "all" ||
               searchTerm) && (
               <div className="flex flex-wrap items-center gap-1.5 p-2 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
                 <span className="text-xs font-medium text-blue-900 dark:text-blue-100">
@@ -1059,6 +1067,26 @@ export function EmployeesPage() {
                     Department
                     <button
                       onClick={() => setDepartmentFilter("all")}
+                      className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {dateRangeFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 pr-1">
+                    Date: {dateRangeFilter === "custom" 
+                      ? `${customStartDate || "?"} to ${customEndDate || "?"}` 
+                      : dateRangeFilter === "30days" ? "Last 30 Days" 
+                      : dateRangeFilter === "60days" ? "Last 60 Days" 
+                      : dateRangeFilter === "90days" ? "Last 90 Days" 
+                      : dateRangeFilter}
+                    <button
+                      onClick={() => {
+                        setDateRangeFilter("all");
+                        setCustomStartDate("");
+                        setCustomEndDate("");
+                      }}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
@@ -1208,6 +1236,29 @@ export function EmployeesPage() {
                 </Select>
               </div>
 
+              {/* Date Range Filter */}
+              <div>
+                <Label className="text-xs font-medium mb-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Added Date
+                </Label>
+                <Select
+                  value={dateRangeFilter}
+                  onValueChange={setDateRangeFilter}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="30days">Last 30 Days</SelectItem>
+                    <SelectItem value="60days">Last 60 Days</SelectItem>
+                    <SelectItem value="90days">Last 90 Days</SelectItem>
+                    <SelectItem value="custom">Custom Date Range</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Passport Status Filter */}
               <div>
                 <Label className="text-xs font-medium mb-1 block">
@@ -1348,6 +1399,38 @@ export function EmployeesPage() {
                 </Select>
               </div>
             </div>
+
+            {/* Custom Date Range Inputs - Show only when custom is selected */}
+            {dateRangeFilter === "custom" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="customStartDate" className="text-xs font-medium">
+                    From Date
+                  </Label>
+                  <Input
+                    id="customStartDate"
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    max={customEndDate || undefined}
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="customEndDate" className="text-xs font-medium">
+                    To Date
+                  </Label>
+                  <Input
+                    id="customEndDate"
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    min={customStartDate || undefined}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Quick Search - Mobile Optimized */}
             {/* Enhanced Quick Search with Clear Button */}
