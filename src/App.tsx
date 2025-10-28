@@ -11,6 +11,7 @@ import { DepartmentsPage } from "@/pages/DepartmentsPage";
 import { JobsPage } from "@/pages/JobsPage";
 import { NationalitiesPage } from "@/pages/NationalitiesPage";
 import { RemindersPage } from "@/pages/RemindersPage";
+import { AuditTrailPage } from "@/pages/AuditTrailPage";
 import { Layout } from "@/components/Layout";
 import "@/i18n/config";
 import { useTheme } from "@/store/useTheme";
@@ -45,6 +46,7 @@ function App() {
               <Route path="jobs" element={<JobsPage />} />
               <Route path="nationalities" element={<NationalitiesPage />} />
               <Route path="reminders" element={<RemindersPage />} />
+              <Route path="audit" element={<AuditTrailPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

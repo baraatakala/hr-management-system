@@ -11,6 +11,7 @@ import {
   FolderKanban,
   Globe,
   Mail,
+  Shield,
   LogOut,
   Moon,
   Sun,
@@ -55,6 +56,11 @@ export function Layout() {
       icon: Globe,
     },
     { name: t("nav.reminders"), href: "/reminders", icon: Mail },
+    {
+      name: i18n.language === "ar" ? "سجل التدقيق" : "Audit Trail",
+      href: "/audit",
+      icon: Shield,
+    },
   ];
 
   const isRTL = i18n.language === "ar";
