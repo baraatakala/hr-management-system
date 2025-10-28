@@ -2169,6 +2169,70 @@ function EmployeeDialog({
 
   // Handle data extracted from OCR
   const handleDataExtracted = (data: any) => {
+    // Smart nationality matching - map OCR result to existing nationalities
+    if (data.nationality && nationalities && nationalities.length > 0) {
+      const extractedNat = data.nationality.toLowerCase();
+      
+      // Try to find exact match first
+      let matchedNationality = nationalities.find((nat: any) => 
+        nat.name_en?.toLowerCase() === extractedNat
+      );
+
+      // If no exact match, try partial matching (e.g., "Syrian Arab Republic" → "Syria")
+      if (!matchedNationality) {
+        matchedNationality = nationalities.find((nat: any) => {
+          const natName = nat.name_en?.toLowerCase() || '';
+          const natWords = natName.split(' ');
+          const extractedWords = extractedNat.split(' ');
+          
+          // Check if any word matches (e.g., "Syrian" matches "Syria")
+          return natWords.some(word => 
+            extractedWords.some(extractedWord => 
+              word.includes(extractedWord) || extractedWord.includes(word)
+            )
+          );
+        });
+      }
+
+      // If still no match, try similarity-based matching
+      if (!matchedNationality) {
+        // Common nationality mappings
+        const nationalityMappings: { [key: string]: string[] } = {
+          'syria': ['syrian', 'syrian arab republic', 'syr'],
+          'india': ['indian', 'ind'],
+          'pakistan': ['pakistani', 'pak'],
+          'bangladesh': ['bangladeshi', 'bgd'],
+          'philippines': ['filipino', 'phl'],
+          'egypt': ['egyptian', 'egy'],
+          'jordan': ['jordanian', 'jor'],
+          'lebanon': ['lebanese', 'lbn'],
+          'sudan': ['sudanese', 'sdn'],
+          'afghanistan': ['afghan', 'afg'],
+          'nepal': ['nepali', 'npl'],
+          'sri lanka': ['sri lankan', 'lka'],
+          'indonesia': ['indonesian', 'idn'],
+        };
+
+        // Find match using mapping
+        for (const [dbNat, variants] of Object.entries(nationalityMappings)) {
+          if (variants.some(variant => extractedNat.includes(variant))) {
+            matchedNationality = nationalities.find((nat: any) => 
+              nat.name_en?.toLowerCase().includes(dbNat)
+            );
+            if (matchedNationality) break;
+          }
+        }
+      }
+
+      // Use matched nationality NAME (not ID) since database stores VARCHAR
+      if (matchedNationality) {
+        data.nationality = matchedNationality.name_en; // Store the name, not the ID
+      } else {
+        // If no match found, remove nationality to avoid invalid data
+        delete data.nationality;
+      }
+    }
+
     setFormData({ ...formData, ...data });
     setScannerOpen(false);
   };
