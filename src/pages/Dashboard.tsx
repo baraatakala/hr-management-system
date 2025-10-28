@@ -70,7 +70,6 @@ export function Dashboard() {
   const {
     data: stats,
     isLoading,
-    refetch,
   } = useQuery({
     queryKey: ["dashboard-stats", selectedCompany, selectedDepartment, selectedNationality, dateRange, customStartDate, customEndDate, statusFilter],
     queryFn: async () => {
@@ -936,15 +935,6 @@ export function Dashboard() {
           >
             <Shield className="w-4 h-4 mr-2" />
             Filters {hasActiveFilters && `(${[selectedCompany, selectedDepartment, selectedNationality, dateRange, statusFilter].filter(f => f !== "all").length})`}
-          </Button>
-          <Button
-            onClick={() => refetch()}
-            variant="outline"
-            size="sm"
-            className="flex-1 sm:flex-initial h-11 md:h-9 touch-manipulation active:scale-95 transition-transform"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
           </Button>
           <Button
             onClick={exportDashboard}
