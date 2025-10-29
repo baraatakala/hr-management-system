@@ -81,26 +81,18 @@ export function AuditTrailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("activity_log")
-        .select(
-          `
-          *,
-          employees (
-            employee_no,
-            name_en,
-            name_ar
-          )
-        `
-        )
+        .select("*")
         .order("timestamp", { ascending: false })
         .limit(1000);
 
       if (error) throw error;
 
+      // Employee info is now stored directly in activity_log columns
       return data.map((log: any) => ({
         ...log,
-        employee_no: log.employees?.employee_no || "N/A",
-        name_en: log.employees?.name_en || "Deleted Employee",
-        name_ar: log.employees?.name_ar || "موظف محذوف",
+        employee_no: log.employee_no || "N/A",
+        name_en: log.name_en || "Deleted Employee",
+        name_ar: log.name_ar || "موظف محذوف",
       })) as AuditLog[];
     },
   });
