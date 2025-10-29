@@ -27,6 +27,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DocumentScanner } from "@/components/DocumentScanner";
+import { BulkImportDialog } from "@/components/BulkImportDialog";
 import {
   Plus,
   Edit,
@@ -50,6 +51,7 @@ import {
   ChevronsRight,
   Calendar,
   Camera,
+  Upload,
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -100,6 +102,7 @@ export function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
   // Check if RTL
   const isRTL = i18n.language === "ar";
@@ -874,6 +877,15 @@ export function EmployeesPage() {
               {t("employees.addEmployee")}
             </span>
             <span className="sm:hidden">Add</span>
+          </Button>
+          <Button
+            onClick={() => setIsBulkImportOpen(true)}
+            variant="outline"
+            className="gap-2 flex-1 md:flex-initial h-9 bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900 text-green-700 dark:text-green-300"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">{t("Bulk Import")}</span>
+            <span className="sm:hidden">{t("Import")}</span>
           </Button>
           <Button
             onClick={exportToExcel}
@@ -2140,6 +2152,20 @@ export function EmployeesPage() {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         employee={editingEmployee}
+        companies={companies || []}
+        departments={departments || []}
+        jobs={jobs || []}
+        nationalities={nationalities || []}
+      />
+
+      {/* Bulk Import Dialog */}
+      <BulkImportDialog
+        open={isBulkImportOpen}
+        onOpenChange={setIsBulkImportOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["employees"] });
+          setIsBulkImportOpen(false);
+        }}
         companies={companies || []}
         departments={departments || []}
         jobs={jobs || []}
