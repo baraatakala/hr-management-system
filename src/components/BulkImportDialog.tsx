@@ -213,8 +213,21 @@ export function BulkImportDialog({
       return dayjs(`${date.y}-${String(date.m).padStart(2, "0")}-${String(date.d).padStart(2, "0")}`).format("YYYY-MM-DD");
     }
     
-    // Handle string dates
-    const parsed = dayjs(value as string);
+    // Handle string dates - try multiple formats
+    const dateStr = value.toString().trim();
+    
+    // Try DD/MM/YYYY format (exported format)
+    if (dateStr.includes("/")) {
+      const parts = dateStr.split("/");
+      if (parts.length === 3) {
+        // DD/MM/YYYY
+        const parsed = dayjs(`${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`, "YYYY-MM-DD");
+        if (parsed.isValid()) return parsed.format("YYYY-MM-DD");
+      }
+    }
+    
+    // Try ISO format (YYYY-MM-DD) or other dayjs-supported formats
+    const parsed = dayjs(dateStr);
     return parsed.isValid() ? parsed.format("YYYY-MM-DD") : null;
   };
 
@@ -244,8 +257,29 @@ export function BulkImportDialog({
       const parsedRows: ImportRow[] = [];
 
       for (let i = 0; i < jsonData.length; i++) {
-        const row = jsonData[i] as Record<string, unknown>;
+        const rawRow = jsonData[i] as Record<string, unknown>;
         const rowNumber = i + 2; // Excel row (accounting for header)
+
+        // Normalize column names - support both exported format and template format
+        const row: Record<string, unknown> = {
+          employee_no: rawRow.employee_no || rawRow["Employee No"],
+          name_en: rawRow.name_en || rawRow["Name (English)"],
+          name_ar: rawRow.name_ar || rawRow["Name (Arabic)"],
+          nationality: rawRow.nationality || rawRow["Nationality"],
+          company_name: rawRow.company_name || rawRow["Company"],
+          department_name: rawRow.department_name || rawRow["Department"],
+          job_name: rawRow.job_name || rawRow["Job"],
+          passport_no: rawRow.passport_no || rawRow["Passport No"],
+          passport_expiry: rawRow.passport_expiry || rawRow["Passport Expiry"],
+          card_no: rawRow.card_no || rawRow["Card No"],
+          card_expiry: rawRow.card_expiry || rawRow["Card Expiry"],
+          emirates_id: rawRow.emirates_id || rawRow["Emirates ID"],
+          emirates_id_expiry: rawRow.emirates_id_expiry || rawRow["Emirates ID Expiry"],
+          residence_no: rawRow.residence_no || rawRow["Residence No"],
+          residence_expiry: rawRow.residence_expiry || rawRow["Residence Expiry"],
+          phone: rawRow.phone || rawRow["Phone"],
+          email: rawRow.email || rawRow["Email"],
+        };
 
         // Validate required fields
         const errors: string[] = [];
