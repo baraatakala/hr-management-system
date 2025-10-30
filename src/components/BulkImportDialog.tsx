@@ -20,9 +20,11 @@ import {
   AlertCircle,
   FileSpreadsheet,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import dayjs from "dayjs";
+import { QuickAddReference } from "./QuickAddReference";
 
 interface ImportRow {
   row: number;
@@ -57,6 +59,7 @@ interface Nationality {
   id: string;
   name_en: string;
   name_ar?: string;
+  code?: string;
 }
 
 interface BulkImportDialogProps {
@@ -83,6 +86,12 @@ export function BulkImportDialog({
   const [importing, setImporting] = useState(false);
   const [results, setResults] = useState<ImportRow[]>([]);
   const [step, setStep] = useState<"upload" | "preview" | "results">("upload");
+  const [revalidatingRow, setRevalidatingRow] = useState<number | null>(null);
+  const [quickAddDialog, setQuickAddDialog] = useState<{
+    type: "nationality" | "company" | "department" | "job";
+    value: string;
+    rowIndex: number;
+  } | null>(null);
 
   // Download Excel template
   const downloadTemplate = () => {
@@ -175,32 +184,74 @@ export function BulkImportDialog({
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Employees");
 
-    // Add instructions sheet
+    // Add instructions sheet with comprehensive guide
     const instructions = [
-      { Field: "employee_no", Required: "YES", Description: "Unique employee ID (e.g., TEST001, EMP001)" },
-      { Field: "name_en", Required: "YES", Description: "Full name in English" },
-      { Field: "name_ar", Required: "YES", Description: "Full name in Arabic" },
-      { Field: "nationality", Required: "YES", Description: "Exact nationality name: United Arab Emirates, Egypt, Syria, India, etc." },
-      { Field: "company_name", Required: "NO", Description: "Exact company name (optional): HR Group Main, HR Group Branch A, HR Group Branch B" },
-      { Field: "department_name", Required: "NO", Description: "Exact department name (optional): Human Resources, Finance, IT, Operations" },
-      { Field: "job_name", Required: "NO", Description: "Exact job title (optional): Manager, Senior Specialist, Specialist, Assistant" },
-      { Field: "passport_no", Required: "NO", Description: "Passport number (e.g., N01234567)" },
-      { Field: "passport_expiry", Required: "NO", Description: "Passport expiry date (YYYY-MM-DD format only)" },
-      { Field: "card_no", Required: "NO", Description: "Work permit/Labor card number (e.g., WC123456)" },
-      { Field: "card_expiry", Required: "NO", Description: "Work permit expiry (YYYY-MM-DD format only)" },
-      { Field: "emirates_id", Required: "NO", Description: "Emirates ID (format: 784-YYYY-NNNNNNN-N)" },
-      { Field: "emirates_id_expiry", Required: "NO", Description: "Emirates ID expiry (YYYY-MM-DD format only)" },
-      { Field: "residence_no", Required: "NO", Description: "Residence permit number (e.g., 101/2023/1234567)" },
-      { Field: "residence_expiry", Required: "NO", Description: "Residence permit expiry (YYYY-MM-DD format only)" },
-      { Field: "phone", Required: "NO", Description: "Phone with country code (e.g., +971501234567)" },
-      { Field: "email", Required: "NO", Description: "Email address (e.g., name@company.ae)" },
+      { Section: "📋 HOW TO USE THIS TEMPLATE", Info: "", Details: "" },
+      { Section: "1. Fill employee data in 'Employees' sheet", Info: "", Details: "" },
+      { Section: "2. Upload the file in HR System", Info: "", Details: "" },
+      { Section: "3. Use Quick Add for missing reference data", Info: "", Details: "If nationality/company/department/job not found, click 'Quick Add' button to add instantly" },
+      { Section: "4. Import validated employees", Info: "", Details: "" },
+      { Section: "", Info: "", Details: "" },
+      { Section: "📊 FIELD REFERENCE", Info: "Required?", Details: "Description & Examples" },
+      { Section: "employee_no", Info: "YES", Details: "Unique employee ID (e.g., TEST001, EMP001, EMP-2024-001)" },
+      { Section: "name_en", Info: "YES", Details: "Full name in English (e.g., Ahmed Mohammed Ali)" },
+      { Section: "name_ar", Info: "YES", Details: "Full name in Arabic (e.g., أحمد محمد علي)" },
+      { Section: "nationality", Info: "YES", Details: "Nationality name - System accepts typos! (e.g., 'germany' matches 'Germany', 'uzabakistan' suggests 'Uzbekistan')" },
+      { Section: "company_name", Info: "NO", Details: "Company name (optional) - Use exact name or Quick Add if missing" },
+      { Section: "department_name", Info: "NO", Details: "Department name (optional) - Use exact name or Quick Add if missing" },
+      { Section: "job_name", Info: "NO", Details: "Job title (optional) - Use exact name or Quick Add if missing" },
+      { Section: "passport_no", Info: "NO", Details: "Passport number (e.g., N01234567, A98765432)" },
+      { Section: "passport_expiry", Info: "NO", Details: "Passport expiry - Supports multiple formats: YYYY-MM-DD, DD/MM/YYYY, or Excel date" },
+      { Section: "card_no", Info: "NO", Details: "Work permit/Labor card number (e.g., WC123456)" },
+      { Section: "card_expiry", Info: "NO", Details: "Work permit expiry - Supports: YYYY-MM-DD, DD/MM/YYYY, Excel date" },
+      { Section: "emirates_id", Info: "NO", Details: "Emirates ID (format: 784-YYYY-NNNNNNN-N)" },
+      { Section: "emirates_id_expiry", Info: "NO", Details: "Emirates ID expiry - Supports: YYYY-MM-DD, DD/MM/YYYY, Excel date" },
+      { Section: "residence_no", Info: "NO", Details: "Residence permit number (e.g., 101/2023/1234567)" },
+      { Section: "residence_expiry", Info: "NO", Details: "Residence permit expiry - Supports: YYYY-MM-DD, DD/MM/YYYY, Excel date" },
+      { Section: "phone", Info: "NO", Details: "Phone with country code (e.g., +971501234567, +201234567890)" },
+      { Section: "email", Info: "NO", Details: "Email address (e.g., ahmed.mohammed@company.ae)" },
+      { Section: "", Info: "", Details: "" },
+      { Section: "✨ SMART FEATURES", Info: "", Details: "" },
+      { Section: "Fuzzy Matching", Info: "✓", Details: "System intelligently matches typos: 'germany' → 'Germany', 'uzabakistan' → suggests 'Uzbekistan'" },
+      { Section: "Quick Add", Info: "✓", Details: "Missing nationality/company/dept/job? Click 'Quick Add' button to add it instantly without leaving import!" },
+      { Section: "Date Formats", Info: "✓", Details: "Accepts YYYY-MM-DD, DD/MM/YYYY, or Excel serial dates - all work!" },
+      { Section: "Auto Re-validation", Info: "✓", Details: "After Quick Add, row automatically re-validates - no need to re-upload file!" },
+      { Section: "Suggestions", Info: "✓", Details: "Typos show similar suggestions: 'analyst' → 'Did you mean: Data Analyst, Business Analyst?'" },
+      { Section: "", Info: "", Details: "" },
+      { Section: "💡 TIPS", Info: "", Details: "" },
+      { Section: "• Case-insensitive", Info: "", Details: "'germany', 'Germany', 'GERMANY' all work the same" },
+      { Section: "• Leave optional fields blank", Info: "", Details: "Company, Department, Job can be empty - add them later via Quick Add" },
+      { Section: "• Fix errors progressively", Info: "", Details: "System shows one Quick Add button per row - fix first error, then next appears" },
+      { Section: "• Use template sample data", Info: "", Details: "First 3 rows show correct format - copy and modify them" },
     ];
 
     const wsInstructions = XLSX.utils.json_to_sheet(instructions);
-    wsInstructions["!cols"] = [{ wch: 25 }, { wch: 12 }, { wch: 60 }];
-    XLSX.utils.book_append_sheet(wb, wsInstructions, "Instructions");
+    wsInstructions["!cols"] = [{ wch: 35 }, { wch: 12 }, { wch: 80 }];
+    XLSX.utils.book_append_sheet(wb, wsInstructions, "📖 Instructions");
 
     XLSX.writeFile(wb, "Employee_Import_Template.xlsx");
+  };
+
+  // Parse error message to detect missing reference data
+  const parseMissingDataError = (errorMessage: string): {
+    type: "nationality" | "company" | "department" | "job";
+    value: string;
+  } | null => {
+    const patterns = [
+      { regex: /Nationality ["']([^"']+)["'] not found/i, type: "nationality" as const },
+      { regex: /Company ["']([^"']+)["'] not found/i, type: "company" as const },
+      { regex: /Department ["']([^"']+)["'] not found/i, type: "department" as const },
+      { regex: /Job ["']([^"']+)["'] not found/i, type: "job" as const },
+    ];
+
+    for (const { regex, type } of patterns) {
+      const match = errorMessage.match(regex);
+      if (match) {
+        return { type, value: match[1] };
+      }
+    }
+
+    return null;
   };
 
   // Validate and parse date
@@ -384,14 +435,35 @@ export function BulkImportDialog({
           }
         }
 
-        // Match nationality
-        const nationality = nationalities.find(
+        // Smart fuzzy matching for nationality
+        let nationality = nationalities.find(
           (n) =>
             n.name_en?.toLowerCase() === row.nationality?.toString().toLowerCase() ||
             n.name_ar === row.nationality
         );
+        // Fuzzy match: try partial matching
         if (!nationality && row.nationality) {
-          errors.push(`Nationality "${row.nationality}" not found`);
+          const searchTerm = row.nationality.toString().toLowerCase().trim();
+          nationality = nationalities.find(
+            (n) =>
+              n.name_en?.toLowerCase().includes(searchTerm) ||
+              searchTerm.includes(n.name_en?.toLowerCase()) ||
+              n.code?.toLowerCase().includes(searchTerm)
+          );
+        }
+        if (!nationality && row.nationality) {
+          // Suggest similar nationalities
+          const searchTerm = row.nationality.toString().toLowerCase().trim();
+          const similarNationalities = nationalities.filter((n) => 
+            n.name_en?.toLowerCase().includes(searchTerm.substring(0, 3)) ||
+            searchTerm.includes(n.name_en?.toLowerCase().substring(0, 3))
+          );
+          
+          if (similarNationalities.length > 0) {
+            errors.push(`Nationality "${row.nationality}" not found. Did you mean: ${similarNationalities.map(n => n.name_en).slice(0, 5).join(", ")}?`);
+          } else {
+            errors.push(`Nationality "${row.nationality}" not found`);
+          }
         }
 
         parsedRows.push({
@@ -401,8 +473,12 @@ export function BulkImportDialog({
             name_en: row.name_en?.toString().trim(),
             name_ar: row.name_ar?.toString().trim(),
             nationality: nationality?.name_en || row.nationality,
+            // Store BOTH names and IDs for re-validation
+            company_name: row.company_name?.toString().trim() || null,
             company_id: company?.id || null,
+            department_name: row.department_name?.toString().trim() || null,
             department_id: department?.id || null,
+            job_name: row.job_name?.toString().trim() || null,
             job_id: job?.id || null,
             passport_no: row.passport_no?.toString().trim() || null,
             passport_expiry: parseDate(row.passport_expiry),
@@ -414,11 +490,11 @@ export function BulkImportDialog({
             residence_expiry: parseDate(row.residence_expiry),
             phone: row.phone?.toString().trim() || null,
             email: row.email?.toString().trim() || null,
-            added_date: dayjs().format("YYYY-MM-DD"), // Current date as default
-            is_active: true, // Active by default
+            added_date: dayjs().format("YYYY-MM-DD"), // Date when employee joined (DATE field)
+            is_active: true, // Active by default (BOOLEAN field)
           },
           status: errors.length > 0 ? "error" : "pending",
-          message: errors.join("; "),
+          message: errors.join(", "),  // Use comma for consistent splitting
         });
       }
 
@@ -449,19 +525,29 @@ export function BulkImportDialog({
       }
 
       try {
+        // Remove _name fields that don't exist in database schema
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { company_name, department_name, job_name, ...dataToInsert } = result.data as Record<string, unknown>;
+        
+        console.log("Inserting employee data:", dataToInsert); // Debug log
+        
         const { data, error } = await supabase
           .from("employees")
-          .insert(result.data as never)
+          .insert(dataToInsert as never)
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error); // Debug log
+          throw error;
+        }
 
         updatedResults[i].status = "success";
         updatedResults[i].message = "Imported successfully";
         updatedResults[i].employeeId = data.id;
         successCount++;
       } catch (error) {
+        console.error("Import failed for row:", result.row, error); // Debug log
         const message = error instanceof Error ? error.message : "Import failed";
         updatedResults[i].status = "error";
         updatedResults[i].message = message;
@@ -493,7 +579,8 @@ export function BulkImportDialog({
   const successRows = results.filter((r) => r.status === "success").length;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -609,11 +696,53 @@ export function BulkImportDialog({
                       <td className="px-2 py-2">{String(result.data.name_en || "")}</td>
                       <td className="px-2 py-2">{result.data.company_id ? "✓" : "✗"}</td>
                       <td className="px-2 py-2">
-                        {result.status === "error" ? (
-                          <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <XCircle className="w-3 h-3" />
-                            {result.message}
+                        {revalidatingRow === idx ? (
+                          <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1 text-xs">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            {t("Validating...")}
                           </span>
+                        ) : result.status === "error" ? (
+                          <div className="space-y-1">
+                            {(() => {
+                              // Split multiple errors if comma-separated
+                              const errorMessages = (result.message || "").split(", ");
+                              // Find FIRST error that can be Quick-Added
+                              const firstQuickAddableError = errorMessages.find(msg => 
+                                parseMissingDataError(msg) !== null
+                              );
+                              const missingData = firstQuickAddableError ? parseMissingDataError(firstQuickAddableError) : null;
+                              
+                              return (
+                                <>
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-red-600 dark:text-red-400 flex items-start gap-1 text-xs">
+                                      <XCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                      <span className="flex-1">{result.message}</span>
+                                    </span>
+                                  </div>
+                                  {missingData && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 px-2 text-xs w-full"
+                                      onClick={() => {
+                                        setQuickAddDialog({
+                                          type: missingData.type,
+                                          value: missingData.value,
+                                          rowIndex: idx,
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="w-3 h-3 mr-1" />
+                                      {t("Add")} {missingData.type === "nationality" ? t("Nationality") : 
+                                              missingData.type === "company" ? t("Company") : 
+                                              missingData.type === "department" ? t("Department") : t("Job")}
+                                    </Button>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
                         ) : (
                           <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
@@ -764,5 +893,144 @@ export function BulkImportDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Quick Add Reference Data Dialog - Outside main dialog to avoid overlay conflicts */}
+    {quickAddDialog && (
+      <QuickAddReference
+        open={!!quickAddDialog}
+        onOpenChange={(open) => {
+          if (!open) setQuickAddDialog(null);
+        }}
+        type={quickAddDialog.type}
+        missingValue={quickAddDialog.value}
+        onSuccess={async () => {
+            // Close the quick-add dialog
+            const rowIndex = quickAddDialog.rowIndex;
+            const addedType = quickAddDialog.type;
+            setQuickAddDialog(null);
+            
+            // Show loading state
+            setRevalidatingRow(rowIndex);
+
+            // Re-validate the specific row
+            const rowToRevalidate = results[rowIndex];
+            if (!rowToRevalidate) {
+              setRevalidatingRow(null);
+              return;
+            }
+
+            // Fetch ONLY the updated reference data type (performance optimization)
+            let updatedCompanies = companies;
+            let updatedDepartments = departments;
+            let updatedJobs = jobs;
+            let updatedNationalities = nationalities;
+
+            if (addedType === "company") {
+              const { data } = await supabase.from("companies").select("*");
+              updatedCompanies = data || companies;
+            } else if (addedType === "department") {
+              const { data } = await supabase.from("departments").select("*");
+              updatedDepartments = data || departments;
+            } else if (addedType === "job") {
+              const { data } = await supabase.from("jobs").select("*");
+              updatedJobs = data || jobs;
+            } else if (addedType === "nationality") {
+              const { data } = await supabase.from("nationalities").select("*");
+              updatedNationalities = data || nationalities;
+            }
+
+            // Re-validate with updated data
+            const row = rowToRevalidate.data;
+            const errors: string[] = [];
+
+            // Validate with updated reference data
+            const nationalityMatch = row.nationality
+              ? (updatedNationalities || []).find(
+                  (n) => n.name_en?.toLowerCase() === String(row.nationality).toLowerCase()
+                )
+              : null;
+            
+            const companyMatch = row.company_name
+              ? (updatedCompanies || []).find(
+                  (c) => c.name_en?.toLowerCase() === String(row.company_name).toLowerCase()
+                )
+              : null;
+            
+            const departmentMatch = row.department_name
+              ? (updatedDepartments || []).find(
+                  (d) => d.name_en?.toLowerCase() === String(row.department_name).toLowerCase()
+                )
+              : null;
+            
+            const jobMatch = row.job_name
+              ? (updatedJobs || []).find(
+                  (j) => j.name_en?.toLowerCase() === String(row.job_name).toLowerCase()
+                )
+              : null;
+
+            // Only add error if field has value but no match found
+            if (row.nationality && !nationalityMatch) {
+              errors.push(`Nationality "${row.nationality}" not found`);
+            }
+            if (row.company_name && !companyMatch) {
+              errors.push(`Company "${row.company_name}" not found`);
+            }
+            if (row.department_name && !departmentMatch) {
+              errors.push(`Department "${row.department_name}" not found`);
+            }
+            if (row.job_name && !jobMatch) {
+              errors.push(`Job "${row.job_name}" not found`);
+            }
+
+            // Update the row status
+            const updatedResults = [...results];
+            if (errors.length === 0) {
+              // Build clean data object with only database fields
+              const cleanData = {
+                employee_no: row.employee_no,
+                name_en: row.name_en,
+                name_ar: row.name_ar,
+                nationality: nationalityMatch?.name_en || row.nationality,  // ✅ Use matched name
+                // No nationality_id - doesn't exist in schema!
+                company_id: companyMatch?.id,
+                department_id: departmentMatch?.id,
+                job_id: jobMatch?.id,
+                passport_no: row.passport_no,
+                passport_expiry: row.passport_expiry,
+                card_no: row.card_no,
+                card_expiry: row.card_expiry,
+                emirates_id: row.emirates_id,
+                emirates_id_expiry: row.emirates_id_expiry,
+                residence_no: row.residence_no,
+                residence_expiry: row.residence_expiry,
+                phone: row.phone,
+                email: row.email,
+                added_date: row.added_date,
+                is_active: row.is_active,
+                // Keep the _name fields for future re-validation (but won't be inserted)
+                company_name: row.company_name,
+                department_name: row.department_name,
+                job_name: row.job_name,
+              };
+              
+              updatedResults[rowIndex] = {
+                ...rowToRevalidate,
+                status: "pending",
+                message: undefined,
+                data: cleanData,
+              };
+            } else {
+              updatedResults[rowIndex] = {
+                ...rowToRevalidate,
+                message: errors.join(", "),
+              };
+            }
+
+            setResults(updatedResults);
+            setRevalidatingRow(null);
+          }}
+        />
+      )}
+    </>
   );
 }

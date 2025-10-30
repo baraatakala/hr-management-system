@@ -31,7 +31,6 @@ import { BulkImportDialog } from "@/components/BulkImportDialog";
 import {
   Plus,
   Edit,
-  Trash2,
   Search,
   Download,
   Grid3x3,
@@ -633,12 +632,6 @@ export function EmployeesPage() {
   const handleAdd = () => {
     setEditingEmployee(null);
     setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm(t("employees.deleteConfirm"))) {
-      deleteMutation.mutate(id);
-    }
   };
 
   // Bulk selection handlers
@@ -1565,24 +1558,15 @@ export function EmployeesPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEdit(employee)}
-                        className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(employee.id)}
-                        className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEdit(employee)}
+                      className="h-9 w-9 p-0 touch-manipulation active:scale-95 transition-transform flex-shrink-0"
+                      title={t("common.edit")}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
                   </div>
 
                   <div className="space-y-2 text-sm md:text-base">
@@ -1865,7 +1849,7 @@ export function EmployeesPage() {
                       </div>
                     </th>
                     <th
-                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800"
+                      className="text-left p-2 md:p-3 font-semibold text-xs md:text-sm cursor-pointer hover:bg-muted/80 select-none active:bg-muted transition-colors bg-muted dark:bg-gray-800 w-48 max-w-xs"
                       onClick={() => handleSort("name")}
                     >
                       <div className="flex items-center gap-1">
@@ -1954,9 +1938,6 @@ export function EmployeesPage() {
                         <SortIcon column="residence" />
                       </div>
                     </th>
-                    <th className="text-right p-2 md:p-3 font-semibold text-xs md:text-sm bg-muted dark:bg-gray-800">
-                      {t("table.actions")}
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1981,15 +1962,15 @@ export function EmployeesPage() {
                       <td className="p-2 md:p-3 font-medium text-xs md:text-sm">
                         {employee.employee_no}
                       </td>
-                      <td className="p-2 md:p-3 text-xs md:text-sm">
-                        <div className="flex items-center gap-2">
-                          <span>
+                      <td className="p-2 md:p-3 text-xs md:text-sm w-48 max-w-xs">
+                        <div className="flex items-center gap-1.5 group">
+                          <span className="truncate flex-1">
                             {i18n.language === "ar"
                               ? employee.name_ar
                               : employee.name_en}
                           </span>
                           <span
-                            className={`inline-block w-2 h-2 rounded-full ${
+                            className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
                               employee.is_active
                                 ? "bg-green-500"
                                 : "bg-gray-400"
@@ -2000,6 +1981,15 @@ export function EmployeesPage() {
                                 : t("filters.inactiveEmployees")
                             }
                           />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(employee)}
+                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                            title={t("common.edit")}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
                         </div>
                       </td>
                       <td className="p-2 md:p-3 text-xs md:text-sm">
@@ -2099,26 +2089,6 @@ export function EmployeesPage() {
                                 )
                               : "N/A"}
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-2 md:p-3">
-                        <div className="flex gap-1 md:gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(employee)}
-                            className="h-8 w-8 p-0 touch-manipulation"
-                          >
-                            <Edit className="w-3 h-3 md:w-4 md:h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(employee.id)}
-                            className="h-8 w-8 p-0 touch-manipulation"
-                          >
-                            <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-red-600" />
-                          </Button>
                         </div>
                       </td>
                     </tr>
