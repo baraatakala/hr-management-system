@@ -218,22 +218,15 @@ export function Dashboard() {
             dayjs(emp.residence_expiry).isBefore(dayjs(), "day")
         ).length || 0;
 
-      // Missing expiry dates (have document number but no expiry date)
+      // Missing expiry dates (ANY employee without expiry date - regardless of document number)
       const missingPassportDate =
-        filteredEmployees?.filter(
-          (emp) => emp.passport_no && !emp.passport_expiry
-        ).length || 0;
+        filteredEmployees?.filter((emp) => !emp.passport_expiry).length || 0;
       const missingCardDate =
-        filteredEmployees?.filter((emp) => emp.card_no && !emp.card_expiry)
-          .length || 0;
+        filteredEmployees?.filter((emp) => !emp.card_expiry).length || 0;
       const missingEmiratesIdDate =
-        filteredEmployees?.filter(
-          (emp) => emp.emirates_id && !emp.emirates_id_expiry
-        ).length || 0;
+        filteredEmployees?.filter((emp) => !emp.emirates_id_expiry).length || 0;
       const missingResidenceDate =
-        filteredEmployees?.filter(
-          (emp) => emp.residence_no && !emp.residence_expiry
-        ).length || 0;
+        filteredEmployees?.filter((emp) => !emp.residence_expiry).length || 0;
 
       // Expiring soon (within 30 days)
       const expiringSoonPassports =

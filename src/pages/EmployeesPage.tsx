@@ -409,9 +409,7 @@ export function EmployeesPage() {
       const matchesPassport =
         passportStatusFilter === "all" ||
         (passportStatusFilter === "missing_number" && !emp.passport_no) ||
-        (passportStatusFilter === "missing_date" &&
-          emp.passport_no &&
-          !emp.passport_expiry) ||
+        (passportStatusFilter === "missing_date" && !emp.passport_expiry) ||
         (passportStatus !== null && passportStatus === passportStatusFilter);
 
       // Card status filter
@@ -419,9 +417,7 @@ export function EmployeesPage() {
       const matchesCard =
         cardStatusFilter === "all" ||
         (cardStatusFilter === "missing_number" && !emp.card_no) ||
-        (cardStatusFilter === "missing_date" &&
-          emp.card_no &&
-          !emp.card_expiry) ||
+        (cardStatusFilter === "missing_date" && !emp.card_expiry) ||
         (cardStatus !== null && cardStatus === cardStatusFilter);
 
       // Emirates ID status filter
@@ -429,9 +425,7 @@ export function EmployeesPage() {
       const matchesEmiratesId =
         emiratesIdStatusFilter === "all" ||
         (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
-        (emiratesIdStatusFilter === "missing_date" &&
-          emp.emirates_id &&
-          !emp.emirates_id_expiry) ||
+        (emiratesIdStatusFilter === "missing_date" && !emp.emirates_id_expiry) ||
         (emiratesIdStatus !== null &&
           emiratesIdStatus === emiratesIdStatusFilter);
 
@@ -440,9 +434,7 @@ export function EmployeesPage() {
       const matchesResidence =
         residenceStatusFilter === "all" ||
         (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
-        (residenceStatusFilter === "missing_date" &&
-          emp.residence_no &&
-          !emp.residence_expiry) ||
+        (residenceStatusFilter === "missing_date" && !emp.residence_expiry) ||
         (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
       // Date range filter (added_date)
