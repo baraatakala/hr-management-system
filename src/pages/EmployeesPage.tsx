@@ -125,6 +125,7 @@ export function EmployeesPage() {
 
   // Apply URL parameters on mount
   useEffect(() => {
+    const search = searchParams.get("search");
     const passport = searchParams.get("passport") as StatusFilter;
     const card = searchParams.get("card") as StatusFilter;
     const emiratesId = searchParams.get("emiratesId") as StatusFilter;
@@ -136,6 +137,9 @@ export function EmployeesPage() {
     const dateRange = searchParams.get("dateRange");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+
+    // Apply search term from URL (from audit trail navigation)
+    if (search) setSearchTerm(search);
 
     // Convert "missing" from URL to "missing_number" for filtering by document number
     // Keep "missing_date" as is for filtering by missing expiry date
@@ -166,6 +170,7 @@ export function EmployeesPage() {
 
     // Show filters panel if any URL filter is present
     if (
+      search ||
       passport ||
       card ||
       emiratesId ||

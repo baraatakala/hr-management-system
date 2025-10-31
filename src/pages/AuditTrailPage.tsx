@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ import {
   ChevronRight,
   Activity,
   TrendingUp,
+  ExternalLink,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { jsPDF } from "jspdf";
@@ -72,6 +74,7 @@ interface AuditLog {
 export function AuditTrailPage() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -345,6 +348,12 @@ export function AuditTrailPage() {
     setCustomStartDate("");
     setCustomEndDate("");
     setCurrentPage(1);
+  };
+
+  // Navigate to employee page with pre-filled search
+  const handleRecordClick = (log: AuditLog) => {
+    // Navigate to employees page with the employee number as search term
+    navigate(`/employees?search=${encodeURIComponent(log.employee_no)}`);
   };
 
   // Export to Excel
@@ -838,7 +847,9 @@ export function AuditTrailPage() {
                 return (
                   <tr 
                     key={log.id} 
-                    className="hover:bg-muted/50 transition-colors duration-150 cursor-pointer active:bg-muted/70"
+                    onClick={() => handleRecordClick(log)}
+                    className="hover:bg-primary/5 hover:shadow-sm transition-all duration-200 cursor-pointer active:bg-primary/10 border-l-4 border-transparent hover:border-primary/50"
+                    title="Click to view this employee in the Employees page"
                   >
                     <td className="px-4 py-4 text-sm whitespace-nowrap">
                       <div className="flex items-center gap-2">
@@ -860,12 +871,15 @@ export function AuditTrailPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                      <div className="flex items-center gap-2 group">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                           {log.employee_no?.substring(0, 2) || "N/A"}
                         </div>
-                        <div>
-                          <div className="font-medium">{log.employee_no}</div>
+                        <div className="flex-1">
+                          <div className="font-medium flex items-center gap-1">
+                            {log.employee_no}
+                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 text-primary transition-opacity" />
+                          </div>
                           <div className="text-xs text-muted-foreground truncate max-w-[150px]">
                             {i18n.language === "ar" ? log.name_ar : log.name_en}
                           </div>
