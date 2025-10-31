@@ -196,7 +196,7 @@ export function BulkImportDialog({
       { Section: "employee_no", Info: "YES", Details: "Unique employee ID (e.g., TEST001, EMP001, EMP-2024-001)" },
       { Section: "name_en", Info: "YES", Details: "Full name in English (e.g., Ahmed Mohammed Ali)" },
       { Section: "name_ar", Info: "YES", Details: "Full name in Arabic (e.g., أحمد محمد علي)" },
-      { Section: "nationality", Info: "YES", Details: "Nationality name - System accepts typos! (e.g., 'germany' matches 'Germany', 'uzabakistan' suggests 'Uzbekistan')" },
+      { Section: "nationality", Info: "NO", Details: "Nationality name (optional) - System accepts typos! (e.g., 'germany' matches 'Germany', 'uzabakistan' suggests 'Uzbekistan')" },
       { Section: "company_name", Info: "NO", Details: "Company name (optional) - Use exact name or Quick Add if missing" },
       { Section: "department_name", Info: "NO", Details: "Department name (optional) - Use exact name or Quick Add if missing" },
       { Section: "job_name", Info: "NO", Details: "Job title (optional) - Use exact name or Quick Add if missing" },
@@ -337,8 +337,7 @@ export function BulkImportDialog({
         if (!row.employee_no?.toString().trim()) errors.push("Employee number required");
         if (!row.name_en?.toString().trim()) errors.push("Name (EN) required");
         if (!row.name_ar?.toString().trim()) errors.push("Name (AR) required");
-        if (!row.nationality?.toString().trim()) errors.push("Nationality required");
-        // Company, department, and job are optional (nullable in database)
+        // Nationality, company, department, and job are optional (nullable in database per migration 20250105)
 
         // Check for duplicates in database
         const { data: existing } = await supabase
@@ -472,7 +471,7 @@ export function BulkImportDialog({
             employee_no: row.employee_no?.toString().trim(),
             name_en: row.name_en?.toString().trim(),
             name_ar: row.name_ar?.toString().trim(),
-            nationality: nationality?.name_en || row.nationality,
+            nationality: nationality?.name_en || (row.nationality ? row.nationality.toString().trim() : null),
             // Store BOTH names and IDs for re-validation
             company_name: row.company_name?.toString().trim() || null,
             company_id: company?.id || null,
@@ -668,14 +667,17 @@ export function BulkImportDialog({
               </div>
             </div>
 
-            <div className="border rounded-lg max-h-96 overflow-y-auto">
+            <div className="border rounded-lg max-h-96 overflow-x-auto overflow-y-auto">
               <table className="w-full text-xs">
                 <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
                   <tr>
                     <th className="px-2 py-2 text-left">{t("Row")}</th>
                     <th className="px-2 py-2 text-left">{t("Employee #")}</th>
                     <th className="px-2 py-2 text-left">{t("Name")}</th>
+                    <th className="px-2 py-2 text-left">{t("Nationality")}</th>
                     <th className="px-2 py-2 text-left">{t("Company")}</th>
+                    <th className="px-2 py-2 text-left">{t("Department")}</th>
+                    <th className="px-2 py-2 text-left">{t("Job")}</th>
                     <th className="px-2 py-2 text-left">{t("Status")}</th>
                   </tr>
                 </thead>
@@ -694,7 +696,129 @@ export function BulkImportDialog({
                         {String(result.data.employee_no || "")}
                       </td>
                       <td className="px-2 py-2">{String(result.data.name_en || "")}</td>
-                      <td className="px-2 py-2">{result.data.company_id ? "✓" : "✗"}</td>
+                      
+                      {/* Nationality Dropdown */}
+                      <td className="px-2 py-2">
+                        <select
+                          className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
+                          value={String(result.data.nationality || "")}
+                          onChange={(e) => {
+                            if (e.target.value === "__ADD_NEW__") {
+                              setQuickAddDialog({
+                                type: "nationality",
+                                value: String(result.data.nationality || ""),
+                                rowIndex: idx,
+                              });
+                            } else {
+                              const updatedResults = [...results];
+                              updatedResults[idx].data.nationality = e.target.value || null;
+                              setResults(updatedResults);
+                            }
+                          }}
+                        >
+                          <option value="">{t("-- None --")}</option>
+                          {nationalities.map((nat) => (
+                            <option key={nat.id} value={nat.name_en}>
+                              {nat.name_en}
+                            </option>
+                          ))}
+                          <option value="__ADD_NEW__">➕ {t("Add New...")}</option>
+                        </select>
+                      </td>
+
+                      {/* Company Dropdown */}
+                      <td className="px-2 py-2">
+                        <select
+                          className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
+                          value={String(result.data.company_id || "")}
+                          onChange={(e) => {
+                            if (e.target.value === "__ADD_NEW__") {
+                              setQuickAddDialog({
+                                type: "company",
+                                value: String(result.data.company_name || ""),
+                                rowIndex: idx,
+                              });
+                            } else {
+                              const updatedResults = [...results];
+                              const selectedCompany = companies.find(c => c.id === e.target.value);
+                              updatedResults[idx].data.company_id = e.target.value || null;
+                              updatedResults[idx].data.company_name = selectedCompany?.name_en || null;
+                              setResults(updatedResults);
+                            }
+                          }}
+                        >
+                          <option value="">{t("-- None --")}</option>
+                          {companies.map((comp) => (
+                            <option key={comp.id} value={comp.id}>
+                              {comp.name_en}
+                            </option>
+                          ))}
+                          <option value="__ADD_NEW__">➕ {t("Add New...")}</option>
+                        </select>
+                      </td>
+
+                      {/* Department Dropdown */}
+                      <td className="px-2 py-2">
+                        <select
+                          className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
+                          value={String(result.data.department_id || "")}
+                          onChange={(e) => {
+                            if (e.target.value === "__ADD_NEW__") {
+                              setQuickAddDialog({
+                                type: "department",
+                                value: String(result.data.department_name || ""),
+                                rowIndex: idx,
+                              });
+                            } else {
+                              const updatedResults = [...results];
+                              const selectedDept = departments.find(d => d.id === e.target.value);
+                              updatedResults[idx].data.department_id = e.target.value || null;
+                              updatedResults[idx].data.department_name = selectedDept?.name_en || null;
+                              setResults(updatedResults);
+                            }
+                          }}
+                        >
+                          <option value="">{t("-- None --")}</option>
+                          {departments.map((dept) => (
+                            <option key={dept.id} value={dept.id}>
+                              {dept.name_en}
+                            </option>
+                          ))}
+                          <option value="__ADD_NEW__">➕ {t("Add New...")}</option>
+                        </select>
+                      </td>
+
+                      {/* Job Dropdown */}
+                      <td className="px-2 py-2">
+                        <select
+                          className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
+                          value={String(result.data.job_id || "")}
+                          onChange={(e) => {
+                            if (e.target.value === "__ADD_NEW__") {
+                              setQuickAddDialog({
+                                type: "job",
+                                value: String(result.data.job_name || ""),
+                                rowIndex: idx,
+                              });
+                            } else {
+                              const updatedResults = [...results];
+                              const selectedJob = jobs.find(j => j.id === e.target.value);
+                              updatedResults[idx].data.job_id = e.target.value || null;
+                              updatedResults[idx].data.job_name = selectedJob?.name_en || null;
+                              setResults(updatedResults);
+                            }
+                          }}
+                        >
+                          <option value="">{t("-- None --")}</option>
+                          {jobs.map((job) => (
+                            <option key={job.id} value={job.id}>
+                              {job.name_en}
+                            </option>
+                          ))}
+                          <option value="__ADD_NEW__">➕ {t("Add New...")}</option>
+                        </select>
+                      </td>
+
                       <td className="px-2 py-2">
                         {revalidatingRow === idx ? (
                           <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1 text-xs">
