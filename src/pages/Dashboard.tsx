@@ -714,11 +714,18 @@ export function Dashboard() {
           (stats.expiredResidence || 0),
       ],
       [
-        "Total Missing Documents",
+        "Total Missing Document Numbers",
         (stats.missingPassports || 0) +
           (stats.missingCard || 0) +
           (stats.missingEmiratesId || 0) +
           (stats.missingResidence || 0),
+      ],
+      [
+        "Total Missing Expiry Dates",
+        (stats.missingPassportDate || 0) +
+          (stats.missingCardDate || 0) +
+          (stats.missingEmiratesIdDate || 0) +
+          (stats.missingResidenceDate || 0),
       ],
       [""],
       ["Active Filters Applied"],
@@ -786,42 +793,50 @@ export function Dashboard() {
       ["DOCUMENT STATUS BREAKDOWN"],
       ["Generated on:", dayjs().format("DD/MM/YYYY HH:mm")],
       [""],
-      ["Document Type", "Expiring Soon", "Expired", "Missing", "Total Issues"],
+      ["Document Type", "Expiring Soon", "Expired", "Missing Number", "Missing Date", "Total Issues"],
       [
         "Passports",
         stats.expiringSoonPassports || 0,
         stats.expiredPassports || 0,
         stats.missingPassports || 0,
+        stats.missingPassportDate || 0,
         (stats.expiringSoonPassports || 0) +
           (stats.expiredPassports || 0) +
-          (stats.missingPassports || 0),
+          (stats.missingPassports || 0) +
+          (stats.missingPassportDate || 0),
       ],
       [
         "Work Cards",
         stats.expiringSoonCards || 0,
         stats.expiredCards || 0,
         stats.missingCard || 0,
+        stats.missingCardDate || 0,
         (stats.expiringSoonCards || 0) +
           (stats.expiredCards || 0) +
-          (stats.missingCard || 0),
+          (stats.missingCard || 0) +
+          (stats.missingCardDate || 0),
       ],
       [
         "Emirates ID",
         stats.expiringSoonEmiratesId || 0,
         stats.expiredEmiratesId || 0,
         stats.missingEmiratesId || 0,
+        stats.missingEmiratesIdDate || 0,
         (stats.expiringSoonEmiratesId || 0) +
           (stats.expiredEmiratesId || 0) +
-          (stats.missingEmiratesId || 0),
+          (stats.missingEmiratesId || 0) +
+          (stats.missingEmiratesIdDate || 0),
       ],
       [
         "Residence Permit",
         stats.expiringSoonResidence || 0,
         stats.expiredResidence || 0,
         stats.missingResidence || 0,
+        stats.missingResidenceDate || 0,
         (stats.expiringSoonResidence || 0) +
           (stats.expiredResidence || 0) +
-          (stats.missingResidence || 0),
+          (stats.missingResidence || 0) +
+          (stats.missingResidenceDate || 0),
       ],
       [""],
       [
@@ -835,6 +850,10 @@ export function Dashboard() {
           (stats.missingCard || 0) +
           (stats.missingEmiratesId || 0) +
           (stats.missingResidence || 0),
+        (stats.missingPassportDate || 0) +
+          (stats.missingCardDate || 0) +
+          (stats.missingEmiratesIdDate || 0) +
+          (stats.missingResidenceDate || 0),
         (stats.totalExpiringDocs || 0) +
           (stats.expiredPassports || 0) +
           (stats.expiredCards || 0) +
@@ -843,12 +862,17 @@ export function Dashboard() {
           (stats.missingPassports || 0) +
           (stats.missingCard || 0) +
           (stats.missingEmiratesId || 0) +
-          (stats.missingResidence || 0),
+          (stats.missingResidence || 0) +
+          (stats.missingPassportDate || 0) +
+          (stats.missingCardDate || 0) +
+          (stats.missingEmiratesIdDate || 0) +
+          (stats.missingResidenceDate || 0),
       ],
     ];
     const ws2 = XLSX.utils.aoa_to_sheet(documentData);
     ws2["!cols"] = [
       { wch: 20 },
+      { wch: 15 },
       { wch: 15 },
       { wch: 15 },
       { wch: 15 },
