@@ -1487,8 +1487,9 @@ export function Dashboard() {
                   }) => (
                     <div
                       key={emp.id}
-                      onClick={() => navigate("/employees")}
+                      onClick={() => navigate(`/employees?search=${encodeURIComponent(emp.employee_no)}`)}
                       className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 hover:shadow-md border border-transparent hover:border-red-300 active:scale-[0.98]"
+                      title="Click to view this employee details"
                     >
                       <div>
                         <p className="font-medium">

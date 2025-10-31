@@ -408,7 +408,6 @@ export function EmployeesPage() {
       const passportStatus = getDocumentStatus(emp.passport_expiry);
       const matchesPassport =
         passportStatusFilter === "all" ||
-        (passportStatusFilter === "missing" && passportStatus === null) ||
         (passportStatusFilter === "missing_number" && !emp.passport_no) ||
         (passportStatusFilter === "missing_date" &&
           emp.passport_no &&
@@ -419,7 +418,6 @@ export function EmployeesPage() {
       const cardStatus = getDocumentStatus(emp.card_expiry);
       const matchesCard =
         cardStatusFilter === "all" ||
-        (cardStatusFilter === "missing" && cardStatus === null) ||
         (cardStatusFilter === "missing_number" && !emp.card_no) ||
         (cardStatusFilter === "missing_date" &&
           emp.card_no &&
@@ -430,7 +428,6 @@ export function EmployeesPage() {
       const emiratesIdStatus = getDocumentStatus(emp.emirates_id_expiry);
       const matchesEmiratesId =
         emiratesIdStatusFilter === "all" ||
-        (emiratesIdStatusFilter === "missing" && emiratesIdStatus === null) ||
         (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
         (emiratesIdStatusFilter === "missing_date" &&
           emp.emirates_id &&
@@ -442,7 +439,6 @@ export function EmployeesPage() {
       const residenceStatus = getDocumentStatus(emp.residence_expiry);
       const matchesResidence =
         residenceStatusFilter === "all" ||
-        (residenceStatusFilter === "missing" && residenceStatus === null) ||
         (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
         (residenceStatusFilter === "missing_date" &&
           emp.residence_no &&
@@ -1304,7 +1300,7 @@ export function EmployeesPage() {
                     <SelectItem value="expired">
                       {t("filters.expired")}
                     </SelectItem>
-                    <SelectItem value="missing">
+                    <SelectItem value="missing_date">
                       {t("filters.missingExpiry")}
                     </SelectItem>
                     <SelectItem value="missing_number">
@@ -1339,7 +1335,7 @@ export function EmployeesPage() {
                     <SelectItem value="expired">
                       {t("filters.expired")}
                     </SelectItem>
-                    <SelectItem value="missing">
+                    <SelectItem value="missing_date">
                       {t("filters.missingExpiry")}
                     </SelectItem>
                     <SelectItem value="missing_number">
@@ -1374,7 +1370,7 @@ export function EmployeesPage() {
                     <SelectItem value="expired">
                       {t("filters.expired")}
                     </SelectItem>
-                    <SelectItem value="missing">
+                    <SelectItem value="missing_date">
                       {t("filters.missingExpiry")}
                     </SelectItem>
                     <SelectItem value="missing_number">
@@ -1409,7 +1405,7 @@ export function EmployeesPage() {
                     <SelectItem value="expired">
                       {t("filters.expired")}
                     </SelectItem>
-                    <SelectItem value="missing">
+                    <SelectItem value="missing_date">
                       {t("filters.missingExpiry")}
                     </SelectItem>
                     <SelectItem value="missing_number">
