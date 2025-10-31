@@ -45,6 +45,21 @@ export function NationalitiesPage() {
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       if (editingItem) {
+        // When editing: Update all employee records with old nationality name to new name
+        const oldName = editingItem.name_en;
+        const newName = data.name_en;
+
+        // Step 1: Update employees if nationality name changed
+        if (oldName !== newName) {
+          const { error: updateEmployeesError } = await supabase
+            .from("employees")
+            .update({ nationality: newName })
+            .eq("nationality", oldName);
+
+          if (updateEmployeesError) throw updateEmployeesError;
+        }
+
+        // Step 2: Update the nationality record
         const { error } = await supabase
           .from("nationalities")
           .update(data)
@@ -57,6 +72,7 @@ export function NationalitiesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nationalities"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"] }); // Refresh employees too
       setIsDialogOpen(false);
       setFormData({ code: "", name_en: "", name_ar: "" });
       setEditingItem(null);
