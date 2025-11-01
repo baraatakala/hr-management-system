@@ -30,16 +30,55 @@ export function NationalitiesPage() {
     name_ar: "",
   });
 
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [linkedFilter, setLinkedFilter] = useState<"all" | "linked" | "unlinked">("all");
+
   const { data: items, isLoading } = useQuery({
     queryKey: ["nationalities"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch nationalities
+      const { data: nationalities, error } = await supabase
         .from("nationalities")
         .select("*")
         .order("name_en");
       if (error) throw error;
-      return data;
+
+      // Fetch employee counts for each nationality (by name_en)
+      const { data: employees } = await supabase
+        .from("employees")
+        .select("nationality");
+
+      // Count employees per nationality
+      const nationalityCounts = employees?.reduce((acc: any, emp: any) => {
+        if (emp.nationality) {
+          acc[emp.nationality] = (acc[emp.nationality] || 0) + 1;
+        }
+        return acc;
+      }, {}) || {};
+
+      // Attach counts to nationalities
+      return nationalities?.map((nat: any) => ({
+        ...nat,
+        employee_count: nationalityCounts[nat.name_en] || 0,
+      }));
     },
+  });
+
+  // Filter items based on search and linked status
+  const filteredItems = items?.filter((item: any) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.name_ar.includes(searchTerm);
+
+    const matchesLinked =
+      linkedFilter === "all" ||
+      (linkedFilter === "linked" && item.employee_count > 0) ||
+      (linkedFilter === "unlinked" && item.employee_count === 0);
+
+    return matchesSearch && matchesLinked;
   });
 
   const saveMutation = useMutation({
@@ -171,8 +210,8 @@ export function NationalitiesPage() {
           </h1>
           <p className="text-gray-500 mt-1 text-sm md:text-base">
             {i18n.language === "ar"
-              ? `${items?.length || 0} جنسية`
-              : `${items?.length || 0} nationalities`}
+              ? `${filteredItems?.length || 0} من ${items?.length || 0} جنسية`
+              : `${filteredItems?.length || 0} of ${items?.length || 0} nationalities`}
           </p>
         </div>
         <Button
@@ -184,8 +223,39 @@ export function NationalitiesPage() {
         </Button>
       </div>
 
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-sm font-medium mb-2 block">
+              {i18n.language === "ar" ? "بحث" : "Search"}
+            </Label>
+            <Input
+              placeholder={i18n.language === "ar" ? "بحث بالرمز أو الاسم..." : "Search by code or name..."}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-2 block">
+              {i18n.language === "ar" ? "حالة الربط بالموظفين" : "Employee Link Status"}
+            </Label>
+            <select
+              value={linkedFilter}
+              onChange={(e) => setLinkedFilter(e.target.value as "all" | "linked" | "unlinked")}
+              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+            >
+              <option value="all">{i18n.language === "ar" ? "كل الجنسيات" : "All Nationalities"}</option>
+              <option value="linked">{i18n.language === "ar" ? "مع موظفين" : "With Employees"}</option>
+              <option value="unlinked">{i18n.language === "ar" ? "بدون موظفين" : "Without Employees"}</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items?.map((item: any) => (
+        {filteredItems?.map((item: any) => (
           <Card key={item.id} className="p-4 hover:shadow-lg transition-shadow">
             <div className="flex justify-between items-start">
               <div className="flex-1">
@@ -193,6 +263,15 @@ export function NationalitiesPage() {
                   {i18n.language === "ar" ? item.name_ar : item.name_en}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">{item.code}</p>
+                <div className="mt-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    item.employee_count > 0
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                  }`}>
+                    {item.employee_count} {i18n.language === "ar" ? "موظف" : "employee"}{item.employee_count !== 1 ? (i18n.language === "ar" ? "ين" : "s") : ""}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => handleEdit(item)}>

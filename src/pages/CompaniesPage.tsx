@@ -30,16 +30,42 @@ export function CompaniesPage() {
     name_ar: "",
   });
 
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [linkedFilter, setLinkedFilter] = useState<"all" | "linked" | "unlinked">("all");
+
   const { data: items, isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
+      // Fetch companies with employee count
       const { data, error } = await supabase
         .from("companies")
-        .select("*")
+        .select("*, employees(count)")
         .order("code");
       if (error) throw error;
-      return data;
+      
+      // Transform data to include employee count
+      return data?.map((item: any) => ({
+        ...item,
+        employee_count: item.employees?.[0]?.count || 0,
+      }));
     },
+  });
+
+  // Filter items based on search and linked status
+  const filteredItems = items?.filter((item: any) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.name_ar.includes(searchTerm);
+
+    const matchesLinked =
+      linkedFilter === "all" ||
+      (linkedFilter === "linked" && item.employee_count > 0) ||
+      (linkedFilter === "unlinked" && item.employee_count === 0);
+
+    return matchesSearch && matchesLinked;
   });
 
   const saveMutation = useMutation({
@@ -132,9 +158,14 @@ export function CompaniesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          {t("companies.title")}
-        </h1>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            {t("companies.title")}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {filteredItems?.length || 0} {t("common.of")} {items?.length || 0} companies
+          </p>
+        </div>
         <Button
           onClick={handleAdd}
           className="w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-95 transition-transform"
@@ -144,15 +175,51 @@ export function CompaniesPage() {
         </Button>
       </div>
 
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Search</Label>
+            <Input
+              placeholder="Search by code or name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Employee Link Status</Label>
+            <select
+              value={linkedFilter}
+              onChange={(e) => setLinkedFilter(e.target.value as "all" | "linked" | "unlinked")}
+              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+            >
+              <option value="all">All Companies</option>
+              <option value="linked">With Employees</option>
+              <option value="unlinked">Without Employees</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items?.map((item: any) => (
+        {filteredItems?.map((item: any) => (
           <Card key={item.id} className="p-4 space-y-2">
             <div className="flex justify-between items-start">
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-lg">
                   {i18n.language === "ar" ? item.name_ar : item.name_en}
                 </h3>
                 <p className="text-sm text-muted-foreground">{item.code}</p>
+                <div className="mt-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    item.employee_count > 0
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                  }`}>
+                    {item.employee_count} employee{item.employee_count !== 1 ? "s" : ""}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button
