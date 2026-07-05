@@ -84,6 +84,42 @@ interface Employee {
   avatar_url: string | null;
 }
 
+function EmployeeAvatar({
+  avatarUrl,
+  initial,
+  sizeClass,
+  textClass,
+}: {
+  avatarUrl: string | null | undefined;
+  initial: string;
+  sizeClass: string;
+  textClass: string;
+}) {
+  const [failed, setFailed] = React.useState(false);
+
+  // Reset failed state if the URL changes (e.g. after a new upload)
+  React.useEffect(() => {
+    setFailed(false);
+  }, [avatarUrl]);
+
+  return (
+    <div
+      className={`${sizeClass} rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold ${textClass}`}
+    >
+      {avatarUrl && !failed ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          className="w-full h-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        initial?.toUpperCase() || "?"
+      )}
+    </div>
+  );
+}
+
 type ViewMode = "grid" | "table";
 type StatusFilter =
   | "all"
@@ -1497,12 +1533,13 @@ export function EmployeesPage() {
                         )}
                       </button>
                       {/* Avatar */}
-                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm mt-0.5">
-                        {employee.avatar_url ? (
-                          <img src={employee.avatar_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
-                        ) : (
-                          (i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0)?.toUpperCase() || "?"
-                        )}
+                      <div className="mt-0.5">
+                        <EmployeeAvatar
+                          avatarUrl={employee.avatar_url}
+                          initial={(i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0) || "?"}
+                          sizeClass="w-10 h-10"
+                          textClass="text-sm"
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-bold text-base md:text-lg truncate">
@@ -1942,13 +1979,12 @@ export function EmployeesPage() {
                       <td className="p-2 md:p-3 text-xs md:text-sm w-52 max-w-xs">
                         <div className="flex items-center gap-2 group">
                           {/* Avatar circle */}
-                          <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                            {employee.avatar_url ? (
-                              <img src={employee.avatar_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
-                            ) : (
-                              (i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0)?.toUpperCase() || "?"
-                            )}
-                          </div>
+                          <EmployeeAvatar
+                            avatarUrl={employee.avatar_url}
+                            initial={(i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0) || "?"}
+                            sizeClass="w-7 h-7"
+                            textClass="text-xs"
+                          />
                           <span className="truncate flex-1">
                             {i18n.language === "ar"
                               ? employee.name_ar
@@ -2469,21 +2505,15 @@ function EmployeeDialog({
             </h3>
             {/* Avatar Upload */}
             <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border">
-              <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
-                {(avatarPreview || formData.avatar_url) ? (
-                  <img
-                    src={avatarPreview || formData.avatar_url}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  (formData.name_en || formData.name_ar || "?").charAt(0).toUpperCase()
-                )}
-              </div>
+              <EmployeeAvatar
+                avatarUrl={avatarPreview || formData.avatar_url}
+                initial={(formData.name_en || formData.name_ar || "?").charAt(0)}
+                sizeClass="w-16 h-16"
+                textClass="text-xl"
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium mb-1">Employee Photo</p>
-                <p className="text-xs text-muted-foreground mb-2">Max 512KB · JPG/PNG/WEBP · Stored privately</p>
+                <p className="text-xs text-muted-foreground mb-2">Max 512KB · JPG/PNG/WEBP</p>
                 <label className="cursor-pointer">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:bg-primary/90 transition-colors">
                     <Camera className="w-3.5 h-3.5" />
