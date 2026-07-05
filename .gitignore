@@ -28,3 +28,8 @@ dist-ssr
 .env.local
 .env.production
 .vercel
+
+# One-off scripts that may contain secrets
+audit-db*.cjs
+run-migration.cjs
+run-migration*.js
