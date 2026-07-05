@@ -1168,6 +1168,44 @@ export function Dashboard() {
     "#06b6d4",
   ];
 
+  // Shared theme-aware chart styling so axis labels, tooltips, and legends
+  // stay readable in both light and dark mode instead of using Recharts'
+  // hardcoded default colors (which are invisible on the dark theme).
+  const chartAxisTick = { fill: "hsl(var(--muted-foreground))", fontSize: 12 };
+  const chartGridStroke = "hsl(var(--border))";
+  const chartTooltipProps = {
+    contentStyle: {
+      backgroundColor: "hsl(var(--popover))",
+      border: "1px solid hsl(var(--border))",
+      borderRadius: 8,
+    },
+    labelStyle: { color: "hsl(var(--popover-foreground))", fontWeight: 600 },
+    itemStyle: { color: "hsl(var(--popover-foreground))" },
+  };
+
+  // Custom pie label renderer: places each label outside the pie along its
+  // own angle (avoids the crowded/overlapping text you get with labelLine=false)
+  // and uses the theme foreground color so it's readable on dark backgrounds.
+  const renderPieLabel = (props: any) => {
+    const { cx, cy, midAngle, outerRadius, name, count } = props;
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 24;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="hsl(var(--foreground))"
+        fontSize={12}
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+      >
+        {`${name} (${count})`}
+      </text>
+    );
+  };
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header with Actions */}
@@ -1759,11 +1797,11 @@ export function Dashboard() {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={stats?.documentTimeline || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="period" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
+              <XAxis dataKey="period" tick={chartAxisTick} />
+              <YAxis tick={chartAxisTick} />
+              <Tooltip {...chartTooltipProps} />
+              <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
               <Bar dataKey="passports" fill="#3b82f6" name="Passports" />
               <Bar dataKey="cards" fill="#10b981" name="Cards" />
               <Bar dataKey="emiratesId" fill="#8b5cf6" name="Emirates ID" />
@@ -1785,15 +1823,16 @@ export function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stats?.companyStats || []}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
                 <XAxis
                   dataKey="name"
                   angle={-45}
                   textAnchor="end"
                   height={80}
+                  tick={chartAxisTick}
                 />
-                <YAxis />
-                <Tooltip />
+                <YAxis tick={chartAxisTick} />
+                <Tooltip {...chartTooltipProps} />
                 <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -1814,9 +1853,9 @@ export function Dashboard() {
                   data={stats?.departmentStats || []}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.name} (${entry.count})`}
-                  outerRadius={90}
+                  labelLine={{ stroke: "hsl(var(--muted-foreground))" }}
+                  label={renderPieLabel}
+                  outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"
                 >
@@ -1827,7 +1866,7 @@ export function Dashboard() {
                     />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip {...chartTooltipProps} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -1850,10 +1889,15 @@ export function Dashboard() {
                 layout="vertical"
                 margin={{ left: 80 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={80} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
+                <XAxis type="number" tick={chartAxisTick} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={80}
+                  tick={chartAxisTick}
+                />
+                <Tooltip {...chartTooltipProps} />
                 <Bar dataKey="count" fill="#10b981" radius={[0, 8, 8, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -1870,15 +1914,16 @@ export function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={stats?.jobStats || []}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
                 <XAxis
                   dataKey="name"
                   angle={-45}
                   textAnchor="end"
                   height={80}
+                  tick={chartAxisTick}
                 />
-                <YAxis />
-                <Tooltip />
+                <YAxis tick={chartAxisTick} />
+                <Tooltip {...chartTooltipProps} />
                 <Area
                   type="monotone"
                   dataKey="count"
