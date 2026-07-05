@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VoiceInput } from "@/components/ui/voice-input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Dialog,
   DialogContent,
@@ -153,29 +154,28 @@ export function EmployeesPage() {
   const isRTL = i18n.language === "ar";
 
   // Filter states
-  const [nationalityFilter, setNationalityFilter] = useState<string>("all");
-  const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [jobFilter, setJobFilter] = useState<string>("all");
+  const [nationalityFilter, setNationalityFilter] = useState<string[]>([]);
+  const [companyFilter, setCompanyFilter] = useState<string[]>([]);
+  const [departmentFilter, setDepartmentFilter] = useState<string[]>([]);
+  const [jobFilter, setJobFilter] = useState<string[]>([]);
   const [activeStatusFilter, setActiveStatusFilter] = useState<string>("all"); // active, inactive, all
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all"); // all, 30days, 60days, 90days, custom
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
   const [passportStatusFilter, setPassportStatusFilter] =
-    useState<StatusFilter>("all");
-  const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter>("all");
+    useState<StatusFilter[]>([]);
+  const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter[]>([]);
   const [emiratesIdStatusFilter, setEmiratesIdStatusFilter] =
-    useState<StatusFilter>("all");
-  const [residenceStatusFilter, setResidenceStatusFilter] =
-    useState<StatusFilter>("all");
+    useState<StatusFilter[]>([]);
+  const [residenceStatusFilter, setResidenceStatusFilter] = useState<StatusFilter[]>([]);
 
   // Apply URL parameters on mount
   useEffect(() => {
     const search = searchParams.get("search");
-    const passport = searchParams.get("passport") as StatusFilter;
-    const card = searchParams.get("card") as StatusFilter;
-    const emiratesId = searchParams.get("emiratesId") as StatusFilter;
-    const residence = searchParams.get("residence") as StatusFilter;
+    const passport = searchParams.get("passport");
+    const card = searchParams.get("card");
+    const emiratesId = searchParams.get("emiratesId");
+    const residence = searchParams.get("residence");
     const company = searchParams.get("company");
     const department = searchParams.get("department");
     const job = searchParams.get("job");
@@ -185,30 +185,31 @@ export function EmployeesPage() {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
+    // Splits a comma-separated URL param into an array, normalizing the legacy
+    // "missing" value (from dashboard links) to "missing_number"
+    const parseStatusParam = (raw: string | null): StatusFilter[] => {
+      if (!raw) return [];
+      return raw
+        .split(",")
+        .filter(Boolean)
+        .map((v) => (v === "missing" ? "missing_number" : v)) as StatusFilter[];
+    };
+    const parseListParam = (raw: string | null): string[] =>
+      raw ? raw.split(",").filter(Boolean) : [];
+
     // Apply search term from URL (from audit trail navigation)
     if (search) setSearchTerm(search);
 
-    // Convert "missing" from URL to "missing_number" for filtering by document number
-    // Keep "missing_date" as is for filtering by missing expiry date
-    if (passport)
-      setPassportStatusFilter(
-        passport === "missing" ? "missing_number" : passport
-      );
-    if (card) setCardStatusFilter(card === "missing" ? "missing_number" : card);
-    if (emiratesId)
-      setEmiratesIdStatusFilter(
-        emiratesId === "missing" ? "missing_number" : emiratesId
-      );
-    if (residence)
-      setResidenceStatusFilter(
-        residence === "missing" ? "missing_number" : residence
-      );
+    if (passport) setPassportStatusFilter(parseStatusParam(passport));
+    if (card) setCardStatusFilter(parseStatusParam(card));
+    if (emiratesId) setEmiratesIdStatusFilter(parseStatusParam(emiratesId));
+    if (residence) setResidenceStatusFilter(parseStatusParam(residence));
 
     // Apply dashboard filters
-    if (company) setCompanyFilter(company);
-    if (department) setDepartmentFilter(department);
-    if (job) setJobFilter(job);
-    if (nationality) setNationalityFilter(nationality);
+    if (company) setCompanyFilter(parseListParam(company));
+    if (department) setDepartmentFilter(parseListParam(department));
+    if (job) setJobFilter(parseListParam(job));
+    if (nationality) setNationalityFilter(parseListParam(nationality));
     if (status) setActiveStatusFilter(status); // active, inactive, or all
 
     // Apply date range filters
@@ -327,16 +328,6 @@ export function EmployeesPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("employees").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-    },
-  });
-
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -434,18 +425,20 @@ export function EmployeesPage() {
 
       // Nationality filter
       const matchesNationality =
-        nationalityFilter === "all" || emp.nationality === nationalityFilter;
+        nationalityFilter.length === 0 ||
+        nationalityFilter.includes(emp.nationality);
 
       // Company filter
       const matchesCompany =
-        companyFilter === "all" || emp.company_id === companyFilter;
+        companyFilter.length === 0 || companyFilter.includes(emp.company_id);
 
       // Department filter
       const matchesDepartment =
-        departmentFilter === "all" || emp.department_id === departmentFilter;
+        departmentFilter.length === 0 ||
+        departmentFilter.includes(emp.department_id);
 
       // Job filter
-      const matchesJob = jobFilter === "all" || emp.job_id === jobFilter;
+      const matchesJob = jobFilter.length === 0 || jobFilter.includes(emp.job_id);
 
       // Active status filter
       const matchesActiveStatus =
@@ -456,35 +449,39 @@ export function EmployeesPage() {
       // Passport status filter
       const passportStatus = getDocumentStatus(emp.passport_expiry);
       const matchesPassport =
-        passportStatusFilter === "all" ||
-        (passportStatusFilter === "missing_number" && !emp.passport_no) ||
-        (passportStatusFilter === "missing_date" && !emp.passport_expiry) ||
-        (passportStatus !== null && passportStatus === passportStatusFilter);
+        passportStatusFilter.length === 0 ||
+        (passportStatusFilter.includes("missing_number") && !emp.passport_no) ||
+        (passportStatusFilter.includes("missing_date") && !emp.passport_expiry) ||
+        (passportStatus !== null && passportStatusFilter.includes(passportStatus));
 
       // Card status filter
       const cardStatus = getDocumentStatus(emp.card_expiry);
       const matchesCard =
-        cardStatusFilter === "all" ||
-        (cardStatusFilter === "missing_number" && !emp.card_no) ||
-        (cardStatusFilter === "missing_date" && !emp.card_expiry) ||
-        (cardStatus !== null && cardStatus === cardStatusFilter);
+        cardStatusFilter.length === 0 ||
+        (cardStatusFilter.includes("missing_number") && !emp.card_no) ||
+        (cardStatusFilter.includes("missing_date") && !emp.card_expiry) ||
+        (cardStatus !== null && cardStatusFilter.includes(cardStatus));
 
       // Emirates ID status filter
       const emiratesIdStatus = getDocumentStatus(emp.emirates_id_expiry);
       const matchesEmiratesId =
-        emiratesIdStatusFilter === "all" ||
-        (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
-        (emiratesIdStatusFilter === "missing_date" && !emp.emirates_id_expiry) ||
+        emiratesIdStatusFilter.length === 0 ||
+        (emiratesIdStatusFilter.includes("missing_number") && !emp.emirates_id) ||
+        (emiratesIdStatusFilter.includes("missing_date") &&
+          !emp.emirates_id_expiry) ||
         (emiratesIdStatus !== null &&
-          emiratesIdStatus === emiratesIdStatusFilter);
+          emiratesIdStatusFilter.includes(emiratesIdStatus));
 
       // Residence status filter
       const residenceStatus = getDocumentStatus(emp.residence_expiry);
       const matchesResidence =
-        residenceStatusFilter === "all" ||
-        (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
-        (residenceStatusFilter === "missing_date" && !emp.residence_expiry) ||
-        (residenceStatus !== null && residenceStatus === residenceStatusFilter);
+        residenceStatusFilter.length === 0 ||
+        (residenceStatusFilter.includes("missing_number") &&
+          !emp.residence_no) ||
+        (residenceStatusFilter.includes("missing_date") &&
+          !emp.residence_expiry) ||
+        (residenceStatus !== null &&
+          residenceStatusFilter.includes(residenceStatus));
 
       // Date range filter (added_date)
       let matchesDateRange = true;
@@ -745,15 +742,15 @@ export function EmployeesPage() {
 
   const clearAllFilters = () => {
     setSearchTerm("");
-    setNationalityFilter("all");
-    setCompanyFilter("all");
-    setDepartmentFilter("all");
-    setJobFilter("all");
+    setNationalityFilter([]);
+    setCompanyFilter([]);
+    setDepartmentFilter([]);
+    setJobFilter([]);
     setActiveStatusFilter("all");
-    setPassportStatusFilter("all");
-    setCardStatusFilter("all");
-    setEmiratesIdStatusFilter("all");
-    setResidenceStatusFilter("all");
+    setPassportStatusFilter([]);
+    setCardStatusFilter([]);
+    setEmiratesIdStatusFilter([]);
+    setResidenceStatusFilter([]);
     setDateRangeFilter("all");
     setCustomStartDate("");
     setCustomEndDate("");
@@ -991,18 +988,18 @@ export function EmployeesPage() {
             <h2 className="text-sm md:text-base font-semibold">
               {t("filters.filtersControl")}
             </h2>
-            {(nationalityFilter !== "all" ||
-              companyFilter !== "all" ||
-              jobFilter !== "all" ||
-              departmentFilter !== "all" ||
+            {(nationalityFilter.length > 0 ||
+              companyFilter.length > 0 ||
+              jobFilter.length > 0 ||
+              departmentFilter.length > 0 ||
               searchTerm) && (
               <Badge variant="secondary" className="text-xs">
                 {[
                   searchTerm ? 1 : 0,
-                  nationalityFilter !== "all" ? 1 : 0,
-                  companyFilter !== "all" ? 1 : 0,
-                  jobFilter !== "all" ? 1 : 0,
-                  departmentFilter !== "all" ? 1 : 0,
+                  nationalityFilter.length,
+                  companyFilter.length,
+                  jobFilter.length,
+                  departmentFilter.length,
                 ].reduce((a, b) => a + b, 0)}{" "}
                 active
               </Badge>
@@ -1059,10 +1056,10 @@ export function EmployeesPage() {
         {showFilters && (
           <div className="space-y-2 mt-2">
             {/* Active Filters Display */}
-            {(nationalityFilter !== "all" ||
-              companyFilter !== "all" ||
-              jobFilter !== "all" ||
-              departmentFilter !== "all" ||
+            {(nationalityFilter.length > 0 ||
+              companyFilter.length > 0 ||
+              jobFilter.length > 0 ||
+              departmentFilter.length > 0 ||
               dateRangeFilter !== "all" ||
               searchTerm) && (
               <div className="flex flex-wrap items-center gap-1.5 p-2 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
@@ -1081,44 +1078,48 @@ export function EmployeesPage() {
                     </button>
                   </Badge>
                 )}
-                {nationalityFilter !== "all" && (
+                {nationalityFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Nationality: {nationalityFilter}
+                    Nationality
+                    {nationalityFilter.length > 1
+                      ? ` (${nationalityFilter.length})`
+                      : `: ${nationalityFilter[0]}`}
                     <button
-                      onClick={() => setNationalityFilter("all")}
+                      onClick={() => setNationalityFilter([])}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
-                {companyFilter !== "all" && (
+                {companyFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Company
+                    Company{companyFilter.length > 1 ? ` (${companyFilter.length})` : ""}
                     <button
-                      onClick={() => setCompanyFilter("all")}
+                      onClick={() => setCompanyFilter([])}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
-                {jobFilter !== "all" && (
+                {jobFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Job
+                    Job{jobFilter.length > 1 ? ` (${jobFilter.length})` : ""}
                     <button
-                      onClick={() => setJobFilter("all")}
+                      onClick={() => setJobFilter([])}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
-                {departmentFilter !== "all" && (
+                {departmentFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
                     Department
+                    {departmentFilter.length > 1 ? ` (${departmentFilter.length})` : ""}
                     <button
-                      onClick={() => setDepartmentFilter("all")}
+                      onClick={() => setDepartmentFilter([])}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
@@ -1159,18 +1160,16 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.nationality")}
                 </Label>
-                <select
-                  value={nationalityFilter}
-                  onChange={(e) => setNationalityFilter(e.target.value)}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="all">{t("filters.allNationalities")}</option>
-                  {nationalities.map((nat: any) => (
-                    <option key={nat.name_en} value={nat.name_en}>
-                      {i18n.language === "ar" ? nat.name_ar : nat.name_en}
-                    </option>
-                  ))}
-                </select>
+                <MultiSelect
+                  values={nationalityFilter}
+                  onValuesChange={setNationalityFilter}
+                  options={nationalities.map((nat: any) => ({
+                    value: nat.name_en,
+                    label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
+                  }))}
+                  allLabel={t("filters.allNationalities")}
+                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
+                />
               </div>
 
               {/* Company Filter */}
@@ -1178,18 +1177,16 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.company")}
                 </Label>
-                <select
-                  value={companyFilter}
-                  onChange={(e) => setCompanyFilter(e.target.value)}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="all">{t("filters.allCompanies")}</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {i18n.language === "ar" ? company.name_ar : company.name_en}
-                    </option>
-                  ))}
-                </select>
+                <MultiSelect
+                  values={companyFilter}
+                  onValuesChange={setCompanyFilter}
+                  options={companies.map((company) => ({
+                    value: company.id,
+                    label: i18n.language === "ar" ? company.name_ar : company.name_en,
+                  }))}
+                  allLabel={t("filters.allCompanies")}
+                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
+                />
               </div>
 
               {/* Job Filter */}
@@ -1197,18 +1194,16 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.job")}
                 </Label>
-                <select
-                  value={jobFilter}
-                  onChange={(e) => setJobFilter(e.target.value)}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="all">{t("filters.allJobs")}</option>
-                  {jobs.map((job) => (
-                    <option key={job.id} value={job.id}>
-                      {i18n.language === "ar" ? job.name_ar : job.name_en}
-                    </option>
-                  ))}
-                </select>
+                <MultiSelect
+                  values={jobFilter}
+                  onValuesChange={setJobFilter}
+                  options={jobs.map((job) => ({
+                    value: job.id,
+                    label: i18n.language === "ar" ? job.name_ar : job.name_en,
+                  }))}
+                  allLabel={t("filters.allJobs")}
+                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
+                />
               </div>
 
               {/* Department Filter */}
@@ -1216,18 +1211,16 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.department")}
                 </Label>
-                <select
-                  value={departmentFilter}
-                  onChange={(e) => setDepartmentFilter(e.target.value)}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="all">{t("filters.allDepartments")}</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {i18n.language === "ar" ? dept.name_ar : dept.name_en}
-                    </option>
-                  ))}
-                </select>
+                <MultiSelect
+                  values={departmentFilter}
+                  onValuesChange={setDepartmentFilter}
+                  options={departments.map((dept) => ({
+                    value: dept.id,
+                    label: i18n.language === "ar" ? dept.name_ar : dept.name_en,
+                  }))}
+                  allLabel={t("filters.allDepartments")}
+                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
+                />
               </div>
 
               {/* Active Status Filter */}
@@ -1284,34 +1277,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.passportStatus")}
                 </Label>
-                <Select
-                  value={passportStatusFilter}
-                  onValueChange={(value) =>
-                    setPassportStatusFilter(value as StatusFilter)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("filters.allStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      {t("filters.allStatus")}
-                    </SelectItem>
-                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
-                    <SelectItem value="expiring">
-                      {t("filters.expiring")}
-                    </SelectItem>
-                    <SelectItem value="expired">
-                      {t("filters.expired")}
-                    </SelectItem>
-                    <SelectItem value="missing_date">
-                      {t("filters.missingExpiry")}
-                    </SelectItem>
-                    <SelectItem value="missing_number">
-                      {t("filters.missingPassportNo")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  values={passportStatusFilter}
+                  onValuesChange={(v) => setPassportStatusFilter(v as StatusFilter[])}
+                  options={[
+                    { value: "valid", label: t("filters.valid") },
+                    { value: "expiring", label: t("filters.expiring") },
+                    { value: "expired", label: t("filters.expired") },
+                    { value: "missing_date", label: t("filters.missingExpiry") },
+                    { value: "missing_number", label: t("filters.missingPassportNo") },
+                  ]}
+                  allLabel={t("filters.allStatus")}
+                />
               </div>
 
               {/* Card Status Filter */}
@@ -1319,34 +1296,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.cardStatus")}
                 </Label>
-                <Select
-                  value={cardStatusFilter}
-                  onValueChange={(value) =>
-                    setCardStatusFilter(value as StatusFilter)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("filters.allStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      {t("filters.allStatus")}
-                    </SelectItem>
-                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
-                    <SelectItem value="expiring">
-                      {t("filters.expiring")}
-                    </SelectItem>
-                    <SelectItem value="expired">
-                      {t("filters.expired")}
-                    </SelectItem>
-                    <SelectItem value="missing_date">
-                      {t("filters.missingExpiry")}
-                    </SelectItem>
-                    <SelectItem value="missing_number">
-                      {t("filters.missingCardNo")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  values={cardStatusFilter}
+                  onValuesChange={(v) => setCardStatusFilter(v as StatusFilter[])}
+                  options={[
+                    { value: "valid", label: t("filters.valid") },
+                    { value: "expiring", label: t("filters.expiring") },
+                    { value: "expired", label: t("filters.expired") },
+                    { value: "missing_date", label: t("filters.missingExpiry") },
+                    { value: "missing_number", label: t("filters.missingCardNo") },
+                  ]}
+                  allLabel={t("filters.allStatus")}
+                />
               </div>
 
               {/* Emirates ID Status Filter */}
@@ -1354,34 +1315,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.emiratesIdStatus")}
                 </Label>
-                <Select
-                  value={emiratesIdStatusFilter}
-                  onValueChange={(value) =>
-                    setEmiratesIdStatusFilter(value as StatusFilter)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("filters.allStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      {t("filters.allStatus")}
-                    </SelectItem>
-                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
-                    <SelectItem value="expiring">
-                      {t("filters.expiring")}
-                    </SelectItem>
-                    <SelectItem value="expired">
-                      {t("filters.expired")}
-                    </SelectItem>
-                    <SelectItem value="missing_date">
-                      {t("filters.missingExpiry")}
-                    </SelectItem>
-                    <SelectItem value="missing_number">
-                      {t("filters.missingEmiratesId")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  values={emiratesIdStatusFilter}
+                  onValuesChange={(v) => setEmiratesIdStatusFilter(v as StatusFilter[])}
+                  options={[
+                    { value: "valid", label: t("filters.valid") },
+                    { value: "expiring", label: t("filters.expiring") },
+                    { value: "expired", label: t("filters.expired") },
+                    { value: "missing_date", label: t("filters.missingExpiry") },
+                    { value: "missing_number", label: t("filters.missingEmiratesId") },
+                  ]}
+                  allLabel={t("filters.allStatus")}
+                />
               </div>
 
               {/* Residence Status Filter */}
@@ -1389,34 +1334,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.residenceStatus")}
                 </Label>
-                <Select
-                  value={residenceStatusFilter}
-                  onValueChange={(value) =>
-                    setResidenceStatusFilter(value as StatusFilter)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("filters.allStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      {t("filters.allStatus")}
-                    </SelectItem>
-                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
-                    <SelectItem value="expiring">
-                      {t("filters.expiring")}
-                    </SelectItem>
-                    <SelectItem value="expired">
-                      {t("filters.expired")}
-                    </SelectItem>
-                    <SelectItem value="missing_date">
-                      {t("filters.missingExpiry")}
-                    </SelectItem>
-                    <SelectItem value="missing_number">
-                      {t("filters.missingResidenceNo")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  values={residenceStatusFilter}
+                  onValuesChange={(v) => setResidenceStatusFilter(v as StatusFilter[])}
+                  options={[
+                    { value: "valid", label: t("filters.valid") },
+                    { value: "expiring", label: t("filters.expiring") },
+                    { value: "expired", label: t("filters.expired") },
+                    { value: "missing_date", label: t("filters.missingExpiry") },
+                    { value: "missing_number", label: t("filters.missingResidenceNo") },
+                  ]}
+                  allLabel={t("filters.allStatus")}
+                />
               </div>
             </div>
 

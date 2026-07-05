@@ -8,13 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Users,
-  FileX,
   AlertTriangle,
   Clock,
   Building2,
   Briefcase,
-  TrendingUp,
-  TrendingDown,
   Download,
   RefreshCw,
   Calendar,
@@ -39,16 +36,9 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   Legend,
   AreaChart,
   Area,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
 } from "recharts";
 import { AnimatedStatCard } from "@/components/AnimatedStatCard";
 import * as XLSX from "xlsx";
@@ -81,11 +71,6 @@ export function Dashboard() {
       statusFilter,
     ],
     queryFn: async () => {
-      const today = dayjs().format("YYYY-MM-DD");
-      const thirtyDaysFromNow = dayjs().add(30, "day").format("YYYY-MM-DD");
-      const sixtyDaysFromNow = dayjs().add(60, "day").format("YYYY-MM-DD");
-      const ninetyDaysFromNow = dayjs().add(90, "day").format("YYYY-MM-DD");
-
       // Get all employees with full details
       const { data: allEmployees } = await supabase
         .from("employees")

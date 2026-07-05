@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit, Trash2, Search, Filter, Users, ExternalLink, Briefcase } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Users, ExternalLink, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function JobsPage() {

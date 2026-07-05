@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit, Trash2, Search, Filter, Users, ExternalLink, FolderKanban } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Users, ExternalLink, FolderKanban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function DepartmentsPage() {

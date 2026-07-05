@@ -129,8 +129,6 @@ export function DocumentScanner({
             line.replace(/[^A-Z0-9<]/g, "").length > 30 && line.includes("<")
         );
 
-      let mrzExtracted = false;
-
       if (mrzLines.length >= 2) {
         const mrz1 = mrzLines[0].replace(/[^A-Z0-9<]/g, "");
         const mrz2 = mrzLines[1].replace(/[^A-Z0-9<]/g, "");
@@ -141,7 +139,6 @@ export function DocumentScanner({
           const surname = mrzNameMatch[1].replace(/</g, " ").trim();
           const givenNames = mrzNameMatch[2].replace(/</g, " ").trim();
           data.name_en = `${givenNames} ${surname}`.trim();
-          mrzExtracted = true;
         }
 
         // Extract passport number from MRZ line 2
@@ -205,9 +202,9 @@ export function DocumentScanner({
       if (!data.passport_expiry) {
         // Extract expiry date (various formats: DD/MM/YYYY, DD-MM-YYYY, etc.)
         const datePatterns = [
-          /\d{2}[\/\-]\d{2}[\/\-]\d{4}/g, // DD/MM/YYYY or DD-MM-YYYY
+          /\d{2}[/-]\d{2}[/-]\d{4}/g, // DD/MM/YYYY or DD-MM-YYYY
           /\d{2}\s?\w{3}\s?\d{4}/g, // DD MMM YYYY
-          /\d{4}[\/\-]\d{2}[\/\-]\d{2}/g, // YYYY/MM/DD
+          /\d{4}[/-]\d{2}[/-]\d{2}/g, // YYYY/MM/DD
         ];
 
         for (const pattern of datePatterns) {
@@ -272,7 +269,7 @@ export function DocumentScanner({
       }
 
       // Extract expiry date
-      const dateMatches = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/g);
+      const dateMatches = text.match(/\d{2}[/-]\d{2}[/-]\d{4}/g);
       if (dateMatches && dateMatches.length > 0) {
         data.emirates_id_expiry = formatDate(
           dateMatches[dateMatches.length - 1]
@@ -377,7 +374,7 @@ export function DocumentScanner({
       if (cardMatch) data.card_no = cardMatch[0];
 
       // Extract expiry date
-      const dateMatches = text.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/g);
+      const dateMatches = text.match(/\d{2}[/-]\d{2}[/-]\d{4}/g);
       if (dateMatches && dateMatches.length > 0) {
         data.card_expiry = formatDate(dateMatches[dateMatches.length - 1]);
       }
@@ -390,7 +387,7 @@ export function DocumentScanner({
   const formatDate = (dateStr: string): string => {
     try {
       // Handle DD/MM/YYYY or DD-MM-YYYY
-      const parts = dateStr.split(/[\/\-]/);
+      const parts = dateStr.split(/[/-]/);
       if (parts.length === 3) {
         const [day, month, year] = parts;
         if (year.length === 4) {

@@ -34,13 +34,11 @@ serve(async (req) => {
     const { userEmail } = await req.json();
     
     // Extract domain from user email
-    let senderDomain = "resend.dev"; // fallback
     let senderEmail = "HR Management <onboarding@resend.dev>"; // fallback
     
     if (userEmail && typeof userEmail === "string" && userEmail.includes("@")) {
       const domain = userEmail.split("@")[1];
       if (domain) {
-        senderDomain = domain;
         senderEmail = `HR Management <hr@${domain}>`;
       }
     }
