@@ -81,6 +81,7 @@ interface Employee {
   added_date: string | null;
   is_active: boolean;
   updated_at: string | null;
+  avatar_url: string | null;
 }
 
 type ViewMode = "grid" | "table";
@@ -102,6 +103,15 @@ export function EmployeesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportTarget, setExportTarget] = useState<"all" | "selected">("all");
+  const [selectedExportFields, setSelectedExportFields] = useState<string[]>([
+    "employee_no", "name_en", "name_ar", "nationality", "status",
+    "company", "department", "job", "added_date",
+    "passport_no", "passport_expiry", "card_no", "card_expiry",
+    "emirates_id", "emirates_id_expiry", "residence_no", "residence_expiry",
+    "email", "phone"
+  ]);
 
   // Check if RTL
   const isRTL = i18n.language === "ar";
@@ -132,6 +142,7 @@ export function EmployeesPage() {
     const residence = searchParams.get("residence") as StatusFilter;
     const company = searchParams.get("company");
     const department = searchParams.get("department");
+    const job = searchParams.get("job");
     const nationality = searchParams.get("nationality");
     const status = searchParams.get("status");
     const dateRange = searchParams.get("dateRange");
@@ -160,6 +171,7 @@ export function EmployeesPage() {
     // Apply dashboard filters
     if (company) setCompanyFilter(company);
     if (department) setDepartmentFilter(department);
+    if (job) setJobFilter(job);
     if (nationality) setNationalityFilter(nationality);
     if (status) setActiveStatusFilter(status); // active, inactive, or all
 
@@ -177,6 +189,7 @@ export function EmployeesPage() {
       residence ||
       company ||
       department ||
+      job ||
       nationality ||
       status ||
       dateRange
@@ -568,10 +581,9 @@ export function EmployeesPage() {
       if (!aValue) return 1;
       if (!bValue) return -1;
 
-      // Compare values
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      return 0;
+      // Compare values - use localeCompare with numeric for proper number sorting
+      const comparison = String(aValue).localeCompare(String(bValue), undefined, { numeric: true, sensitivity: 'base' });
+      return sortDirection === "asc" ? comparison : -comparison;
     });
   }, [
     employees,
@@ -682,57 +694,9 @@ export function EmployeesPage() {
     const selectedEmployees = filteredEmployees?.filter((emp: any) =>
       selectedIds.includes(emp.id)
     );
-
     if (!selectedEmployees || selectedEmployees.length === 0) return;
-
-    const exportData = selectedEmployees.map((emp: any) => ({
-      "Employee No": emp.employee_no,
-      "Name (EN)": emp.name_en,
-      "Name (AR)": emp.name_ar,
-      Nationality: emp.nationality,
-      Status: emp.is_active ? "Active" : "Inactive",
-      "Added Date": emp.added_date
-        ? dayjs(emp.added_date).format("DD/MM/YYYY")
-        : "",
-      "Last Updated": emp.updated_at
-        ? dayjs(emp.updated_at).format("DD/MM/YYYY HH:mm")
-        : "",
-      Company:
-        i18n.language === "ar"
-          ? emp.companies?.name_ar
-          : emp.companies?.name_en,
-      Department:
-        i18n.language === "ar"
-          ? emp.departments?.name_ar
-          : emp.departments?.name_en,
-      Job: i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
-      "Passport No": emp.passport_no || "",
-      "Passport Expiry": emp.passport_expiry
-        ? dayjs(emp.passport_expiry).format("DD/MM/YYYY")
-        : "",
-      "Card No": emp.card_no || "",
-      "Card Expiry": emp.card_expiry
-        ? dayjs(emp.card_expiry).format("DD/MM/YYYY")
-        : "",
-      "Emirates ID": emp.emirates_id || "",
-      "Emirates ID Expiry": emp.emirates_id_expiry
-        ? dayjs(emp.emirates_id_expiry).format("DD/MM/YYYY")
-        : "",
-      "Residence No": emp.residence_no || "",
-      "Residence Expiry": emp.residence_expiry
-        ? dayjs(emp.residence_expiry).format("DD/MM/YYYY")
-        : "",
-      Email: emp.email || "",
-      Phone: emp.phone || "",
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Selected Employees");
-    XLSX.writeFile(
-      wb,
-      `selected_employees_${dayjs().format("YYYY-MM-DD")}.xlsx`
-    );
+    setExportTarget("selected");
+    setExportDialogOpen(true);
   };
 
   const getExpiryStatus = (expiryDate: string | null) => {
@@ -761,77 +725,89 @@ export function EmployeesPage() {
     navigate("/employees", { replace: true });
   };
 
-  const exportToExcel = () => {
-    if (!filteredEmployees || filteredEmployees.length === 0) {
-      alert("No data to export");
-      return;
-    }
+  const EXPORT_FIELD_DEFS = [
+    { key: "employee_no", label: "Employee No" },
+    { key: "name_en", label: "Name (English)" },
+    { key: "name_ar", label: "Name (Arabic)" },
+    { key: "nationality", label: "Nationality" },
+    { key: "status", label: "Status" },
+    { key: "added_date", label: "Added Date" },
+    { key: "updated_at", label: "Last Updated" },
+    { key: "company", label: "Company" },
+    { key: "department", label: "Department" },
+    { key: "job", label: "Job" },
+    { key: "passport_no", label: "Passport No" },
+    { key: "passport_expiry", label: "Passport Expiry" },
+    { key: "card_no", label: "Card No" },
+    { key: "card_expiry", label: "Card Expiry" },
+    { key: "emirates_id", label: "Emirates ID" },
+    { key: "emirates_id_expiry", label: "Emirates ID Expiry" },
+    { key: "residence_no", label: "Residence No" },
+    { key: "residence_expiry", label: "Residence Expiry" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+  ];
 
-    const exportData = filteredEmployees.map((emp: any) => ({
-      "Employee No": emp.employee_no,
-      "Name (English)": emp.name_en,
-      "Name (Arabic)": emp.name_ar,
-      Nationality: emp.nationality,
-      Status: emp.is_active ? "Active" : "Inactive",
-      "Added Date": emp.added_date
-        ? dayjs(emp.added_date).format("DD/MM/YYYY")
-        : "",
-      "Last Updated": emp.updated_at
-        ? dayjs(emp.updated_at).format("DD/MM/YYYY HH:mm")
-        : "",
-      Company:
-        i18n.language === "ar"
-          ? emp.companies?.name_ar
-          : emp.companies?.name_en,
-      Department:
-        i18n.language === "ar"
-          ? emp.departments?.name_ar
-          : emp.departments?.name_en,
-      Job: i18n.language === "ar" ? emp.jobs?.name_ar : emp.jobs?.name_en,
-      "Passport No": emp.passport_no || "",
-      "Passport Expiry": emp.passport_expiry
-        ? dayjs(emp.passport_expiry).format("DD/MM/YYYY")
-        : "",
-      "Card No": emp.card_no || "",
-      "Card Expiry": emp.card_expiry
-        ? dayjs(emp.card_expiry).format("DD/MM/YYYY")
-        : "",
-      "Emirates ID": emp.emirates_id || "",
-      "Emirates ID Expiry": emp.emirates_id_expiry
-        ? dayjs(emp.emirates_id_expiry).format("DD/MM/YYYY")
-        : "",
-      "Residence No": emp.residence_no || "",
-      "Residence Expiry": emp.residence_expiry
-        ? dayjs(emp.residence_expiry).format("DD/MM/YYYY")
-        : "",
-      Email: emp.email || "",
-      Phone: emp.phone || "",
-    }));
+  const buildExportRow = (emp: any) => {
+    const all: Record<string, string> = {
+      employee_no: emp.employee_no || "",
+      name_en: emp.name_en || "",
+      name_ar: emp.name_ar || "",
+      nationality: emp.nationality || "",
+      status: emp.is_active ? "Active" : "Inactive",
+      added_date: emp.added_date ? dayjs(emp.added_date).format("DD/MM/YYYY") : "",
+      updated_at: emp.updated_at ? dayjs(emp.updated_at).format("DD/MM/YYYY HH:mm") : "",
+      company: i18n.language === "ar" ? emp.companies?.name_ar || "" : emp.companies?.name_en || "",
+      department: i18n.language === "ar" ? emp.departments?.name_ar || "" : emp.departments?.name_en || "",
+      job: i18n.language === "ar" ? emp.jobs?.name_ar || "" : emp.jobs?.name_en || "",
+      passport_no: emp.passport_no || "",
+      passport_expiry: emp.passport_expiry ? dayjs(emp.passport_expiry).format("DD/MM/YYYY") : "",
+      card_no: emp.card_no || "",
+      card_expiry: emp.card_expiry ? dayjs(emp.card_expiry).format("DD/MM/YYYY") : "",
+      emirates_id: emp.emirates_id || "",
+      emirates_id_expiry: emp.emirates_id_expiry ? dayjs(emp.emirates_id_expiry).format("DD/MM/YYYY") : "",
+      residence_no: emp.residence_no || "",
+      residence_expiry: emp.residence_expiry ? dayjs(emp.residence_expiry).format("DD/MM/YYYY") : "",
+      email: emp.email || "",
+      phone: emp.phone || "",
+    };
+    const row: Record<string, string> = {};
+    selectedExportFields.forEach((k) => {
+      const def = EXPORT_FIELD_DEFS.find((d) => d.key === k);
+      if (def) row[def.label] = all[k] ?? "";
+    });
+    return row;
+  };
 
+  const doExport = (empList: any[], filename: string) => {
+    if (!empList || empList.length === 0) { alert("No data to export"); return; }
+    const exportData = empList.map(buildExportRow);
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Employees");
-
-    // Auto-size columns
     const maxWidth = 50;
     const colWidths = Object.keys(exportData[0]).map((key) => ({
-      wch: Math.min(
-        maxWidth,
-        Math.max(
-          key.length,
-          ...exportData.map(
-            (row) => String(row[key as keyof typeof row] || "").length
-          )
-        )
-      ),
+      wch: Math.min(maxWidth, Math.max(key.length, ...exportData.map((r) => String(r[key] || "").length))),
     }));
     ws["!cols"] = colWidths;
+    XLSX.writeFile(wb, filename);
+  };
 
-    XLSX.writeFile(wb, `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`);
+  const exportToExcel = () => {
+    if (!filteredEmployees || filteredEmployees.length === 0) { alert("No data to export"); return; }
+    setExportTarget("all");
+    setExportDialogOpen(true);
   };
 
   if (isLoading) {
-    return <div>{t("common.loading")}</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <span>{t("common.loading")}</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1520,6 +1496,14 @@ export function EmployeesPage() {
                           <Square className="w-5 h-5 md:w-6 md:h-6" />
                         )}
                       </button>
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm mt-0.5">
+                        {employee.avatar_url ? (
+                          <img src={employee.avatar_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                        ) : (
+                          (i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0)?.toUpperCase() || "?"
+                        )}
+                      </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-bold text-base md:text-lg truncate">
                           {i18n.language === "ar"
@@ -1955,8 +1939,16 @@ export function EmployeesPage() {
                       <td className="p-2 md:p-3 font-medium text-xs md:text-sm">
                         {employee.employee_no}
                       </td>
-                      <td className="p-2 md:p-3 text-xs md:text-sm w-48 max-w-xs">
-                        <div className="flex items-center gap-1.5 group">
+                      <td className="p-2 md:p-3 text-xs md:text-sm w-52 max-w-xs">
+                        <div className="flex items-center gap-2 group">
+                          {/* Avatar circle */}
+                          <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                            {employee.avatar_url ? (
+                              <img src={employee.avatar_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                            ) : (
+                              (i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0)?.toUpperCase() || "?"
+                            )}
+                          </div>
                           <span className="truncate flex-1">
                             {i18n.language === "ar"
                               ? employee.name_ar
@@ -2134,6 +2126,72 @@ export function EmployeesPage() {
         jobs={jobs || []}
         nationalities={nationalities || []}
       />
+
+      {/* Export Fields Selection Dialog */}
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-green-600" />
+              {exportTarget === "all"
+                ? `Export ${filteredEmployees?.length || 0} Employees`
+                : `Export ${selectedIds.length} Selected Employees`}
+            </DialogTitle>
+            <DialogDescription>
+              Choose which fields to include in the Excel export.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="flex gap-2 mb-2">
+              <Button size="sm" variant="outline" onClick={() => setSelectedExportFields(EXPORT_FIELD_DEFS.map(d => d.key))}>
+                Select All
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setSelectedExportFields([])}>
+                Clear All
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
+              {EXPORT_FIELD_DEFS.map((field) => (
+                <label key={field.key} className="flex items-center gap-2 p-2 rounded-md border hover:bg-muted cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedExportFields.includes(field.key)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedExportFields(prev => [...prev, field.key]);
+                      } else {
+                        setSelectedExportFields(prev => prev.filter(k => k !== field.key));
+                      }
+                    }}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                  {field.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (selectedExportFields.length === 0) { alert("Please select at least one field"); return; }
+                const empList = exportTarget === "all"
+                  ? filteredEmployees || []
+                  : (filteredEmployees || []).filter((e: any) => selectedIds.includes(e.id));
+                const filename = exportTarget === "all"
+                  ? `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`
+                  : `Selected_Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`;
+                doExport(empList, filename);
+                setExportDialogOpen(false);
+              }}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export ({selectedExportFields.length} fields)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -2269,12 +2327,57 @@ function EmployeeDialog({
         is_active: true,
       });
     }
+    setAvatarFile(null);
+    setAvatarPreview(null);
   }, [employee]);
+
+  // Avatar state
+  const [avatarFile, setAvatarFile] = React.useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = React.useState(false);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Validate size (max 300KB) and type
+    if (file.size > 512 * 1024) {
+      alert("Photo must be under 512KB. Please compress it first.");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      return;
+    }
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const uploadAvatar = async (employeeId: string): Promise<string | null> => {
+    if (!avatarFile) return formData.avatar_url || null;
+    setAvatarUploading(true);
+    try {
+      const ext = avatarFile.name.split(".").pop() || "jpg";
+      const path = `${employeeId}/avatar.${ext}`;
+      const { error } = await supabase.storage
+        .from("employee-avatars")
+        .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+      if (error) throw error;
+      const { data } = supabase.storage.from("employee-avatars").getPublicUrl(path);
+      return data.publicUrl + `?t=${Date.now()}`;
+    } catch (err: any) {
+      console.error("Avatar upload failed:", err.message);
+      return null;
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       // Clean data: remove nested objects and keep only valid columns
-      const cleanData = {
+      const cleanData: any = {
         employee_no: data.employee_no,
         name_en: data.name_en,
         name_ar: data.name_ar,
@@ -2294,17 +2397,34 @@ function EmployeeDialog({
         phone: data.phone || null,
         added_date: data.added_date || null,
         is_active: data.is_active !== false,
+        avatar_url: data.avatar_url || null,
       };
 
       if (employee) {
+        // Upload avatar first if changed
+        if (avatarFile) {
+          const url = await uploadAvatar(employee.id);
+          if (url) cleanData.avatar_url = url;
+        }
         const { error } = await supabase
           .from("employees")
           .update(cleanData)
           .eq("id", employee.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("employees").insert([cleanData]);
+        // Insert first to get id, then upload avatar
+        const { data: inserted, error } = await supabase
+          .from("employees")
+          .insert([cleanData])
+          .select("id")
+          .single();
         if (error) throw error;
+        if (avatarFile && inserted) {
+          const url = await uploadAvatar(inserted.id);
+          if (url) {
+            await supabase.from("employees").update({ avatar_url: url }).eq("id", inserted.id);
+          }
+        }
       }
     },
     onSuccess: () => {
@@ -2347,6 +2467,45 @@ function EmployeeDialog({
               <span className="text-xl sm:text-2xl">📋</span>
               <span>Basic Information</span>
             </h3>
+            {/* Avatar Upload */}
+            <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border">
+              <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
+                {(avatarPreview || formData.avatar_url) ? (
+                  <img
+                    src={avatarPreview || formData.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  (formData.name_en || formData.name_ar || "?").charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium mb-1">Employee Photo</p>
+                <p className="text-xs text-muted-foreground mb-2">Max 512KB · JPG/PNG/WEBP · Stored privately</p>
+                <label className="cursor-pointer">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:bg-primary/90 transition-colors">
+                    <Camera className="w-3.5 h-3.5" />
+                    {(formData.avatar_url || avatarPreview) ? "Change Photo" : "Upload Photo"}
+                  </span>
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
+                </label>
+                {(formData.avatar_url || avatarPreview) && (
+                  <button
+                    type="button"
+                    className="ml-2 text-xs text-red-500 hover:text-red-700 underline"
+                    onClick={() => {
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                      setFormData({ ...formData, avatar_url: null });
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
@@ -2777,10 +2936,15 @@ function EmployeeDialog({
             </Button>
             <Button
               type="submit"
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || avatarUploading}
               className="w-full sm:w-auto h-12 sm:h-10 text-base sm:text-sm font-semibold order-1 sm:order-2"
             >
-              {saveMutation.isPending ? t("common.loading") : t("common.save")}
+              {(saveMutation.isPending || avatarUploading) ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  {avatarUploading ? "Uploading photo..." : t("common.loading")}
+                </span>
+              ) : t("common.save")}
             </Button>
           </DialogFooter>
         </form>

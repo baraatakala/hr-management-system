@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +15,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Edit, Trash2, Search, Globe, Users, ExternalLink } from "lucide-react";
 
 export function NationalitiesPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -198,107 +201,95 @@ export function NationalitiesPage() {
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center h-64">Loading...</div>
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
     );
 
+  const totalEmployees = items?.reduce((sum: number, n: any) => sum + (n.employee_count || 0), 0) || 0;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 pb-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Globe className="w-6 h-6 text-primary" />
             {i18n.language === "ar" ? "الجنسيات" : "Nationalities"}
           </h1>
-          <p className="text-gray-500 mt-1 text-sm md:text-base">
-            {i18n.language === "ar"
-              ? `${filteredItems?.length || 0} من ${items?.length || 0} جنسية`
-              : `${filteredItems?.length || 0} of ${items?.length || 0} nationalities`}
+          <p className="text-sm text-muted-foreground mt-1">
+            {items?.length || 0} nationalities &bull; {totalEmployees} employees
           </p>
         </div>
-        <Button
-          onClick={handleAdd}
-          className="gap-2 w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-95 transition-transform"
-        >
+        <Button onClick={handleAdd} className="gap-2">
           <Plus className="w-4 h-4" />
           {i18n.language === "ar" ? "إضافة جنسية" : "Add Nationality"}
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-sm font-medium mb-2 block">
-              {i18n.language === "ar" ? "بحث" : "Search"}
-            </Label>
+      <Card className="p-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder={i18n.language === "ar" ? "بحث بالرمز أو الاسم..." : "Search by code or name..."}
+              placeholder={i18n.language === "ar" ? "بحث..." : "Search by code or name..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
+              className="pl-9"
             />
           </div>
-          <div>
-            <Label className="text-sm font-medium mb-2 block">
-              {i18n.language === "ar" ? "حالة الربط بالموظفين" : "Employee Link Status"}
-            </Label>
-            <select
-              value={linkedFilter}
-              onChange={(e) => setLinkedFilter(e.target.value as "all" | "linked" | "unlinked")}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            >
-              <option value="all">{i18n.language === "ar" ? "كل الجنسيات" : "All Nationalities"}</option>
-              <option value="linked">{i18n.language === "ar" ? "مع موظفين" : "With Employees"}</option>
-              <option value="unlinked">{i18n.language === "ar" ? "بدون موظفين" : "Without Employees"}</option>
-            </select>
-          </div>
+          <select
+            value={linkedFilter}
+            onChange={(e) => setLinkedFilter(e.target.value as "all" | "linked" | "unlinked")}
+            className="h-9 px-3 rounded-md border border-input bg-background text-sm"
+          >
+            <option value="all">{i18n.language === "ar" ? "كل الجنسيات" : "All Nationalities"}</option>
+            <option value="linked">{i18n.language === "ar" ? "مع موظفين" : "With Employees"}</option>
+            <option value="unlinked">{i18n.language === "ar" ? "بدون موظفين" : "Without Employees"}</option>
+          </select>
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredItems?.map((item: any) => (
-          <Card key={item.id} className="p-4 hover:shadow-lg transition-shadow">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg">
-                  {i18n.language === "ar" ? item.name_ar : item.name_en}
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">{item.code}</p>
-                <div className="mt-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    item.employee_count > 0
-                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                  }`}>
-                    {item.employee_count} {i18n.language === "ar" ? "موظف" : "employee"}{item.employee_count !== 1 ? (i18n.language === "ar" ? "ين" : "s") : ""}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => handleEdit(item)}>
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(item)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {items?.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">
-            {i18n.language === "ar"
-              ? "لا توجد جنسيات. اضغط على 'إضافة جنسية' للبدء."
-              : "No nationalities found. Click 'Add Nationality' to get started."}
-          </p>
-        </div>
-      )}
+      <Card className="overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Code</th>
+              <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name (EN)</th>
+              <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Name (AR)</th>
+              <th className="text-center p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Employees</th>
+              <th className="text-right p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredItems?.length === 0 && (
+              <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No nationalities found</td></tr>
+            )}
+            {filteredItems?.map((item: any) => (
+              <tr key={item.id} className="border-b hover:bg-muted/30 transition-colors group">
+                <td className="p-3"><Badge variant="outline" className="font-mono text-xs">{item.code}</Badge></td>
+                <td className="p-3"><p className="font-semibold text-sm">{item.name_en}</p></td>
+                <td className="p-3 hidden md:table-cell"><p className="text-sm text-muted-foreground" dir="rtl">{item.name_ar}</p></td>
+                <td className="p-3 text-center">
+                  {item.employee_count > 0 ? (
+                    <button
+                      onClick={() => navigate(`/employees?nationality=${encodeURIComponent(item.name_en)}`)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/70 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium transition-colors"
+                    >
+                      <Users className="w-3 h-3" />{item.employee_count}<ExternalLink className="w-3 h-3 opacity-60" />
+                    </button>
+                  ) : <span className="text-xs text-muted-foreground">0</span>}
+                </td>
+                <td className="p-3 text-right">
+                  <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(item)} className="h-8 w-8 p-0"><Edit className="w-3.5 h-3.5" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(item)} className="h-8 w-8 p-0 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>

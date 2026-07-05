@@ -27,25 +27,25 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 220 20% 8%;
+    --foreground: 213 31% 91%;
+    --card: 220 17% 11%;
+    --card-foreground: 213 31% 91%;
+    --popover: 220 17% 11%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 213 94% 68%;
+    --primary-foreground: 220 20% 8%;
+    --secondary: 220 17% 17%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 220 17% 16%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 220 17% 20%;
+    --accent-foreground: 213 31% 91%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 213 31% 91%;
+    --border: 220 17% 18%;
+    --input: 220 17% 16%;
+    --ring: 213 94% 68%;
   }
 }
 
@@ -108,3 +108,64 @@
 [dir="ltr"] {
   direction: ltr;
 }
+
+/* Enhanced Dark Mode Styles */
+.dark body {
+  background: hsl(220, 20%, 8%);
+}
+
+.dark .card-glow {
+  box-shadow: 0 0 0 1px hsl(220, 17%, 18%), 0 4px 24px -4px rgba(0,0,0,0.5);
+}
+
+/* Stat cards in dark mode */
+.dark [class*="bg-blue-50"] { background-color: hsl(220, 30%, 13%) !important; }
+.dark [class*="bg-green-50"] { background-color: hsl(145, 25%, 12%) !important; }
+.dark [class*="bg-red-50"] { background-color: hsl(0, 25%, 12%) !important; }
+.dark [class*="bg-yellow-50"] { background-color: hsl(45, 25%, 12%) !important; }
+.dark [class*="bg-orange-50"] { background-color: hsl(30, 25%, 12%) !important; }
+.dark [class*="bg-purple-50"] { background-color: hsl(270, 25%, 12%) !important; }
+
+/* Table striping in dark mode */
+.dark tbody tr:nth-child(even) {
+  background-color: hsl(220, 17%, 12%);
+}
+
+/* Better scrollbar in dark mode */
+.dark ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dark ::-webkit-scrollbar-track { background: hsl(220, 17%, 11%); }
+.dark ::-webkit-scrollbar-thumb { background: hsl(220, 17%, 25%); border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: hsl(220, 17%, 35%); }
+
+/* Selection in dark mode */
+.dark ::selection { background: hsl(213, 94%, 30%); color: white; }
+
+/* Focus ring in dark mode */
+.dark *:focus-visible { outline: 2px solid hsl(213, 94%, 68%); outline-offset: 2px; }
+
+/* Input fields in dark mode - better contrast */
+.dark input[type="text"],
+.dark input[type="date"],
+.dark input[type="email"],
+.dark input[type="tel"],
+.dark input[type="number"],
+.dark select,
+.dark textarea {
+  background-color: hsl(220, 20%, 10%);
+  border-color: hsl(220, 17%, 22%);
+  color: hsl(213, 31%, 91%);
+}
+.dark input[type="text"]:focus,
+.dark input[type="date"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="tel"]:focus,
+.dark select:focus {
+  border-color: hsl(213, 94%, 68%);
+  box-shadow: 0 0 0 3px hsl(213, 94%, 20%);
+}
+
+/* Card hover effect in dark mode */
+.dark .hover\:shadow-lg:hover {
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 0 1px hsl(220, 17%, 22%);
+}
+

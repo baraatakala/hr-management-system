@@ -85,6 +85,9 @@ export function RemindersPage() {
       } = await supabase.auth.getSession();
       const token =
         session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      // Get user email from session to use for sender domain
+      const userEmail = session?.user?.email;
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-reminders`,
@@ -94,7 +97,7 @@ export function RemindersPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ userEmail }),
         }
       );
 

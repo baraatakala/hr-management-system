@@ -30,6 +30,21 @@ serve(async (req) => {
   }
 
   try {
+    // Get user email from request body
+    const { userEmail } = await req.json();
+    
+    // Extract domain from user email
+    let senderDomain = "resend.dev"; // fallback
+    let senderEmail = "HR Management <onboarding@resend.dev>"; // fallback
+    
+    if (userEmail && typeof userEmail === "string" && userEmail.includes("@")) {
+      const domain = userEmail.split("@")[1];
+      if (domain) {
+        senderDomain = domain;
+        senderEmail = `HR Management <hr@${domain}>`;
+      }
+    }
+    
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // Calculate date 30 days from now
@@ -101,7 +116,7 @@ serve(async (req) => {
       for (const doc of expiringDocuments) {
         try {
           // Send email via Resend (no duplicate check - always send)
-          const emailSent = await sendEmail(employee, doc.type, doc.expiryDate);
+          const emailSent = await sendEmail(employee, doc.type, doc.expiryDate, senderEmail);
 
           // Log reminder in database
           const { error: insertError } = await supabase
@@ -165,7 +180,8 @@ function isExpiringSoon(expiryDate: string, thirtyDaysStr: string): boolean {
 async function sendEmail(
   employee: Employee,
   docType: string,
-  expiryDate: string
+  expiryDate: string,
+  senderEmail: string
 ): Promise<boolean> {
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -175,7 +191,7 @@ async function sendEmail(
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "HR Management <onboarding@resend.dev>",
+        from: senderEmail,
         to: [employee.email],
         subject: `Document Expiry Reminder - ${docType
           .replace("_", " ")

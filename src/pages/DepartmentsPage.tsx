@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +15,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit, Trash2, Search, Filter } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Users, ExternalLink, FolderKanban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function DepartmentsPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -175,110 +177,98 @@ export function DepartmentsPage() {
     saveMutation.mutate(formData);
   };
 
-  if (isLoading) return <div>{t("common.loading")}</div>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center min-h-[300px]">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  const totalEmployees = Object.values(employeeCounts || {}).reduce((a: number, b: unknown) => a + (b as number), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 pb-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <FolderKanban className="w-6 h-6 text-primary" />
             {t("departments.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {filteredItems?.length || 0} of {items?.length || 0} departments
+            {items?.length || 0} departments &bull; {totalEmployees} total employees
           </p>
         </div>
-        <Button
-          onClick={handleAdd}
-          className="w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-95 transition-transform"
-        >
-          <Plus className="w-4 h-4 mr-2" />
+        <Button onClick={handleAdd} className="gap-2">
+          <Plus className="w-4 h-4" />
           {t("departments.addDepartment")}
         </Button>
       </div>
 
-      {/* Search and Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search Input */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search by code or name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      {/* Filters */}
+      <Card className="p-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by code or name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex gap-1">
+            {(["all", "linked", "unlinked"] as const).map((v) => (
+              <Button key={v} variant={linkFilter === v ? "default" : "outline"} size="sm" onClick={() => setLinkFilter(v)} className="capitalize">{v}</Button>
+            ))}
+          </div>
         </div>
+      </Card>
 
-        {/* Link Filter Buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant={linkFilter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setLinkFilter("all")}
-            className="gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            All
-          </Button>
-          <Button
-            variant={linkFilter === "linked" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setLinkFilter("linked")}
-            className="gap-2"
-          >
-            Linked
-          </Button>
-          <Button
-            variant={linkFilter === "unlinked" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setLinkFilter("unlinked")}
-            className="gap-2"
-          >
-            Unlinked
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredItems?.map((item: any) => {
-          const employeeCount = employeeCounts?.[item.id] || 0;
-          return (
-            <Card key={item.id} className="p-4 space-y-2">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-lg">
-                      {i18n.language === "ar" ? item.name_ar : item.name_en}
-                    </h3>
-                    <Badge variant={employeeCount > 0 ? "default" : "secondary"}>
-                      {employeeCount} {employeeCount === 1 ? "employee" : "employees"}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{item.code}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEdit(item)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDelete(item)}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Table */}
+      <Card className="overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Code</th>
+              <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name (EN)</th>
+              <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Name (AR)</th>
+              <th className="text-center p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Employees</th>
+              <th className="text-right p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredItems?.length === 0 && (
+              <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No departments found</td></tr>
+            )}
+            {filteredItems?.map((item: any) => {
+              const empCount = employeeCounts?.[item.id] || 0;
+              return (
+                <tr key={item.id} className="border-b hover:bg-muted/30 transition-colors group">
+                  <td className="p-3"><Badge variant="outline" className="font-mono text-xs">{item.code}</Badge></td>
+                  <td className="p-3"><p className="font-semibold text-sm">{item.name_en}</p></td>
+                  <td className="p-3 hidden md:table-cell"><p className="text-sm text-muted-foreground" dir="rtl">{item.name_ar}</p></td>
+                  <td className="p-3 text-center">
+                    {empCount > 0 ? (
+                      <button
+                        onClick={() => navigate(`/employees?department=${item.id}`)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/70 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium transition-colors"
+                      >
+                        <Users className="w-3 h-3" />{empCount}<ExternalLink className="w-3 h-3 opacity-60" />
+                      </button>
+                    ) : <span className="text-xs text-muted-foreground">0</span>}
+                  </td>
+                  <td className="p-3 text-right">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="sm" variant="ghost" onClick={() => handleEdit(item)} className="h-8 w-8 p-0"><Edit className="w-3.5 h-3.5" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(item)} className="h-8 w-8 p-0 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>

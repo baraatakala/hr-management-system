@@ -152,10 +152,11 @@ export function AuditTrailPage() {
     return String(value);
   };
 
-  // Fetch audit logs
+  // Fetch audit logs - remove hard limit, use pagination via client-side
   const {
     data: auditLogs,
     isLoading,
+    refetch: refetchAudit,
   } = useQuery({
     queryKey: ["audit-trail"],
     queryFn: async () => {
@@ -163,7 +164,7 @@ export function AuditTrailPage() {
         .from("activity_log")
         .select("*")
         .order("timestamp", { ascending: false })
-        .limit(1000);
+        .limit(5000);
 
       if (error) throw error;
 
@@ -175,6 +176,7 @@ export function AuditTrailPage() {
         name_ar: log.name_ar || "موظف محذوف",
       })) as AuditLog[];
     },
+    staleTime: 30000, // refresh every 30s
   });
 
   // Get unique users for filter
@@ -476,6 +478,10 @@ export function AuditTrailPage() {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={() => refetchAudit()} variant="outline" size="sm" className="h-11 md:h-9 gap-2" title="Refresh audit records">
+            <RefreshCw className="w-4 h-4" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
           <Button onClick={exportToExcel} variant="outline" size="sm" className="flex-1 sm:flex-initial h-11 md:h-9 touch-manipulation active:scale-95 transition-transform gap-2">
             <Download className="w-4 h-4" />
             Export Excel
