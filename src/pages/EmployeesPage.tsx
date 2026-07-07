@@ -1001,7 +1001,7 @@ export function EmployeesPage() {
                   jobFilter.length,
                   departmentFilter.length,
                 ].reduce((a, b) => a + b, 0)}{" "}
-                active
+                {t("filters.active")}
               </Badge>
             )}
           </div>
@@ -1064,7 +1064,7 @@ export function EmployeesPage() {
               searchTerm) && (
               <div className="flex flex-wrap items-center gap-1.5 p-2 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
                 <span className="text-xs font-medium text-blue-900 dark:text-blue-100">
-                  Active:
+                  {t("filters.active")}:
                 </span>
                 {searchTerm && (
                   <Badge variant="secondary" className="gap-1 pr-1">
@@ -1080,7 +1080,7 @@ export function EmployeesPage() {
                 )}
                 {nationalityFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Nationality
+                    {t("employees.nationality")}
                     {nationalityFilter.length > 1
                       ? ` (${nationalityFilter.length})`
                       : `: ${nationalityFilter[0]}`}
@@ -1094,7 +1094,7 @@ export function EmployeesPage() {
                 )}
                 {companyFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Company{companyFilter.length > 1 ? ` (${companyFilter.length})` : ""}
+                    {t("employees.company")}{companyFilter.length > 1 ? ` (${companyFilter.length})` : ""}
                     <button
                       onClick={() => setCompanyFilter([])}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
@@ -1105,7 +1105,7 @@ export function EmployeesPage() {
                 )}
                 {jobFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Job{jobFilter.length > 1 ? ` (${jobFilter.length})` : ""}
+                    {t("employees.job")}{jobFilter.length > 1 ? ` (${jobFilter.length})` : ""}
                     <button
                       onClick={() => setJobFilter([])}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
@@ -1116,7 +1116,7 @@ export function EmployeesPage() {
                 )}
                 {departmentFilter.length > 0 && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Department
+                    {t("employees.department")}
                     {departmentFilter.length > 1 ? ` (${departmentFilter.length})` : ""}
                     <button
                       onClick={() => setDepartmentFilter([])}
@@ -1128,15 +1128,15 @@ export function EmployeesPage() {
                 )}
                 {dateRangeFilter !== "all" && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    Date:{" "}
+                    {t("filters.dateRange")}:{" "}
                     {dateRangeFilter === "custom"
-                      ? `${customStartDate || "?"} to ${customEndDate || "?"}`
+                      ? `${customStartDate || "?"} → ${customEndDate || "?"}`
                       : dateRangeFilter === "30days"
-                      ? "Last 30 Days"
+                      ? t("filters.last30Days")
                       : dateRangeFilter === "60days"
-                      ? "Last 60 Days"
+                      ? t("filters.last60Days")
                       : dateRangeFilter === "90days"
-                      ? "Last 90 Days"
+                      ? t("filters.last90Days")
                       : dateRangeFilter}
                     <button
                       onClick={() => {
@@ -1253,21 +1253,21 @@ export function EmployeesPage() {
               <div>
                 <Label className="text-xs font-medium mb-1 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  Added Date
+                  {t("filters.dateRange")}
                 </Label>
                 <Select
                   value={dateRangeFilter}
                   onValueChange={setDateRangeFilter}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Time" />
+                    <SelectValue placeholder={t("filters.allTime")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="30days">Last 30 Days</SelectItem>
-                    <SelectItem value="60days">Last 60 Days</SelectItem>
-                    <SelectItem value="90days">Last 90 Days</SelectItem>
-                    <SelectItem value="custom">Custom Date Range</SelectItem>
+                    <SelectItem value="all">{t("filters.allTime")}</SelectItem>
+                    <SelectItem value="30days">{t("filters.last30Days")}</SelectItem>
+                    <SelectItem value="60days">{t("filters.last60Days")}</SelectItem>
+                    <SelectItem value="90days">{t("filters.last90Days")}</SelectItem>
+                    <SelectItem value="custom">{t("filters.customDateRange")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1357,7 +1357,7 @@ export function EmployeesPage() {
                     htmlFor="customStartDate"
                     className="text-xs font-medium"
                   >
-                    From Date
+                    {t("filters.fromDate")}
                   </Label>
                   <Input
                     id="customStartDate"
@@ -1373,7 +1373,7 @@ export function EmployeesPage() {
                     htmlFor="customEndDate"
                     className="text-xs font-medium"
                   >
-                    To Date
+                    {t("filters.toDate")}
                   </Label>
                   <Input
                     id="customEndDate"
@@ -1404,17 +1404,17 @@ export function EmployeesPage() {
                   isRTL ? "flex-row-reverse" : ""
                 }`}
               >
-                <Search className="absolute left-3 w-4 h-4 text-gray-400 flex-shrink-0 pointer-events-none" />
+                <Search className="absolute left-3 rtl:left-auto rtl:right-3 w-4 h-4 text-gray-400 flex-shrink-0 pointer-events-none" />
                 <Input
-                  placeholder="Search by name, employee #, email, phone, passport, emirates ID..."
+                  placeholder={t("filters.searchPlaceholder")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 h-9 pl-10 pr-10"
+                  className="flex-1 h-9 pl-10 pr-10 rtl:pl-10 rtl:pr-10"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm("")}
-                    className="absolute right-3 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    className="absolute right-3 rtl:right-auto rtl:left-3 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                     type="button"
                   >
                     <X className="w-4 h-4 text-gray-400" />
@@ -1422,8 +1422,7 @@ export function EmployeesPage() {
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                💡 Tip: Search works across all fields - names, documents,
-                contact info
+                {t("filters.searchTip")}
               </p>
             </div>
           </div>
@@ -1674,9 +1673,9 @@ export function EmployeesPage() {
           ) : (
             <div className="flex items-center justify-center min-h-[500px]">
               <div className="text-center text-muted-foreground">
-                <p className="text-lg font-medium">No employees found</p>
+                <p className="text-lg font-medium">{t("filters.noEmployeesFound")}</p>
                 <p className="text-sm mt-2">
-                  Try adjusting your filters or search terms
+                  {t("filters.adjustFilters")}
                 </p>
               </div>
             </div>
@@ -2048,9 +2047,9 @@ export function EmployeesPage() {
               {(!filteredEmployees || filteredEmployees.length === 0) && (
                 <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
                   <div className="text-center">
-                    <p className="text-lg font-medium">No employees found</p>
+                    <p className="text-lg font-medium">{t("filters.noEmployeesFound")}</p>
                     <p className="text-sm mt-2">
-                      Try adjusting your filters or search terms
+                      {t("filters.adjustFilters")}
                     </p>
                   </div>
                 </div>

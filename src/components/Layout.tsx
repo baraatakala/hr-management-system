@@ -1,6 +1,8 @@
 import React from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import dayjs from "dayjs";
+import "dayjs/locale/ar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/store/useTheme";
 import {
@@ -35,6 +37,11 @@ export function Layout() {
     const currentLang = i18n.language || "en";
     document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = currentLang;
+    // Keep dayjs's relative-time wording ("2 hours ago" / "منذ ساعتين") and
+    // date formatting in sync with the UI language. Without this, .fromNow()
+    // always renders English text, which then visually reverses inside RTL
+    // containers (e.g. "2 hours ago" shows as "hours ago 2").
+    dayjs.locale(currentLang === "ar" ? "ar" : "en");
   }, [i18n.language]);
 
   const toggleLanguage = () => {
@@ -42,6 +49,7 @@ export function Layout() {
     i18n.changeLanguage(newLang);
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = newLang;
+    dayjs.locale(newLang === "ar" ? "ar" : "en");
   };
 
   const navigation = [

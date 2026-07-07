@@ -173,13 +173,13 @@ export function MultiSelect({
         <div className="absolute z-50 mt-1 w-full min-w-[220px] rounded-md border bg-popover shadow-md animate-in fade-in-0 zoom-in-95">
           <div className="px-2 pt-2 pb-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
                 placeholder={searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 pl-9"
+                className="h-9 pl-9 rtl:pl-3 rtl:pr-9"
               />
             </div>
           </div>
@@ -229,7 +229,7 @@ export function MultiSelect({
                     >
                       <span
                         className={cn(
-                          "mr-2 flex h-4 w-4 items-center justify-center rounded border shrink-0 transition-colors",
+                          "mr-2 rtl:mr-0 rtl:ml-2 flex h-4 w-4 items-center justify-center rounded border shrink-0 transition-colors",
                           checked ? "bg-primary border-primary" : "border-input"
                         )}
                       >

@@ -122,6 +122,21 @@ const resources = {
       "filters.activeEmployees": "Active Employees",
       "filters.inactiveEmployees": "Inactive Employees",
       "filters.allEmployees": "All Employees",
+      "filters.dateRange": "Added Date",
+      "filters.allTime": "All Time",
+      "filters.last30Days": "Last 30 Days",
+      "filters.last60Days": "Last 60 Days",
+      "filters.last90Days": "Last 90 Days",
+      "filters.customDateRange": "Custom Date Range",
+      "filters.fromDate": "From Date",
+      "filters.toDate": "To Date",
+      "filters.searchPlaceholder":
+        "Search by name, employee #, email, phone, passport, emirates ID...",
+      "filters.searchTip":
+        "\ud83d\udca1 Tip: Search works across all fields - names, documents, contact info",
+      "filters.active": "Active",
+      "filters.noEmployeesFound": "No employees found",
+      "filters.adjustFilters": "Try adjusting your filters or search terms",
 
       // Companies
       "companies.title": "Companies",
@@ -276,6 +291,21 @@ const resources = {
       "filters.activeEmployees": "الموظفون النشطون",
       "filters.inactiveEmployees": "الموظفون غير النشطين",
       "filters.allEmployees": "جميع الموظفين",
+      "filters.dateRange": "تاريخ الإضافة",
+      "filters.allTime": "كل الأوقات",
+      "filters.last30Days": "آخر 30 يوماً",
+      "filters.last60Days": "آخر 60 يوماً",
+      "filters.last90Days": "آخر 90 يوماً",
+      "filters.customDateRange": "نطاق تاريخ مخصص",
+      "filters.fromDate": "من تاريخ",
+      "filters.toDate": "إلى تاريخ",
+      "filters.searchPlaceholder":
+        "ابحث بالاسم، رقم الموظف، البريد الإلكتروني، الهاتف، جواز السفر، الهوية الإماراتية...",
+      "filters.searchTip":
+        "\ud83d\udca1 نصيحة: يعمل البحث عبر جميع الحقول - الأسماء، المستندات، معلومات الاتصال",
+      "filters.active": "نشط",
+      "filters.noEmployeesFound": "لا يوجد موظفون",
+      "filters.adjustFilters": "حاول تعديل الفلاتر أو مصطلحات البحث",
 
       // Companies
       "companies.title": "الشركات",
