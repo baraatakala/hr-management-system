@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,10 +53,12 @@ import {
   Calendar,
   Camera,
   Upload,
+  FileText,
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import * as XLSX from "xlsx";
+import { exportEmployeesToPdf } from "@/utils/pdfExport";
 
 // Enable relative time plugin for dayjs
 dayjs.extend(relativeTime);
@@ -133,6 +136,7 @@ type StatusFilter =
 
 export function EmployeesPage() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -142,6 +146,7 @@ export function EmployeesPage() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportTarget, setExportTarget] = useState<"all" | "selected">("all");
+  const [exportFormat, setExportFormat] = useState<"excel" | "pdf">("excel");
   const [selectedExportFields, setSelectedExportFields] = useState<string[]>([
     "employee_no", "name_en", "name_ar", "nationality", "status",
     "company", "department", "job", "added_date",
@@ -826,9 +831,73 @@ export function EmployeesPage() {
     XLSX.writeFile(wb, filename);
   };
 
+  // Human-readable summary of active filters, reused in the PDF report header
+  const buildFiltersSummary = (): string[] => {
+    const parts: string[] = [];
+    if (searchTerm) parts.push(`Search: "${searchTerm}"`);
+    if (nationalityFilter.length) parts.push(`Nationality: ${nationalityFilter.join(", ")}`);
+    if (companyFilter.length) {
+      const names = companies
+        .filter((c: any) => companyFilter.includes(c.id))
+        .map((c: any) => c.name_en);
+      parts.push(`Company: ${names.join(", ")}`);
+    }
+    if (departmentFilter.length) {
+      const names = departments
+        .filter((d: any) => departmentFilter.includes(d.id))
+        .map((d: any) => d.name_en);
+      parts.push(`Department: ${names.join(", ")}`);
+    }
+    if (jobFilter.length) {
+      const names = jobs
+        .filter((j: any) => jobFilter.includes(j.id))
+        .map((j: any) => j.name_en);
+      parts.push(`Job: ${names.join(", ")}`);
+    }
+    if (activeStatusFilter !== "all") parts.push(`Status: ${activeStatusFilter}`);
+    if (dateRangeFilter !== "all") {
+      parts.push(
+        `Added: ${
+        dateRangeFilter === "custom"
+        ? `${customStartDate || "?"} to ${customEndDate || "?"}`
+        : dateRangeFilter
+        }`
+      );
+    }
+    if (passportStatusFilter.length) parts.push(`Passport: ${passportStatusFilter.join(", ")}`);
+    if (cardStatusFilter.length) parts.push(`Card: ${cardStatusFilter.join(", ")}`);
+    if (emiratesIdStatusFilter.length) parts.push(`Emirates ID: ${emiratesIdStatusFilter.join(", ")}`);
+    if (residenceStatusFilter.length) parts.push(`Residence: ${residenceStatusFilter.join(", ")}`);
+    return parts;
+  };
+
+  const doExportPdf = (empList: any[], target: "all" | "selected") => {
+    if (!empList || empList.length === 0) { alert("No data to export"); return; }
+    const fieldDefs = EXPORT_FIELD_DEFS.filter((d) => selectedExportFields.includes(d.key) && d.key !== "name_ar");
+    exportEmployeesToPdf({
+      employees: empList,
+      fields: fieldDefs,
+      title: "Employee Directory Report",
+      subtitle:
+        target === "all"
+          ? `All Employees${filteredEmployees && filteredEmployees.length !== employees?.length ? " (filtered)" : ""}`
+          : `Selected Employees (${empList.length})`,
+      filtersApplied: target === "all" ? buildFiltersSummary() : [],
+      generatedBy: user?.email || undefined,
+    });
+  };
+
   const exportToExcel = () => {
     if (!filteredEmployees || filteredEmployees.length === 0) { alert("No data to export"); return; }
     setExportTarget("all");
+    setExportFormat("excel");
+    setExportDialogOpen(true);
+  };
+
+  const exportToPdf = () => {
+    if (!filteredEmployees || filteredEmployees.length === 0) { alert("No data to export"); return; }
+    setExportTarget("all");
+    setExportFormat("pdf");
     setExportDialogOpen(true);
   };
 
@@ -889,7 +958,16 @@ export function EmployeesPage() {
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{t("filters.exportExcel")}</span>
-            <span className="sm:hidden">{t("common.export")}</span>
+            <span className="sm:hidden">Excel</span>
+          </Button>
+          <Button
+            onClick={exportToPdf}
+            variant="outline"
+            className="gap-2 flex-1 md:flex-initial h-9 bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900 text-red-700 dark:text-red-300"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">Export PDF</span>
+            <span className="sm:hidden">PDF</span>
           </Button>
         </div>
       </div>
@@ -2096,16 +2174,52 @@ export function EmployeesPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-green-600" />
+              {exportFormat === "pdf" ? (
+                <FileText className="w-5 h-5 text-red-600" />
+              ) : (
+                <FileSpreadsheet className="w-5 h-5 text-green-600" />
+              )}
               {exportTarget === "all"
                 ? `Export ${filteredEmployees?.length || 0} Employees`
                 : `Export ${selectedIds.length} Selected Employees`}
             </DialogTitle>
             <DialogDescription>
-              Choose which fields to include in the Excel export.
+              Choose a format and which fields to include in the export.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
+            {/* Format Toggle */}
+            <div className="flex gap-2 p-1 bg-muted rounded-lg">
+              <button
+                type="button"
+                onClick={() => setExportFormat("excel")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
+                  exportFormat === "excel"
+                    ? "bg-green-600 text-white shadow-sm"
+                    : "text-muted-foreground hover:bg-background"
+                }`}
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Excel (.xlsx)
+              </button>
+              <button
+                type="button"
+                onClick={() => setExportFormat("pdf")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
+                  exportFormat === "pdf"
+                    ? "bg-red-600 text-white shadow-sm"
+                    : "text-muted-foreground hover:bg-background"
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                PDF Report
+              </button>
+            </div>
+            {exportFormat === "pdf" && (
+              <p className="text-xs text-muted-foreground -mt-1">
+                Includes a summary of active/inactive counts and passport/card/Emirates ID/residence status, color-coded by expiry. Arabic name fields may not render in PDF — use Excel for Arabic reports.
+              </p>
+            )}
             <div className="flex gap-2 mb-2">
               <Button size="sm" variant="outline" onClick={() => setSelectedExportFields(EXPORT_FIELD_DEFS.map(d => d.key))}>
                 Select All
@@ -2115,23 +2229,37 @@ export function EmployeesPage() {
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
-              {EXPORT_FIELD_DEFS.map((field) => (
-                <label key={field.key} className="flex items-center gap-2 p-2 rounded-md border hover:bg-muted cursor-pointer text-sm">
-                  <input
-                    type="checkbox"
-                    checked={selectedExportFields.includes(field.key)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedExportFields(prev => [...prev, field.key]);
-                      } else {
-                        setSelectedExportFields(prev => prev.filter(k => k !== field.key));
-                      }
-                    }}
-                    className="w-4 h-4 accent-blue-600"
-                  />
-                  {field.label}
-                </label>
-              ))}
+              {EXPORT_FIELD_DEFS.map((field) => {
+                const isArabicField = field.key === "name_ar";
+                const disabledForPdf = exportFormat === "pdf" && isArabicField;
+                return (
+                  <label
+                    key={field.key}
+                    className={`flex items-center gap-2 p-2 rounded-md border text-sm ${
+                      disabledForPdf
+                        ? "opacity-40 cursor-not-allowed"
+                        : "hover:bg-muted cursor-pointer"
+                    }`}
+                    title={disabledForPdf ? "Arabic text isn't supported in PDF reports" : undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedExportFields.includes(field.key)}
+                      disabled={disabledForPdf}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedExportFields(prev => [...prev, field.key]);
+                        } else {
+                          setSelectedExportFields(prev => prev.filter(k => k !== field.key));
+                        }
+                      }}
+                      className="w-4 h-4 accent-blue-600"
+                    />
+                    {field.label}
+                    {disabledForPdf && <span className="text-[10px] text-muted-foreground">(PDF: N/A)</span>}
+                  </label>
+                );
+              })}
             </div>
           </div>
           <DialogFooter>
@@ -2142,15 +2270,19 @@ export function EmployeesPage() {
                 const empList = exportTarget === "all"
                   ? filteredEmployees || []
                   : (filteredEmployees || []).filter((e: any) => selectedIds.includes(e.id));
-                const filename = exportTarget === "all"
-                  ? `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`
-                  : `Selected_Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`;
-                doExport(empList, filename);
+                if (exportFormat === "pdf") {
+                  doExportPdf(empList, exportTarget);
+                } else {
+                  const filename = exportTarget === "all"
+                    ? `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`
+                    : `Selected_Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`;
+                  doExport(empList, filename);
+                }
                 setExportDialogOpen(false);
               }}
-              className="gap-2"
+              className={`gap-2 ${exportFormat === "pdf" ? "bg-red-600 hover:bg-red-700" : ""}`}
             >
-              <Download className="w-4 h-4" />
+              {exportFormat === "pdf" ? <FileText className="w-4 h-4" /> : <Download className="w-4 h-4" />}
               Export ({selectedExportFields.length} fields)
             </Button>
           </DialogFooter>
