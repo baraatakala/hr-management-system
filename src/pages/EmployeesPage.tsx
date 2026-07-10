@@ -786,6 +786,29 @@ export function EmployeesPage() {
     { key: "phone", label: "Phone" },
   ];
 
+  const EXPORT_FIELD_LABEL_KEYS: Record<string, string> = {
+    employee_no: "employees.employeeNo",
+    name_en: "employees.nameEn",
+    name_ar: "employees.nameAr",
+    nationality: "employees.nationality",
+    status: "employees.status",
+    added_date: "employees.addedDate",
+    updated_at: "employees.lastUpdated",
+    company: "employees.company",
+    department: "employees.department",
+    job: "employees.job",
+    passport_no: "employees.passportNo",
+    passport_expiry: "employees.passportExpiry",
+    card_no: "employees.cardNo",
+    card_expiry: "employees.cardExpiry",
+    emirates_id: "employees.emiratesId",
+    emirates_id_expiry: "employees.emiratesIdExpiry",
+    residence_no: "employees.residenceNo",
+    residence_expiry: "employees.residenceExpiry",
+    email: "employees.email",
+    phone: "employees.phone",
+  };
+
   const buildExportRow = (emp: any) => {
     const all: Record<string, string> = {
       employee_no: emp.employee_no || "",
@@ -887,17 +910,9 @@ export function EmployeesPage() {
     });
   };
 
-  const exportToExcel = () => {
-    if (!filteredEmployees || filteredEmployees.length === 0) { alert("No data to export"); return; }
+  const openExportDialog = () => {
+    if (!filteredEmployees || filteredEmployees.length === 0) { alert(t("export.noData")); return; }
     setExportTarget("all");
-    setExportFormat("excel");
-    setExportDialogOpen(true);
-  };
-
-  const exportToPdf = () => {
-    if (!filteredEmployees || filteredEmployees.length === 0) { alert("No data to export"); return; }
-    setExportTarget("all");
-    setExportFormat("pdf");
     setExportDialogOpen(true);
   };
 
@@ -948,26 +963,16 @@ export function EmployeesPage() {
             className="gap-2 flex-1 md:flex-initial h-9 bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900 text-green-700 dark:text-green-300"
           >
             <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">{t("Bulk Import")}</span>
-            <span className="sm:hidden">{t("Import")}</span>
+            <span className="hidden sm:inline">{t("common.bulkImport")}</span>
+            <span className="sm:hidden">{t("common.import")}</span>
           </Button>
           <Button
-            onClick={exportToExcel}
+            onClick={openExportDialog}
             variant="outline"
             className="gap-2 flex-1 md:flex-initial h-9"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{t("filters.exportExcel")}</span>
-            <span className="sm:hidden">Excel</span>
-          </Button>
-          <Button
-            onClick={exportToPdf}
-            variant="outline"
-            className="gap-2 flex-1 md:flex-initial h-9 bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900 text-red-700 dark:text-red-300"
-          >
-            <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Export PDF</span>
-            <span className="sm:hidden">PDF</span>
+            <span>{t("common.export")}</span>
           </Button>
         </div>
       </div>
@@ -987,8 +992,7 @@ export function EmployeesPage() {
             >
               <CheckSquare className="w-4 h-4 text-blue-600 flex-shrink-0" />
               <span className="font-semibold text-xs md:text-sm text-blue-900 dark:text-blue-100">
-                {selectedIds.length}{" "}
-                {selectedIds.length === 1 ? "employee" : "employees"} selected
+                {t("common.selectedCount", { count: selectedIds.length })}
               </span>
             </div>
             <div
@@ -1003,7 +1007,7 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <CheckSquare className="w-4 h-4" />
-                <span className="hidden sm:inline">Activate</span>
+                <span className="hidden sm:inline">{t("common.activate")}</span>
               </Button>
               <Button
                 onClick={handleBulkDeactivate}
@@ -1012,7 +1016,7 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <Square className="w-4 h-4" />
-                <span className="hidden sm:inline">Deactivate</span>
+                <span className="hidden sm:inline">{t("common.deactivate")}</span>
               </Button>
               <Button
                 onClick={handleBulkExport}
@@ -1021,8 +1025,8 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                <span className="hidden sm:inline">Export Selected</span>
-                <span className="sm:hidden">Export</span>
+                <span className="hidden sm:inline">{t("common.exportSelected")}</span>
+                <span className="sm:hidden">{t("common.export")}</span>
               </Button>
               <Button
                 onClick={handleBulkDelete}
@@ -1031,8 +1035,8 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <Trash className="w-4 h-4" />
-                <span className="hidden sm:inline">Delete Selected</span>
-                <span className="sm:hidden">Delete</span>
+                <span className="hidden sm:inline">{t("common.deleteSelected")}</span>
+                <span className="sm:hidden">{t("common.delete")}</span>
               </Button>
               <Button
                 onClick={() => {
@@ -2180,11 +2184,11 @@ export function EmployeesPage() {
                 <FileSpreadsheet className="w-5 h-5 text-green-600" />
               )}
               {exportTarget === "all"
-                ? `Export ${filteredEmployees?.length || 0} Employees`
-                : `Export ${selectedIds.length} Selected Employees`}
+                ? t("export.titleAll", { count: filteredEmployees?.length || 0 })
+                : t("export.titleSelected", { count: selectedIds.length })}
             </DialogTitle>
             <DialogDescription>
-              Choose a format and which fields to include in the export.
+              {t("export.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -2200,7 +2204,7 @@ export function EmployeesPage() {
                 }`}
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                Excel (.xlsx)
+                {t("export.excelFormat")}
               </button>
               <button
                 type="button"
@@ -2212,26 +2216,27 @@ export function EmployeesPage() {
                 }`}
               >
                 <FileText className="w-4 h-4" />
-                PDF Report
+                {t("export.pdfFormat")}
               </button>
             </div>
             {exportFormat === "pdf" && (
               <p className="text-xs text-muted-foreground -mt-1">
-                Includes a summary of active/inactive counts and passport/card/Emirates ID/residence status, color-coded by expiry. Arabic name fields may not render in PDF — use Excel for Arabic reports.
+                {t("export.pdfNote")}
               </p>
             )}
             <div className="flex gap-2 mb-2">
               <Button size="sm" variant="outline" onClick={() => setSelectedExportFields(EXPORT_FIELD_DEFS.map(d => d.key))}>
-                Select All
+                {t("common.selectAll")}
               </Button>
               <Button size="sm" variant="outline" onClick={() => setSelectedExportFields([])}>
-                Clear All
+                {t("filters.clearAll")}
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
               {EXPORT_FIELD_DEFS.map((field) => {
                 const isArabicField = field.key === "name_ar";
                 const disabledForPdf = exportFormat === "pdf" && isArabicField;
+                const displayLabel = t(EXPORT_FIELD_LABEL_KEYS[field.key] || field.key);
                 return (
                   <label
                     key={field.key}
@@ -2240,7 +2245,7 @@ export function EmployeesPage() {
                         ? "opacity-40 cursor-not-allowed"
                         : "hover:bg-muted cursor-pointer"
                     }`}
-                    title={disabledForPdf ? "Arabic text isn't supported in PDF reports" : undefined}
+                    title={disabledForPdf ? t("export.pdfFieldTooltip") : undefined}
                   >
                     <input
                       type="checkbox"
@@ -2255,18 +2260,18 @@ export function EmployeesPage() {
                       }}
                       className="w-4 h-4 accent-blue-600"
                     />
-                    {field.label}
-                    {disabledForPdf && <span className="text-[10px] text-muted-foreground">(PDF: N/A)</span>}
+                    {displayLabel}
+                    {disabledForPdf && <span className="text-[10px] text-muted-foreground">{t("export.pdfFieldUnavailable")}</span>}
                   </label>
                 );
               })}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button
               onClick={() => {
-                if (selectedExportFields.length === 0) { alert("Please select at least one field"); return; }
+                if (selectedExportFields.length === 0) { alert(t("export.selectFieldWarning")); return; }
                 const empList = exportTarget === "all"
                   ? filteredEmployees || []
                   : (filteredEmployees || []).filter((e: any) => selectedIds.includes(e.id));
@@ -2283,7 +2288,7 @@ export function EmployeesPage() {
               className={`gap-2 ${exportFormat === "pdf" ? "bg-red-600 hover:bg-red-700" : ""}`}
             >
               {exportFormat === "pdf" ? <FileText className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-              Export ({selectedExportFields.length} fields)
+              {t("export.button", { count: selectedExportFields.length })}
             </Button>
           </DialogFooter>
         </DialogContent>

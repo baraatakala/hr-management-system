@@ -22,6 +22,13 @@ const resources = {
       "common.no": "No",
       "common.hide": "Hide",
       "common.show": "Show",
+      "common.bulkImport": "Bulk Import",
+      "common.activate": "Activate",
+      "common.deactivate": "Deactivate",
+      "common.exportSelected": "Export Selected",
+      "common.deleteSelected": "Delete Selected",
+      "common.selectAll": "Select All",
+      "common.selectedCount": "{{count}} selected",
 
       // Auth
       "auth.login": "Login",
@@ -80,8 +87,23 @@ const resources = {
       "employees.phone": "Phone",
       "employees.addedDate": "Added Date",
       "employees.isActive": "Active Employee",
+      "employees.status": "Status",
+      "employees.lastUpdated": "Last Updated",
       "employees.deleteConfirm":
         "Are you sure you want to delete this employee?",
+
+      // Export dialog
+      "export.titleAll": "Export {{count}} Employees",
+      "export.titleSelected": "Export {{count}} Selected Employees",
+      "export.description": "Choose a format and which fields to include in the export.",
+      "export.excelFormat": "Excel (.xlsx)",
+      "export.pdfFormat": "PDF Report",
+      "export.pdfNote": "Includes a summary of active/inactive counts and passport/card/Emirates ID/residence status, color-coded by expiry. Arabic name fields aren't supported in PDF — use Excel for Arabic reports.",
+      "export.pdfFieldUnavailable": "(PDF: N/A)",
+      "export.pdfFieldTooltip": "Arabic text isn't supported in PDF reports",
+      "export.button": "Export ({{count}} fields)",
+      "export.selectFieldWarning": "Please select at least one field",
+      "export.noData": "No data to export",
 
       // Table Column Headers
       "table.employeeNo": "Employee No",
@@ -192,6 +214,13 @@ const resources = {
       "common.no": "لا",
       "common.hide": "إخفاء",
       "common.show": "إظهار",
+      "common.bulkImport": "استيراد جماعي",
+      "common.activate": "تفعيل",
+      "common.deactivate": "تعطيل",
+      "common.exportSelected": "تصدير المحدد",
+      "common.deleteSelected": "حذف المحدد",
+      "common.selectAll": "تحديد الكل",
+      "common.selectedCount": "{{count}} محدد",
 
       // Auth
       "auth.login": "تسجيل الدخول",
@@ -250,7 +279,22 @@ const resources = {
       "employees.phone": "الهاتف",
       "employees.addedDate": "تاريخ الإضافة",
       "employees.isActive": "موظف نشط",
+      "employees.status": "الحالة",
+      "employees.lastUpdated": "آخر تحديث",
       "employees.deleteConfirm": "هل أنت متأكد من حذف هذا الموظف؟",
+
+      // Export dialog
+      "export.titleAll": "تصدير {{count}} موظف",
+      "export.titleSelected": "تصدير {{count}} موظف محدد",
+      "export.description": "اختر التنسيق والحقول المراد تضمينها في التصدير.",
+      "export.excelFormat": "إكسل (.xlsx)",
+      "export.pdfFormat": "تقرير PDF",
+      "export.pdfNote": "يتضمن ملخصاً لعدد الموظفين النشطين/غير النشطين وحالة جواز السفر/البطاقة/الهوية/الإقامة ملونة حسب تاريخ الانتهاء. حقول الاسم بالعربية غير مدعومة في PDF — استخدم إكسل للتقارير العربية.",
+      "export.pdfFieldUnavailable": "(PDF: غير متوفر)",
+      "export.pdfFieldTooltip": "النص العربي غير مدعوم في تقارير PDF",
+      "export.button": "تصدير ({{count}} حقل)",
+      "export.selectFieldWarning": "يرجى اختيار حقل واحد على الأقل",
+      "export.noData": "لا توجد بيانات للتصدير",
 
       // Table Column Headers
       "table.employeeNo": "رقم الموظف",
