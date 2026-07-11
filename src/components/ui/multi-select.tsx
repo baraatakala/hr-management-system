@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 interface MultiSelectOption {
   value: string;
   label: string;
+  /** "missing" renders the option with distinct styling (dashed border,
+   *  amber, italic) to visually separate it from real data values — used
+   *  for a pinned "records with this field empty" choice. */
+  variant?: "default" | "missing";
 }
 
 interface MultiSelectProps {
@@ -215,28 +219,51 @@ export function MultiSelect({
               <div className="py-6 text-center text-sm text-muted-foreground">{emptyText}</div>
             ) : (
               <div className="space-y-0.5 py-1">
-                {filteredOptions.map((option) => {
+                {filteredOptions.map((option, idx) => {
                   const checked = values.includes(option.value);
+                  const isMissing = option.variant === "missing";
+                  // Divider after the pinned "missing" option so it reads as
+                  // separate from the real values that follow it.
+                  const nextIsRegular =
+                    isMissing && filteredOptions[idx + 1]?.variant !== "missing";
                   return (
-                    <button
-                      key={option.value}
-                      onClick={() => toggleValue(option.value)}
-                      className={cn(
-                        "relative flex w-full cursor-pointer items-center rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground touch-manipulation",
-                        checked && "bg-accent/60"
-                      )}
-                      type="button"
-                    >
-                      <span
+                    <React.Fragment key={option.value}>
+                      <button
+                        onClick={() => toggleValue(option.value)}
                         className={cn(
-                          "mr-2 rtl:mr-0 rtl:ml-2 flex h-4 w-4 items-center justify-center rounded border shrink-0 transition-colors",
-                          checked ? "bg-primary border-primary" : "border-input"
+                          "relative flex w-full cursor-pointer items-center rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground touch-manipulation",
+                          checked && !isMissing && "bg-accent/60",
+                          isMissing &&
+                            "border border-dashed border-amber-400/60 dark:border-amber-500/40",
+                          isMissing && checked && "bg-amber-100 dark:bg-amber-950/40"
                         )}
+                        type="button"
                       >
-                        {checked && <Check className="h-3 w-3 text-primary-foreground" />}
-                      </span>
-                      <span className="truncate">{option.label}</span>
-                    </button>
+                        <span
+                          className={cn(
+                            "mr-2 rtl:mr-0 rtl:ml-2 flex h-4 w-4 items-center justify-center rounded border shrink-0 transition-colors",
+                            checked
+                              ? isMissing
+                                ? "bg-amber-500 border-amber-500"
+                                : "bg-primary border-primary"
+                              : "border-input"
+                          )}
+                        >
+                          {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+                        </span>
+                        <span
+                          className={cn(
+                            "truncate",
+                            isMissing && "italic text-amber-700 dark:text-amber-400"
+                          )}
+                        >
+                          {option.label}
+                        </span>
+                      </button>
+                      {nextIsRegular && (
+                        <div className="my-1 border-t border-dashed" />
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </div>

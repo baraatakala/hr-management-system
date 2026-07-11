@@ -125,6 +125,23 @@ function EmployeeAvatar({
 }
 
 type ViewMode = "grid" | "table";
+
+// Sentinel value for the pinned "Missing / Empty" option in the Nationality,
+// Company, Job, and Department filters — lets users find records with a
+// null/blank value in that field, which a normal value-list can't express.
+const MISSING_VALUE = "__missing__";
+
+// filterValues: selected sentinel(s)/id(s) from the MultiSelect. actualValue:
+// the employee's raw field (nationality string, or *_id foreign key).
+function matchesFieldFilter(
+  filterValues: string[],
+  actualValue: string | null | undefined
+): boolean {
+  if (filterValues.length === 0) return true;
+  if (!actualValue) return filterValues.includes(MISSING_VALUE);
+  return filterValues.includes(actualValue);
+}
+
 type StatusFilter =
   | "all"
   | "valid"
@@ -432,21 +449,16 @@ export function EmployeesPage() {
         emp.jobs?.name_ar?.includes(searchOriginal);
 
       // Nationality filter
-      const matchesNationality =
-        nationalityFilter.length === 0 ||
-        nationalityFilter.includes(emp.nationality);
+      const matchesNationality = matchesFieldFilter(nationalityFilter, emp.nationality);
 
       // Company filter
-      const matchesCompany =
-        companyFilter.length === 0 || companyFilter.includes(emp.company_id);
+      const matchesCompany = matchesFieldFilter(companyFilter, emp.company_id);
 
       // Department filter
-      const matchesDepartment =
-        departmentFilter.length === 0 ||
-        departmentFilter.includes(emp.department_id);
+      const matchesDepartment = matchesFieldFilter(departmentFilter, emp.department_id);
 
       // Job filter
-      const matchesJob = jobFilter.length === 0 || jobFilter.includes(emp.job_id);
+      const matchesJob = matchesFieldFilter(jobFilter, emp.job_id);
 
       // Active status filter
       const matchesActiveStatus =
@@ -860,24 +872,26 @@ export function EmployeesPage() {
   // Human-readable summary of active filters, reused in the PDF report header
   const buildFiltersSummary = (): string[] => {
     const parts: string[] = [];
+    const missingLabel = t("filters.missingValue");
+    const friendly = (v: string) => (v === MISSING_VALUE ? missingLabel : v);
     if (searchTerm) parts.push(`Search: "${searchTerm}"`);
-    if (nationalityFilter.length) parts.push(`Nationality: ${nationalityFilter.join(", ")}`);
+    if (nationalityFilter.length) parts.push(`Nationality: ${nationalityFilter.map(friendly).join(", ")}`);
     if (companyFilter.length) {
-      const names = companies
-        .filter((c: any) => companyFilter.includes(c.id))
-        .map((c: any) => c.name_en);
+      const names = companyFilter.map((id) =>
+        id === MISSING_VALUE ? missingLabel : companies.find((c: any) => c.id === id)?.name_en || id
+      );
       parts.push(`Company: ${names.join(", ")}`);
     }
     if (departmentFilter.length) {
-      const names = departments
-        .filter((d: any) => departmentFilter.includes(d.id))
-        .map((d: any) => d.name_en);
+      const names = departmentFilter.map((id) =>
+        id === MISSING_VALUE ? missingLabel : departments.find((d: any) => d.id === id)?.name_en || id
+      );
       parts.push(`Department: ${names.join(", ")}`);
     }
     if (jobFilter.length) {
-      const names = jobs
-        .filter((j: any) => jobFilter.includes(j.id))
-        .map((j: any) => j.name_en);
+      const names = jobFilter.map((id) =>
+        id === MISSING_VALUE ? missingLabel : jobs.find((j: any) => j.id === id)?.name_en || id
+      );
       parts.push(`Job: ${names.join(", ")}`);
     }
     if (activeStatusFilter !== "all") parts.push(`Status: ${activeStatusFilter}`);
@@ -1170,7 +1184,7 @@ export function EmployeesPage() {
                     {t("employees.nationality")}
                     {nationalityFilter.length > 1
                       ? ` (${nationalityFilter.length})`
-                      : `: ${nationalityFilter[0]}`}
+                      : `: ${nationalityFilter[0] === MISSING_VALUE ? t("filters.missingValue") : nationalityFilter[0]}`}
                     <button
                       onClick={() => setNationalityFilter([])}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
@@ -1250,10 +1264,13 @@ export function EmployeesPage() {
                 <MultiSelect
                   values={nationalityFilter}
                   onValuesChange={setNationalityFilter}
-                  options={nationalities.map((nat: any) => ({
-                    value: nat.name_en,
-                    label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
-                  }))}
+                  options={[
+                    { value: MISSING_VALUE, label: t("filters.missingValue"), variant: "missing" },
+                    ...nationalities.map((nat: any) => ({
+                      value: nat.name_en,
+                      label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
+                    })),
+                  ]}
                   allLabel={t("filters.allNationalities")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                 />
@@ -1267,10 +1284,13 @@ export function EmployeesPage() {
                 <MultiSelect
                   values={companyFilter}
                   onValuesChange={setCompanyFilter}
-                  options={companies.map((company) => ({
-                    value: company.id,
-                    label: i18n.language === "ar" ? company.name_ar : company.name_en,
-                  }))}
+                  options={[
+                    { value: MISSING_VALUE, label: t("filters.missingValue"), variant: "missing" },
+                    ...companies.map((company) => ({
+                      value: company.id,
+                      label: i18n.language === "ar" ? company.name_ar : company.name_en,
+                    })),
+                  ]}
                   allLabel={t("filters.allCompanies")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                 />
@@ -1284,10 +1304,13 @@ export function EmployeesPage() {
                 <MultiSelect
                   values={jobFilter}
                   onValuesChange={setJobFilter}
-                  options={jobs.map((job) => ({
-                    value: job.id,
-                    label: i18n.language === "ar" ? job.name_ar : job.name_en,
-                  }))}
+                  options={[
+                    { value: MISSING_VALUE, label: t("filters.missingValue"), variant: "missing" },
+                    ...jobs.map((job) => ({
+                      value: job.id,
+                      label: i18n.language === "ar" ? job.name_ar : job.name_en,
+                    })),
+                  ]}
                   allLabel={t("filters.allJobs")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                 />
@@ -1301,10 +1324,13 @@ export function EmployeesPage() {
                 <MultiSelect
                   values={departmentFilter}
                   onValuesChange={setDepartmentFilter}
-                  options={departments.map((dept) => ({
-                    value: dept.id,
-                    label: i18n.language === "ar" ? dept.name_ar : dept.name_en,
-                  }))}
+                  options={[
+                    { value: MISSING_VALUE, label: t("filters.missingValue"), variant: "missing" },
+                    ...departments.map((dept) => ({
+                      value: dept.id,
+                      label: i18n.language === "ar" ? dept.name_ar : dept.name_en,
+                    })),
+                  ]}
                   allLabel={t("filters.allDepartments")}
                   searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
                 />

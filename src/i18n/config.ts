@@ -161,6 +161,7 @@ const resources = {
       "filters.searchTip":
         "\ud83d\udca1 Tip: Search works across all fields - names, documents, contact info",
       "filters.active": "Active",
+      "filters.missingValue": "⚠ Missing / Empty",
       "filters.noEmployeesFound": "No employees found",
       "filters.adjustFilters": "Try adjusting your filters or search terms",
 
@@ -356,6 +357,7 @@ const resources = {
       "filters.searchTip":
         "\ud83d\udca1 نصيحة: يعمل البحث عبر جميع الحقول - الأسماء، المستندات، معلومات الاتصال",
       "filters.active": "نشط",
+      "filters.missingValue": "⚠ مفقود / فارغ",
       "filters.noEmployeesFound": "لا يوجد موظفون",
       "filters.adjustFilters": "حاول تعديل الفلاتر أو مصطلحات البحث",
 
