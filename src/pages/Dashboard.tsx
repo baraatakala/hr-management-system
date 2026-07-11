@@ -213,40 +213,31 @@ export function Dashboard() {
       const missingResidenceDate =
         filteredEmployees?.filter((emp) => !emp.residence_expiry).length || 0;
 
-      // Expiring soon (within 30 days)
+      // Expiring soon (0-30 days, inclusive — matches the Employees page and
+      // PDF export's day-diff logic, rather than isAfter/isBefore "day" which
+      // silently excludes anything expiring exactly today or exactly on day 30)
+      const isExpiringSoon = (expiry: string | null) => {
+        if (!expiry) return false;
+        const days = dayjs(expiry).diff(dayjs(), "day");
+        return days >= 0 && days <= 30;
+      };
+
       const expiringSoonPassports =
-        filteredEmployees?.filter(
-          (emp) =>
-            emp.passport_expiry &&
-            dayjs(emp.passport_expiry).isAfter(dayjs(), "day") &&
-            dayjs(emp.passport_expiry).isBefore(dayjs().add(30, "day"), "day")
-        ).length || 0;
+        filteredEmployees?.filter((emp) => isExpiringSoon(emp.passport_expiry))
+          .length || 0;
 
       const expiringSoonCards =
-        filteredEmployees?.filter(
-          (emp) =>
-            emp.card_expiry &&
-            dayjs(emp.card_expiry).isAfter(dayjs(), "day") &&
-            dayjs(emp.card_expiry).isBefore(dayjs().add(30, "day"), "day")
-        ).length || 0;
+        filteredEmployees?.filter((emp) => isExpiringSoon(emp.card_expiry))
+          .length || 0;
 
       const expiringSoonEmiratesId =
-        filteredEmployees?.filter(
-          (emp) =>
-            emp.emirates_id_expiry &&
-            dayjs(emp.emirates_id_expiry).isAfter(dayjs(), "day") &&
-            dayjs(emp.emirates_id_expiry).isBefore(
-              dayjs().add(30, "day"),
-              "day"
-            )
+        filteredEmployees?.filter((emp) =>
+          isExpiringSoon(emp.emirates_id_expiry)
         ).length || 0;
 
       const expiringSoonResidence =
-        filteredEmployees?.filter(
-          (emp) =>
-            emp.residence_expiry &&
-            dayjs(emp.residence_expiry).isAfter(dayjs(), "day") &&
-            dayjs(emp.residence_expiry).isBefore(dayjs().add(30, "day"), "day")
+        filteredEmployees?.filter((emp) =>
+          isExpiringSoon(emp.residence_expiry)
         ).length || 0;
 
       const totalExpiringDocs =
