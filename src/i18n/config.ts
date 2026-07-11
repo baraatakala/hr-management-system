@@ -104,6 +104,10 @@ const resources = {
       "export.button": "Export ({{count}} fields)",
       "export.selectFieldWarning": "Please select at least one field",
       "export.noData": "No data to export",
+      "export.includePhotos": "Include employee photos",
+      "export.includePhotosNote": "Fetches each photo from Supabase Storage and embeds a small thumbnail. Off by default — uses extra bandwidth and takes longer, especially for large exports.",
+      "export.fetchingPhotos": "Loading photos ({{loaded}}/{{total}})",
+      "export.generating": "Generating...",
 
       // Table Column Headers
       "table.employeeNo": "Employee No",
@@ -295,6 +299,10 @@ const resources = {
       "export.button": "تصدير ({{count}} حقل)",
       "export.selectFieldWarning": "يرجى اختيار حقل واحد على الأقل",
       "export.noData": "لا توجد بيانات للتصدير",
+      "export.includePhotos": "تضمين صور الموظفين",
+      "export.includePhotosNote": "يجلب كل صورة من Supabase Storage ويدرج صورة مصغرة. معطل افتراضياً — يستهلك بيانات إضافية ويستغرق وقتاً أطول، خاصة في التصديرات الكبيرة.",
+      "export.fetchingPhotos": "جارٍ تحميل الصور ({{loaded}}/{{total}})",
+      "export.generating": "جارٍ الإنشاء...",
 
       // Table Column Headers
       "table.employeeNo": "رقم الموظف",

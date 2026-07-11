@@ -3,13 +3,11 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VoiceInput } from "@/components/ui/voice-input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Dialog,
   DialogContent,
@@ -53,12 +51,10 @@ import {
   Calendar,
   Camera,
   Upload,
-  FileText,
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import * as XLSX from "xlsx";
-import { exportEmployeesToPdf } from "@/utils/pdfExport";
 
 // Enable relative time plugin for dayjs
 dayjs.extend(relativeTime);
@@ -88,42 +84,6 @@ interface Employee {
   avatar_url: string | null;
 }
 
-function EmployeeAvatar({
-  avatarUrl,
-  initial,
-  sizeClass,
-  textClass,
-}: {
-  avatarUrl: string | null | undefined;
-  initial: string;
-  sizeClass: string;
-  textClass: string;
-}) {
-  const [failed, setFailed] = React.useState(false);
-
-  // Reset failed state if the URL changes (e.g. after a new upload)
-  React.useEffect(() => {
-    setFailed(false);
-  }, [avatarUrl]);
-
-  return (
-    <div
-      className={`${sizeClass} rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold ${textClass}`}
-    >
-      {avatarUrl && !failed ? (
-        <img
-          src={avatarUrl}
-          alt=""
-          className="w-full h-full object-cover"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        initial?.toUpperCase() || "?"
-      )}
-    </div>
-  );
-}
-
 type ViewMode = "grid" | "table";
 type StatusFilter =
   | "all"
@@ -136,7 +96,6 @@ type StatusFilter =
 
 export function EmployeesPage() {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -146,7 +105,6 @@ export function EmployeesPage() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportTarget, setExportTarget] = useState<"all" | "selected">("all");
-  const [exportFormat, setExportFormat] = useState<"excel" | "pdf">("excel");
   const [selectedExportFields, setSelectedExportFields] = useState<string[]>([
     "employee_no", "name_en", "name_ar", "nationality", "status",
     "company", "department", "job", "added_date",
@@ -159,28 +117,29 @@ export function EmployeesPage() {
   const isRTL = i18n.language === "ar";
 
   // Filter states
-  const [nationalityFilter, setNationalityFilter] = useState<string[]>([]);
-  const [companyFilter, setCompanyFilter] = useState<string[]>([]);
-  const [departmentFilter, setDepartmentFilter] = useState<string[]>([]);
-  const [jobFilter, setJobFilter] = useState<string[]>([]);
+  const [nationalityFilter, setNationalityFilter] = useState<string>("all");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [jobFilter, setJobFilter] = useState<string>("all");
   const [activeStatusFilter, setActiveStatusFilter] = useState<string>("all"); // active, inactive, all
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all"); // all, 30days, 60days, 90days, custom
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
   const [passportStatusFilter, setPassportStatusFilter] =
-    useState<StatusFilter[]>([]);
-  const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter[]>([]);
+    useState<StatusFilter>("all");
+  const [cardStatusFilter, setCardStatusFilter] = useState<StatusFilter>("all");
   const [emiratesIdStatusFilter, setEmiratesIdStatusFilter] =
-    useState<StatusFilter[]>([]);
-  const [residenceStatusFilter, setResidenceStatusFilter] = useState<StatusFilter[]>([]);
+    useState<StatusFilter>("all");
+  const [residenceStatusFilter, setResidenceStatusFilter] =
+    useState<StatusFilter>("all");
 
   // Apply URL parameters on mount
   useEffect(() => {
     const search = searchParams.get("search");
-    const passport = searchParams.get("passport");
-    const card = searchParams.get("card");
-    const emiratesId = searchParams.get("emiratesId");
-    const residence = searchParams.get("residence");
+    const passport = searchParams.get("passport") as StatusFilter;
+    const card = searchParams.get("card") as StatusFilter;
+    const emiratesId = searchParams.get("emiratesId") as StatusFilter;
+    const residence = searchParams.get("residence") as StatusFilter;
     const company = searchParams.get("company");
     const department = searchParams.get("department");
     const job = searchParams.get("job");
@@ -190,31 +149,30 @@ export function EmployeesPage() {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    // Splits a comma-separated URL param into an array, normalizing the legacy
-    // "missing" value (from dashboard links) to "missing_number"
-    const parseStatusParam = (raw: string | null): StatusFilter[] => {
-      if (!raw) return [];
-      return raw
-        .split(",")
-        .filter(Boolean)
-        .map((v) => (v === "missing" ? "missing_number" : v)) as StatusFilter[];
-    };
-    const parseListParam = (raw: string | null): string[] =>
-      raw ? raw.split(",").filter(Boolean) : [];
-
     // Apply search term from URL (from audit trail navigation)
     if (search) setSearchTerm(search);
 
-    if (passport) setPassportStatusFilter(parseStatusParam(passport));
-    if (card) setCardStatusFilter(parseStatusParam(card));
-    if (emiratesId) setEmiratesIdStatusFilter(parseStatusParam(emiratesId));
-    if (residence) setResidenceStatusFilter(parseStatusParam(residence));
+    // Convert "missing" from URL to "missing_number" for filtering by document number
+    // Keep "missing_date" as is for filtering by missing expiry date
+    if (passport)
+      setPassportStatusFilter(
+        passport === "missing" ? "missing_number" : passport
+      );
+    if (card) setCardStatusFilter(card === "missing" ? "missing_number" : card);
+    if (emiratesId)
+      setEmiratesIdStatusFilter(
+        emiratesId === "missing" ? "missing_number" : emiratesId
+      );
+    if (residence)
+      setResidenceStatusFilter(
+        residence === "missing" ? "missing_number" : residence
+      );
 
     // Apply dashboard filters
-    if (company) setCompanyFilter(parseListParam(company));
-    if (department) setDepartmentFilter(parseListParam(department));
-    if (job) setJobFilter(parseListParam(job));
-    if (nationality) setNationalityFilter(parseListParam(nationality));
+    if (company) setCompanyFilter(company);
+    if (department) setDepartmentFilter(department);
+    if (job) setJobFilter(job);
+    if (nationality) setNationalityFilter(nationality);
     if (status) setActiveStatusFilter(status); // active, inactive, or all
 
     // Apply date range filters
@@ -333,6 +291,16 @@ export function EmployeesPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("employees").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+  });
+
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -430,20 +398,18 @@ export function EmployeesPage() {
 
       // Nationality filter
       const matchesNationality =
-        nationalityFilter.length === 0 ||
-        nationalityFilter.includes(emp.nationality);
+        nationalityFilter === "all" || emp.nationality === nationalityFilter;
 
       // Company filter
       const matchesCompany =
-        companyFilter.length === 0 || companyFilter.includes(emp.company_id);
+        companyFilter === "all" || emp.company_id === companyFilter;
 
       // Department filter
       const matchesDepartment =
-        departmentFilter.length === 0 ||
-        departmentFilter.includes(emp.department_id);
+        departmentFilter === "all" || emp.department_id === departmentFilter;
 
       // Job filter
-      const matchesJob = jobFilter.length === 0 || jobFilter.includes(emp.job_id);
+      const matchesJob = jobFilter === "all" || emp.job_id === jobFilter;
 
       // Active status filter
       const matchesActiveStatus =
@@ -454,39 +420,35 @@ export function EmployeesPage() {
       // Passport status filter
       const passportStatus = getDocumentStatus(emp.passport_expiry);
       const matchesPassport =
-        passportStatusFilter.length === 0 ||
-        (passportStatusFilter.includes("missing_number") && !emp.passport_no) ||
-        (passportStatusFilter.includes("missing_date") && !emp.passport_expiry) ||
-        (passportStatus !== null && passportStatusFilter.includes(passportStatus));
+        passportStatusFilter === "all" ||
+        (passportStatusFilter === "missing_number" && !emp.passport_no) ||
+        (passportStatusFilter === "missing_date" && !emp.passport_expiry) ||
+        (passportStatus !== null && passportStatus === passportStatusFilter);
 
       // Card status filter
       const cardStatus = getDocumentStatus(emp.card_expiry);
       const matchesCard =
-        cardStatusFilter.length === 0 ||
-        (cardStatusFilter.includes("missing_number") && !emp.card_no) ||
-        (cardStatusFilter.includes("missing_date") && !emp.card_expiry) ||
-        (cardStatus !== null && cardStatusFilter.includes(cardStatus));
+        cardStatusFilter === "all" ||
+        (cardStatusFilter === "missing_number" && !emp.card_no) ||
+        (cardStatusFilter === "missing_date" && !emp.card_expiry) ||
+        (cardStatus !== null && cardStatus === cardStatusFilter);
 
       // Emirates ID status filter
       const emiratesIdStatus = getDocumentStatus(emp.emirates_id_expiry);
       const matchesEmiratesId =
-        emiratesIdStatusFilter.length === 0 ||
-        (emiratesIdStatusFilter.includes("missing_number") && !emp.emirates_id) ||
-        (emiratesIdStatusFilter.includes("missing_date") &&
-          !emp.emirates_id_expiry) ||
+        emiratesIdStatusFilter === "all" ||
+        (emiratesIdStatusFilter === "missing_number" && !emp.emirates_id) ||
+        (emiratesIdStatusFilter === "missing_date" && !emp.emirates_id_expiry) ||
         (emiratesIdStatus !== null &&
-          emiratesIdStatusFilter.includes(emiratesIdStatus));
+          emiratesIdStatus === emiratesIdStatusFilter);
 
       // Residence status filter
       const residenceStatus = getDocumentStatus(emp.residence_expiry);
       const matchesResidence =
-        residenceStatusFilter.length === 0 ||
-        (residenceStatusFilter.includes("missing_number") &&
-          !emp.residence_no) ||
-        (residenceStatusFilter.includes("missing_date") &&
-          !emp.residence_expiry) ||
-        (residenceStatus !== null &&
-          residenceStatusFilter.includes(residenceStatus));
+        residenceStatusFilter === "all" ||
+        (residenceStatusFilter === "missing_number" && !emp.residence_no) ||
+        (residenceStatusFilter === "missing_date" && !emp.residence_expiry) ||
+        (residenceStatus !== null && residenceStatus === residenceStatusFilter);
 
       // Date range filter (added_date)
       let matchesDateRange = true;
@@ -747,15 +709,15 @@ export function EmployeesPage() {
 
   const clearAllFilters = () => {
     setSearchTerm("");
-    setNationalityFilter([]);
-    setCompanyFilter([]);
-    setDepartmentFilter([]);
-    setJobFilter([]);
+    setNationalityFilter("all");
+    setCompanyFilter("all");
+    setDepartmentFilter("all");
+    setJobFilter("all");
     setActiveStatusFilter("all");
-    setPassportStatusFilter([]);
-    setCardStatusFilter([]);
-    setEmiratesIdStatusFilter([]);
-    setResidenceStatusFilter([]);
+    setPassportStatusFilter("all");
+    setCardStatusFilter("all");
+    setEmiratesIdStatusFilter("all");
+    setResidenceStatusFilter("all");
     setDateRangeFilter("all");
     setCustomStartDate("");
     setCustomEndDate("");
@@ -785,29 +747,6 @@ export function EmployeesPage() {
     { key: "email", label: "Email" },
     { key: "phone", label: "Phone" },
   ];
-
-  const EXPORT_FIELD_LABEL_KEYS: Record<string, string> = {
-    employee_no: "employees.employeeNo",
-    name_en: "employees.nameEn",
-    name_ar: "employees.nameAr",
-    nationality: "employees.nationality",
-    status: "employees.status",
-    added_date: "employees.addedDate",
-    updated_at: "employees.lastUpdated",
-    company: "employees.company",
-    department: "employees.department",
-    job: "employees.job",
-    passport_no: "employees.passportNo",
-    passport_expiry: "employees.passportExpiry",
-    card_no: "employees.cardNo",
-    card_expiry: "employees.cardExpiry",
-    emirates_id: "employees.emiratesId",
-    emirates_id_expiry: "employees.emiratesIdExpiry",
-    residence_no: "employees.residenceNo",
-    residence_expiry: "employees.residenceExpiry",
-    email: "employees.email",
-    phone: "employees.phone",
-  };
 
   const buildExportRow = (emp: any) => {
     const all: Record<string, string> = {
@@ -854,64 +793,8 @@ export function EmployeesPage() {
     XLSX.writeFile(wb, filename);
   };
 
-  // Human-readable summary of active filters, reused in the PDF report header
-  const buildFiltersSummary = (): string[] => {
-    const parts: string[] = [];
-    if (searchTerm) parts.push(`Search: "${searchTerm}"`);
-    if (nationalityFilter.length) parts.push(`Nationality: ${nationalityFilter.join(", ")}`);
-    if (companyFilter.length) {
-      const names = companies
-        .filter((c: any) => companyFilter.includes(c.id))
-        .map((c: any) => c.name_en);
-      parts.push(`Company: ${names.join(", ")}`);
-    }
-    if (departmentFilter.length) {
-      const names = departments
-        .filter((d: any) => departmentFilter.includes(d.id))
-        .map((d: any) => d.name_en);
-      parts.push(`Department: ${names.join(", ")}`);
-    }
-    if (jobFilter.length) {
-      const names = jobs
-        .filter((j: any) => jobFilter.includes(j.id))
-        .map((j: any) => j.name_en);
-      parts.push(`Job: ${names.join(", ")}`);
-    }
-    if (activeStatusFilter !== "all") parts.push(`Status: ${activeStatusFilter}`);
-    if (dateRangeFilter !== "all") {
-      parts.push(
-        `Added: ${
-        dateRangeFilter === "custom"
-        ? `${customStartDate || "?"} to ${customEndDate || "?"}`
-        : dateRangeFilter
-        }`
-      );
-    }
-    if (passportStatusFilter.length) parts.push(`Passport: ${passportStatusFilter.join(", ")}`);
-    if (cardStatusFilter.length) parts.push(`Card: ${cardStatusFilter.join(", ")}`);
-    if (emiratesIdStatusFilter.length) parts.push(`Emirates ID: ${emiratesIdStatusFilter.join(", ")}`);
-    if (residenceStatusFilter.length) parts.push(`Residence: ${residenceStatusFilter.join(", ")}`);
-    return parts;
-  };
-
-  const doExportPdf = (empList: any[], target: "all" | "selected") => {
-    if (!empList || empList.length === 0) { alert("No data to export"); return; }
-    const fieldDefs = EXPORT_FIELD_DEFS.filter((d) => selectedExportFields.includes(d.key) && d.key !== "name_ar");
-    exportEmployeesToPdf({
-      employees: empList,
-      fields: fieldDefs,
-      title: "Employee Directory Report",
-      subtitle:
-        target === "all"
-          ? `All Employees${filteredEmployees && filteredEmployees.length !== employees?.length ? " (filtered)" : ""}`
-          : `Selected Employees (${empList.length})`,
-      filtersApplied: target === "all" ? buildFiltersSummary() : [],
-      generatedBy: user?.email || undefined,
-    });
-  };
-
-  const openExportDialog = () => {
-    if (!filteredEmployees || filteredEmployees.length === 0) { alert(t("export.noData")); return; }
+  const exportToExcel = () => {
+    if (!filteredEmployees || filteredEmployees.length === 0) { alert("No data to export"); return; }
     setExportTarget("all");
     setExportDialogOpen(true);
   };
@@ -963,16 +846,17 @@ export function EmployeesPage() {
             className="gap-2 flex-1 md:flex-initial h-9 bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900 text-green-700 dark:text-green-300"
           >
             <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">{t("common.bulkImport")}</span>
-            <span className="sm:hidden">{t("common.import")}</span>
+            <span className="hidden sm:inline">{t("Bulk Import")}</span>
+            <span className="sm:hidden">{t("Import")}</span>
           </Button>
           <Button
-            onClick={openExportDialog}
+            onClick={exportToExcel}
             variant="outline"
             className="gap-2 flex-1 md:flex-initial h-9"
           >
             <Download className="w-4 h-4" />
-            <span>{t("common.export")}</span>
+            <span className="hidden sm:inline">{t("filters.exportExcel")}</span>
+            <span className="sm:hidden">{t("common.export")}</span>
           </Button>
         </div>
       </div>
@@ -992,7 +876,8 @@ export function EmployeesPage() {
             >
               <CheckSquare className="w-4 h-4 text-blue-600 flex-shrink-0" />
               <span className="font-semibold text-xs md:text-sm text-blue-900 dark:text-blue-100">
-                {t("common.selectedCount", { count: selectedIds.length })}
+                {selectedIds.length}{" "}
+                {selectedIds.length === 1 ? "employee" : "employees"} selected
               </span>
             </div>
             <div
@@ -1007,7 +892,7 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <CheckSquare className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("common.activate")}</span>
+                <span className="hidden sm:inline">Activate</span>
               </Button>
               <Button
                 onClick={handleBulkDeactivate}
@@ -1016,7 +901,7 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <Square className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("common.deactivate")}</span>
+                <span className="hidden sm:inline">Deactivate</span>
               </Button>
               <Button
                 onClick={handleBulkExport}
@@ -1025,8 +910,8 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("common.exportSelected")}</span>
-                <span className="sm:hidden">{t("common.export")}</span>
+                <span className="hidden sm:inline">Export Selected</span>
+                <span className="sm:hidden">Export</span>
               </Button>
               <Button
                 onClick={handleBulkDelete}
@@ -1035,8 +920,8 @@ export function EmployeesPage() {
                 size="sm"
               >
                 <Trash className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("common.deleteSelected")}</span>
-                <span className="sm:hidden">{t("common.delete")}</span>
+                <span className="hidden sm:inline">Delete Selected</span>
+                <span className="sm:hidden">Delete</span>
               </Button>
               <Button
                 onClick={() => {
@@ -1070,20 +955,20 @@ export function EmployeesPage() {
             <h2 className="text-sm md:text-base font-semibold">
               {t("filters.filtersControl")}
             </h2>
-            {(nationalityFilter.length > 0 ||
-              companyFilter.length > 0 ||
-              jobFilter.length > 0 ||
-              departmentFilter.length > 0 ||
+            {(nationalityFilter !== "all" ||
+              companyFilter !== "all" ||
+              jobFilter !== "all" ||
+              departmentFilter !== "all" ||
               searchTerm) && (
               <Badge variant="secondary" className="text-xs">
                 {[
                   searchTerm ? 1 : 0,
-                  nationalityFilter.length,
-                  companyFilter.length,
-                  jobFilter.length,
-                  departmentFilter.length,
+                  nationalityFilter !== "all" ? 1 : 0,
+                  companyFilter !== "all" ? 1 : 0,
+                  jobFilter !== "all" ? 1 : 0,
+                  departmentFilter !== "all" ? 1 : 0,
                 ].reduce((a, b) => a + b, 0)}{" "}
-                {t("filters.active")}
+                active
               </Badge>
             )}
           </div>
@@ -1138,15 +1023,15 @@ export function EmployeesPage() {
         {showFilters && (
           <div className="space-y-2 mt-2">
             {/* Active Filters Display */}
-            {(nationalityFilter.length > 0 ||
-              companyFilter.length > 0 ||
-              jobFilter.length > 0 ||
-              departmentFilter.length > 0 ||
+            {(nationalityFilter !== "all" ||
+              companyFilter !== "all" ||
+              jobFilter !== "all" ||
+              departmentFilter !== "all" ||
               dateRangeFilter !== "all" ||
               searchTerm) && (
               <div className="flex flex-wrap items-center gap-1.5 p-2 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
                 <span className="text-xs font-medium text-blue-900 dark:text-blue-100">
-                  {t("filters.active")}:
+                  Active:
                 </span>
                 {searchTerm && (
                   <Badge variant="secondary" className="gap-1 pr-1">
@@ -1160,48 +1045,44 @@ export function EmployeesPage() {
                     </button>
                   </Badge>
                 )}
-                {nationalityFilter.length > 0 && (
+                {nationalityFilter !== "all" && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    {t("employees.nationality")}
-                    {nationalityFilter.length > 1
-                      ? ` (${nationalityFilter.length})`
-                      : `: ${nationalityFilter[0]}`}
+                    Nationality: {nationalityFilter}
                     <button
-                      onClick={() => setNationalityFilter([])}
+                      onClick={() => setNationalityFilter("all")}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
-                {companyFilter.length > 0 && (
+                {companyFilter !== "all" && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    {t("employees.company")}{companyFilter.length > 1 ? ` (${companyFilter.length})` : ""}
+                    Company
                     <button
-                      onClick={() => setCompanyFilter([])}
+                      onClick={() => setCompanyFilter("all")}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
-                {jobFilter.length > 0 && (
+                {jobFilter !== "all" && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    {t("employees.job")}{jobFilter.length > 1 ? ` (${jobFilter.length})` : ""}
+                    Job
                     <button
-                      onClick={() => setJobFilter([])}
+                      onClick={() => setJobFilter("all")}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
-                {departmentFilter.length > 0 && (
+                {departmentFilter !== "all" && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    {t("employees.department")}
-                    {departmentFilter.length > 1 ? ` (${departmentFilter.length})` : ""}
+                    Department
                     <button
-                      onClick={() => setDepartmentFilter([])}
+                      onClick={() => setDepartmentFilter("all")}
                       className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
@@ -1210,15 +1091,15 @@ export function EmployeesPage() {
                 )}
                 {dateRangeFilter !== "all" && (
                   <Badge variant="secondary" className="gap-1 pr-1">
-                    {t("filters.dateRange")}:{" "}
+                    Date:{" "}
                     {dateRangeFilter === "custom"
-                      ? `${customStartDate || "?"} → ${customEndDate || "?"}`
+                      ? `${customStartDate || "?"} to ${customEndDate || "?"}`
                       : dateRangeFilter === "30days"
-                      ? t("filters.last30Days")
+                      ? "Last 30 Days"
                       : dateRangeFilter === "60days"
-                      ? t("filters.last60Days")
+                      ? "Last 60 Days"
                       : dateRangeFilter === "90days"
-                      ? t("filters.last90Days")
+                      ? "Last 90 Days"
                       : dateRangeFilter}
                     <button
                       onClick={() => {
@@ -1242,16 +1123,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.nationality")}
                 </Label>
-                <MultiSelect
-                  values={nationalityFilter}
-                  onValuesChange={setNationalityFilter}
-                  options={nationalities.map((nat: any) => ({
-                    value: nat.name_en,
-                    label: i18n.language === "ar" ? nat.name_ar : nat.name_en,
-                  }))}
-                  allLabel={t("filters.allNationalities")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                />
+                <select
+                  value={nationalityFilter}
+                  onChange={(e) => setNationalityFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">{t("filters.allNationalities")}</option>
+                  {nationalities.map((nat: any) => (
+                    <option key={nat.name_en} value={nat.name_en}>
+                      {i18n.language === "ar" ? nat.name_ar : nat.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Company Filter */}
@@ -1259,16 +1142,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.company")}
                 </Label>
-                <MultiSelect
-                  values={companyFilter}
-                  onValuesChange={setCompanyFilter}
-                  options={companies.map((company) => ({
-                    value: company.id,
-                    label: i18n.language === "ar" ? company.name_ar : company.name_en,
-                  }))}
-                  allLabel={t("filters.allCompanies")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                />
+                <select
+                  value={companyFilter}
+                  onChange={(e) => setCompanyFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">{t("filters.allCompanies")}</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {i18n.language === "ar" ? company.name_ar : company.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Job Filter */}
@@ -1276,16 +1161,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.job")}
                 </Label>
-                <MultiSelect
-                  values={jobFilter}
-                  onValuesChange={setJobFilter}
-                  options={jobs.map((job) => ({
-                    value: job.id,
-                    label: i18n.language === "ar" ? job.name_ar : job.name_en,
-                  }))}
-                  allLabel={t("filters.allJobs")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                />
+                <select
+                  value={jobFilter}
+                  onChange={(e) => setJobFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">{t("filters.allJobs")}</option>
+                  {jobs.map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {i18n.language === "ar" ? job.name_ar : job.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Department Filter */}
@@ -1293,16 +1180,18 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("employees.department")}
                 </Label>
-                <MultiSelect
-                  values={departmentFilter}
-                  onValuesChange={setDepartmentFilter}
-                  options={departments.map((dept) => ({
-                    value: dept.id,
-                    label: i18n.language === "ar" ? dept.name_ar : dept.name_en,
-                  }))}
-                  allLabel={t("filters.allDepartments")}
-                  searchPlaceholder={i18n.language === "ar" ? "بحث..." : "Search..."}
-                />
+                <select
+                  value={departmentFilter}
+                  onChange={(e) => setDepartmentFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">{t("filters.allDepartments")}</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {i18n.language === "ar" ? dept.name_ar : dept.name_en}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Active Status Filter */}
@@ -1335,21 +1224,21 @@ export function EmployeesPage() {
               <div>
                 <Label className="text-xs font-medium mb-1 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {t("filters.dateRange")}
+                  Added Date
                 </Label>
                 <Select
                   value={dateRangeFilter}
                   onValueChange={setDateRangeFilter}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t("filters.allTime")} />
+                    <SelectValue placeholder="All Time" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("filters.allTime")}</SelectItem>
-                    <SelectItem value="30days">{t("filters.last30Days")}</SelectItem>
-                    <SelectItem value="60days">{t("filters.last60Days")}</SelectItem>
-                    <SelectItem value="90days">{t("filters.last90Days")}</SelectItem>
-                    <SelectItem value="custom">{t("filters.customDateRange")}</SelectItem>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="30days">Last 30 Days</SelectItem>
+                    <SelectItem value="60days">Last 60 Days</SelectItem>
+                    <SelectItem value="90days">Last 90 Days</SelectItem>
+                    <SelectItem value="custom">Custom Date Range</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1359,18 +1248,34 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.passportStatus")}
                 </Label>
-                <MultiSelect
-                  values={passportStatusFilter}
-                  onValuesChange={(v) => setPassportStatusFilter(v as StatusFilter[])}
-                  options={[
-                    { value: "valid", label: t("filters.valid") },
-                    { value: "expiring", label: t("filters.expiring") },
-                    { value: "expired", label: t("filters.expired") },
-                    { value: "missing_date", label: t("filters.missingExpiry") },
-                    { value: "missing_number", label: t("filters.missingPassportNo") },
-                  ]}
-                  allLabel={t("filters.allStatus")}
-                />
+                <Select
+                  value={passportStatusFilter}
+                  onValueChange={(value) =>
+                    setPassportStatusFilter(value as StatusFilter)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("filters.allStatus")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
+                    <SelectItem value="expiring">
+                      {t("filters.expiring")}
+                    </SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing_date">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingPassportNo")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Card Status Filter */}
@@ -1378,18 +1283,34 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.cardStatus")}
                 </Label>
-                <MultiSelect
-                  values={cardStatusFilter}
-                  onValuesChange={(v) => setCardStatusFilter(v as StatusFilter[])}
-                  options={[
-                    { value: "valid", label: t("filters.valid") },
-                    { value: "expiring", label: t("filters.expiring") },
-                    { value: "expired", label: t("filters.expired") },
-                    { value: "missing_date", label: t("filters.missingExpiry") },
-                    { value: "missing_number", label: t("filters.missingCardNo") },
-                  ]}
-                  allLabel={t("filters.allStatus")}
-                />
+                <Select
+                  value={cardStatusFilter}
+                  onValueChange={(value) =>
+                    setCardStatusFilter(value as StatusFilter)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("filters.allStatus")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
+                    <SelectItem value="expiring">
+                      {t("filters.expiring")}
+                    </SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing_date">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingCardNo")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Emirates ID Status Filter */}
@@ -1397,18 +1318,34 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.emiratesIdStatus")}
                 </Label>
-                <MultiSelect
-                  values={emiratesIdStatusFilter}
-                  onValuesChange={(v) => setEmiratesIdStatusFilter(v as StatusFilter[])}
-                  options={[
-                    { value: "valid", label: t("filters.valid") },
-                    { value: "expiring", label: t("filters.expiring") },
-                    { value: "expired", label: t("filters.expired") },
-                    { value: "missing_date", label: t("filters.missingExpiry") },
-                    { value: "missing_number", label: t("filters.missingEmiratesId") },
-                  ]}
-                  allLabel={t("filters.allStatus")}
-                />
+                <Select
+                  value={emiratesIdStatusFilter}
+                  onValueChange={(value) =>
+                    setEmiratesIdStatusFilter(value as StatusFilter)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("filters.allStatus")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
+                    <SelectItem value="expiring">
+                      {t("filters.expiring")}
+                    </SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing_date">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingEmiratesId")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Residence Status Filter */}
@@ -1416,18 +1353,34 @@ export function EmployeesPage() {
                 <Label className="text-xs font-medium mb-1 block">
                   {t("filters.residenceStatus")}
                 </Label>
-                <MultiSelect
-                  values={residenceStatusFilter}
-                  onValuesChange={(v) => setResidenceStatusFilter(v as StatusFilter[])}
-                  options={[
-                    { value: "valid", label: t("filters.valid") },
-                    { value: "expiring", label: t("filters.expiring") },
-                    { value: "expired", label: t("filters.expired") },
-                    { value: "missing_date", label: t("filters.missingExpiry") },
-                    { value: "missing_number", label: t("filters.missingResidenceNo") },
-                  ]}
-                  allLabel={t("filters.allStatus")}
-                />
+                <Select
+                  value={residenceStatusFilter}
+                  onValueChange={(value) =>
+                    setResidenceStatusFilter(value as StatusFilter)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("filters.allStatus")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t("filters.allStatus")}
+                    </SelectItem>
+                    <SelectItem value="valid">{t("filters.valid")}</SelectItem>
+                    <SelectItem value="expiring">
+                      {t("filters.expiring")}
+                    </SelectItem>
+                    <SelectItem value="expired">
+                      {t("filters.expired")}
+                    </SelectItem>
+                    <SelectItem value="missing_date">
+                      {t("filters.missingExpiry")}
+                    </SelectItem>
+                    <SelectItem value="missing_number">
+                      {t("filters.missingResidenceNo")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -1439,7 +1392,7 @@ export function EmployeesPage() {
                     htmlFor="customStartDate"
                     className="text-xs font-medium"
                   >
-                    {t("filters.fromDate")}
+                    From Date
                   </Label>
                   <Input
                     id="customStartDate"
@@ -1455,7 +1408,7 @@ export function EmployeesPage() {
                     htmlFor="customEndDate"
                     className="text-xs font-medium"
                   >
-                    {t("filters.toDate")}
+                    To Date
                   </Label>
                   <Input
                     id="customEndDate"
@@ -1486,17 +1439,17 @@ export function EmployeesPage() {
                   isRTL ? "flex-row-reverse" : ""
                 }`}
               >
-                <Search className="absolute left-3 rtl:left-auto rtl:right-3 w-4 h-4 text-gray-400 flex-shrink-0 pointer-events-none" />
+                <Search className="absolute left-3 w-4 h-4 text-gray-400 flex-shrink-0 pointer-events-none" />
                 <Input
-                  placeholder={t("filters.searchPlaceholder")}
+                  placeholder="Search by name, employee #, email, phone, passport, emirates ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 h-9 pl-10 pr-10 rtl:pl-10 rtl:pr-10"
+                  className="flex-1 h-9 pl-10 pr-10"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm("")}
-                    className="absolute right-3 rtl:right-auto rtl:left-3 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    className="absolute right-3 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                     type="button"
                   >
                     <X className="w-4 h-4 text-gray-400" />
@@ -1504,7 +1457,8 @@ export function EmployeesPage() {
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {t("filters.searchTip")}
+                💡 Tip: Search works across all fields - names, documents,
+                contact info
               </p>
             </div>
           </div>
@@ -1543,13 +1497,12 @@ export function EmployeesPage() {
                         )}
                       </button>
                       {/* Avatar */}
-                      <div className="mt-0.5">
-                        <EmployeeAvatar
-                          avatarUrl={employee.avatar_url}
-                          initial={(i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0) || "?"}
-                          sizeClass="w-10 h-10"
-                          textClass="text-sm"
-                        />
+                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm mt-0.5">
+                        {employee.avatar_url ? (
+                          <img src={employee.avatar_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                        ) : (
+                          (i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0)?.toUpperCase() || "?"
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-bold text-base md:text-lg truncate">
@@ -1755,9 +1708,9 @@ export function EmployeesPage() {
           ) : (
             <div className="flex items-center justify-center min-h-[500px]">
               <div className="text-center text-muted-foreground">
-                <p className="text-lg font-medium">{t("filters.noEmployeesFound")}</p>
+                <p className="text-lg font-medium">No employees found</p>
                 <p className="text-sm mt-2">
-                  {t("filters.adjustFilters")}
+                  Try adjusting your filters or search terms
                 </p>
               </div>
             </div>
@@ -1989,12 +1942,13 @@ export function EmployeesPage() {
                       <td className="p-2 md:p-3 text-xs md:text-sm w-52 max-w-xs">
                         <div className="flex items-center gap-2 group">
                           {/* Avatar circle */}
-                          <EmployeeAvatar
-                            avatarUrl={employee.avatar_url}
-                            initial={(i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0) || "?"}
-                            sizeClass="w-7 h-7"
-                            textClass="text-xs"
-                          />
+                          <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                            {employee.avatar_url ? (
+                              <img src={employee.avatar_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                            ) : (
+                              (i18n.language === "ar" ? employee.name_ar : employee.name_en)?.charAt(0)?.toUpperCase() || "?"
+                            )}
+                          </div>
                           <span className="truncate flex-1">
                             {i18n.language === "ar"
                               ? employee.name_ar
@@ -2129,9 +2083,9 @@ export function EmployeesPage() {
               {(!filteredEmployees || filteredEmployees.length === 0) && (
                 <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
                   <div className="text-center">
-                    <p className="text-lg font-medium">{t("filters.noEmployeesFound")}</p>
+                    <p className="text-lg font-medium">No employees found</p>
                     <p className="text-sm mt-2">
-                      {t("filters.adjustFilters")}
+                      Try adjusting your filters or search terms
                     </p>
                   </div>
                 </div>
@@ -2178,117 +2132,62 @@ export function EmployeesPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {exportFormat === "pdf" ? (
-                <FileText className="w-5 h-5 text-red-600" />
-              ) : (
-                <FileSpreadsheet className="w-5 h-5 text-green-600" />
-              )}
+              <FileSpreadsheet className="w-5 h-5 text-green-600" />
               {exportTarget === "all"
-                ? t("export.titleAll", { count: filteredEmployees?.length || 0 })
-                : t("export.titleSelected", { count: selectedIds.length })}
+                ? `Export ${filteredEmployees?.length || 0} Employees`
+                : `Export ${selectedIds.length} Selected Employees`}
             </DialogTitle>
             <DialogDescription>
-              {t("export.description")}
+              Choose which fields to include in the Excel export.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            {/* Format Toggle */}
-            <div className="flex gap-2 p-1 bg-muted rounded-lg">
-              <button
-                type="button"
-                onClick={() => setExportFormat("excel")}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
-                  exportFormat === "excel"
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "text-muted-foreground hover:bg-background"
-                }`}
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                {t("export.excelFormat")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setExportFormat("pdf")}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
-                  exportFormat === "pdf"
-                    ? "bg-red-600 text-white shadow-sm"
-                    : "text-muted-foreground hover:bg-background"
-                }`}
-              >
-                <FileText className="w-4 h-4" />
-                {t("export.pdfFormat")}
-              </button>
-            </div>
-            {exportFormat === "pdf" && (
-              <p className="text-xs text-muted-foreground -mt-1">
-                {t("export.pdfNote")}
-              </p>
-            )}
             <div className="flex gap-2 mb-2">
               <Button size="sm" variant="outline" onClick={() => setSelectedExportFields(EXPORT_FIELD_DEFS.map(d => d.key))}>
-                {t("common.selectAll")}
+                Select All
               </Button>
               <Button size="sm" variant="outline" onClick={() => setSelectedExportFields([])}>
-                {t("filters.clearAll")}
+                Clear All
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
-              {EXPORT_FIELD_DEFS.map((field) => {
-                const isArabicField = field.key === "name_ar";
-                const disabledForPdf = exportFormat === "pdf" && isArabicField;
-                const displayLabel = t(EXPORT_FIELD_LABEL_KEYS[field.key] || field.key);
-                return (
-                  <label
-                    key={field.key}
-                    className={`flex items-center gap-2 p-2 rounded-md border text-sm ${
-                      disabledForPdf
-                        ? "opacity-40 cursor-not-allowed"
-                        : "hover:bg-muted cursor-pointer"
-                    }`}
-                    title={disabledForPdf ? t("export.pdfFieldTooltip") : undefined}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedExportFields.includes(field.key)}
-                      disabled={disabledForPdf}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedExportFields(prev => [...prev, field.key]);
-                        } else {
-                          setSelectedExportFields(prev => prev.filter(k => k !== field.key));
-                        }
-                      }}
-                      className="w-4 h-4 accent-blue-600"
-                    />
-                    {displayLabel}
-                    {disabledForPdf && <span className="text-[10px] text-muted-foreground">{t("export.pdfFieldUnavailable")}</span>}
-                  </label>
-                );
-              })}
+              {EXPORT_FIELD_DEFS.map((field) => (
+                <label key={field.key} className="flex items-center gap-2 p-2 rounded-md border hover:bg-muted cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedExportFields.includes(field.key)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedExportFields(prev => [...prev, field.key]);
+                      } else {
+                        setSelectedExportFields(prev => prev.filter(k => k !== field.key));
+                      }
+                    }}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                  {field.label}
+                </label>
+              ))}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>{t("common.cancel")}</Button>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>Cancel</Button>
             <Button
               onClick={() => {
-                if (selectedExportFields.length === 0) { alert(t("export.selectFieldWarning")); return; }
+                if (selectedExportFields.length === 0) { alert("Please select at least one field"); return; }
                 const empList = exportTarget === "all"
                   ? filteredEmployees || []
                   : (filteredEmployees || []).filter((e: any) => selectedIds.includes(e.id));
-                if (exportFormat === "pdf") {
-                  doExportPdf(empList, exportTarget);
-                } else {
-                  const filename = exportTarget === "all"
-                    ? `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`
-                    : `Selected_Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`;
-                  doExport(empList, filename);
-                }
+                const filename = exportTarget === "all"
+                  ? `Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`
+                  : `Selected_Employees_${dayjs().format("YYYY-MM-DD")}.xlsx`;
+                doExport(empList, filename);
                 setExportDialogOpen(false);
               }}
-              className={`gap-2 ${exportFormat === "pdf" ? "bg-red-600 hover:bg-red-700" : ""}`}
+              className="gap-2"
             >
-              {exportFormat === "pdf" ? <FileText className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-              {t("export.button", { count: selectedExportFields.length })}
+              <Download className="w-4 h-4" />
+              Export ({selectedExportFields.length} fields)
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2570,15 +2469,21 @@ function EmployeeDialog({
             </h3>
             {/* Avatar Upload */}
             <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border">
-              <EmployeeAvatar
-                avatarUrl={avatarPreview || formData.avatar_url}
-                initial={(formData.name_en || formData.name_ar || "?").charAt(0)}
-                sizeClass="w-16 h-16"
-                textClass="text-xl"
-              />
+              <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
+                {(avatarPreview || formData.avatar_url) ? (
+                  <img
+                    src={avatarPreview || formData.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  (formData.name_en || formData.name_ar || "?").charAt(0).toUpperCase()
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium mb-1">Employee Photo</p>
-                <p className="text-xs text-muted-foreground mb-2">Max 512KB · JPG/PNG/WEBP</p>
+                <p className="text-xs text-muted-foreground mb-2">Max 512KB · JPG/PNG/WEBP · Stored privately</p>
                 <label className="cursor-pointer">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:bg-primary/90 transition-colors">
                     <Camera className="w-3.5 h-3.5" />

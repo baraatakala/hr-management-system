@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Search, Globe, Users, ExternalLink } from "lucide-react";
 
 export function NationalitiesPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);

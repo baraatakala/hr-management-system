@@ -28,6 +28,14 @@ export interface PdfExportOptions {
   filtersApplied: string[];
   /** Name/email of the person generating the report */
   generatedBy?: string;
+  /** Opt-in only — fetches each employee's avatar_url and embeds a small
+   *  thumbnail. Off by default: on a Supabase free-tier project this pulls
+   *  real egress bandwidth for every photo, every export, so it shouldn't
+   *  happen silently. */
+  includePhotos?: boolean;
+  /** Called with (loaded, total) while photos are being fetched, so the UI
+   *  can show progress instead of freezing on a big export. */
+  onPhotoProgress?: (loaded: number, total: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -36,7 +44,6 @@ export interface PdfExportOptions {
 
 const COLOR = {
   brand: [30, 64, 175] as [number, number, number], // blue-800
-  brandLight: [219, 234, 254] as [number, number, number], // blue-100
   dark: [15, 23, 42] as [number, number, number], // slate-900
   muted: [100, 116, 139] as [number, number, number], // slate-500
   border: [226, 232, 240] as [number, number, number], // slate-200
@@ -44,10 +51,9 @@ const COLOR = {
   green: [21, 128, 61] as [number, number, number], // green-700
   greenBg: [220, 252, 231] as [number, number, number], // green-100
   amber: [180, 83, 9] as [number, number, number], // amber-700
-  amberBg: [254, 243, 199] as [number, number, number], // amber-100
   red: [185, 28, 28] as [number, number, number], // red-700
-  redBg: [254, 226, 226] as [number, number, number], // red-100
   gray: [107, 114, 128] as [number, number, number], // gray-500
+  photoPlaceholder: [226, 232, 240] as [number, number, number], // slate-200
 };
 
 const EXPIRY_FIELD_KEYS = [
@@ -66,8 +72,14 @@ const UNSUPPORTED_PDF_FIELDS = new Set(["name_ar"]);
 const NARROW_FIELDS = new Set(["employee_no", "status", "nationality"]);
 const WIDE_FIELDS = new Set(["name_en", "email"]);
 
+const PHOTO_COL_KEY = "__photo__";
+const PHOTO_COL_WIDTH_MM = 16; // table column width
+const PHOTO_THUMB_PX = 96; // source-side square thumbnail resolution before JPEG compression
+const PHOTO_ROW_HEIGHT_MM = 15; // forces every row tall enough to fit the thumbnail
+const PHOTO_FETCH_CONCURRENCY = 6; // caps parallel requests against Supabase Storage
+
 // ---------------------------------------------------------------------------
-// Helpers
+// Date helpers
 // ---------------------------------------------------------------------------
 
 // Every date is formatted through an explicit "en" locale instance so that
@@ -86,7 +98,7 @@ export function getDocStatus(expiry?: string | null): DocStatus {
   return "valid";
 }
 
-function statusColors(status: DocStatus): { text: [number, number, number]; bg?: [number, number, number] } {
+function statusColors(status: DocStatus): { text: [number, number, number] } {
   switch (status) {
     case "expired":
       return { text: COLOR.red };
@@ -108,28 +120,106 @@ function fmtDateTime(d?: string | null) {
 }
 
 // ---------------------------------------------------------------------------
+// Photo helpers — fetch once, downscale hard, embed as a small JPEG so the
+// PDF stays light and we don't re-transmit full-resolution avatars.
+// ---------------------------------------------------------------------------
+
+async function fetchAvatarThumbnail(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const bitmap = await createImageBitmap(blob);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = PHOTO_THUMB_PX;
+    canvas.height = PHOTO_THUMB_PX;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    // Center-crop to a square so avatars aren't stretched
+    const srcSize = Math.min(bitmap.width, bitmap.height);
+    const sx = (bitmap.width - srcSize) / 2;
+    const sy = (bitmap.height - srcSize) / 2;
+    ctx.drawImage(bitmap, sx, sy, srcSize, srcSize, 0, 0, PHOTO_THUMB_PX, PHOTO_THUMB_PX);
+
+    return canvas.toDataURL("image/jpeg", 0.55);
+  } catch {
+    return null; // broken URL / CORS / network hiccup — just skip this one photo
+  }
+}
+
+async function fetchThumbnailsWithLimit(
+  urls: (string | null | undefined)[],
+  onProgress?: (loaded: number, total: number) => void
+): Promise<(string | null)[]> {
+  const results: (string | null)[] = new Array(urls.length).fill(null);
+  const total = urls.filter(Boolean).length;
+  let loaded = 0;
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < urls.length) {
+      const i = cursor++;
+      const url = urls[i];
+      if (url) {
+        results[i] = await fetchAvatarThumbnail(url);
+        loaded++;
+        onProgress?.(loaded, total);
+      }
+    }
+  }
+
+  const workerCount = Math.min(PHOTO_FETCH_CONCURRENCY, Math.max(1, total));
+  await Promise.all(Array.from({ length: workerCount }, worker));
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Main export function
 // ---------------------------------------------------------------------------
 
-export function exportEmployeesToPdf({
+export async function exportEmployeesToPdf({
   employees,
   fields: fieldsIn,
   title,
   subtitle,
   filtersApplied,
   generatedBy,
-}: PdfExportOptions): void {
+  includePhotos = false,
+  onPhotoProgress,
+}: PdfExportOptions): Promise<void> {
   if (!employees || employees.length === 0) {
     alert("No data to export");
     return;
   }
 
   // English-only report: silently drop any unsupported (Arabic) fields
-  const fields = fieldsIn.filter((f) => !UNSUPPORTED_PDF_FIELDS.has(f.key));
-  if (fields.length === 0) {
+  const baseFields = fieldsIn.filter((f) => !UNSUPPORTED_PDF_FIELDS.has(f.key));
+  if (baseFields.length === 0) {
     alert("Select at least one field supported in PDF (Arabic-only fields aren't supported).");
     return;
   }
+
+  // Photos, if requested, are fetched up front (async) so autoTable can lay
+  // out the whole document synchronously afterwards.
+  let photoDataUrls: (string | null)[] = [];
+  if (includePhotos) {
+    photoDataUrls = await fetchThumbnailsWithLimit(
+      employees.map((e) => e.avatar_url),
+      onPhotoProgress
+    );
+  }
+
+  const fields: PdfFieldDef[] = includePhotos
+    ? [{ key: PHOTO_COL_KEY, label: "Photo" }, ...baseFields]
+    : baseFields;
+
+  // Initials fallback for employees with no photo (or a failed fetch),
+  // matching the app's own avatar-initial convention.
+  const employeeInitials: string[] = employees.map(
+    (e) => (e.name_en || e.name_ar || "?").trim().charAt(0).toUpperCase() || "?"
+  );
 
   // Landscape, larger paper for wide field sets so columns stay readable
   const paperFormat = fields.length > 11 ? "a3" : "a4";
@@ -181,6 +271,9 @@ export function exportEmployeesToPdf({
 
     fields.forEach((f) => {
       switch (f.key) {
+        case PHOTO_COL_KEY:
+          row.push(""); // drawn as an image in didDrawCell, not as text
+          break;
         case "employee_no":
           row.push(emp.employee_no || "");
           break;
@@ -358,12 +451,13 @@ export function exportEmployeesToPdf({
   // -------------------------------------------------------------------------
   const columnStyles: Record<number, any> = {};
   fields.forEach((f, idx) => {
-    if (NARROW_FIELDS.has(f.key)) columnStyles[idx] = { cellWidth: "auto", minCellWidth: 16 };
+    if (f.key === PHOTO_COL_KEY) columnStyles[idx] = { cellWidth: PHOTO_COL_WIDTH_MM, halign: "center" };
+    else if (NARROW_FIELDS.has(f.key)) columnStyles[idx] = { cellWidth: "auto", minCellWidth: 16 };
     else if (WIDE_FIELDS.has(f.key)) columnStyles[idx] = { cellWidth: "auto", minCellWidth: 26 };
   });
 
   autoTable(doc, {
-    startY: cursorY + 2,
+    startY: cursorY + 4,
     margin: { left: margin, right: margin, top: HEADER_HEIGHT + 4 },
     head,
     body,
@@ -376,6 +470,7 @@ export function exportEmployeesToPdf({
       textColor: COLOR.dark,
       overflow: "linebreak",
       valign: "middle",
+      ...(includePhotos ? { minCellHeight: PHOTO_ROW_HEIGHT_MM } : {}),
     },
     headStyles: {
       fillColor: COLOR.brand,
@@ -395,8 +490,48 @@ export function exportEmployeesToPdf({
       data.cell.styles.textColor = c.text;
       data.cell.styles.fontStyle = status === "expired" || status === "expiring" ? "bold" : "normal";
     },
-    didDrawPage: () => {
-      // header + footer drawn per page after autoTable finishes laying out that page
+    didDrawCell: (data) => {
+      if (!includePhotos || data.section !== "body") return;
+      const fieldKey = fields[data.column.index]?.key;
+      if (fieldKey !== PHOTO_COL_KEY) return;
+
+      const dataUrl = photoDataUrls[data.row.index];
+      const cell = data.cell;
+      const size = Math.min(cell.height, cell.width) - 3; // small padding
+      const x = cell.x + (cell.width - size) / 2;
+      const y = cell.y + (cell.height - size) / 2;
+      const cx = x + size / 2;
+      const cy = y + size / 2;
+      const r = size / 2;
+
+      if (dataUrl) {
+        try {
+          // Clip to a circle so the thumbnail matches the app's round
+          // avatar style instead of a hard-edged square.
+          doc.saveGraphicsState();
+          doc.circle(cx, cy, r, null);
+          (doc as any).clip();
+          (doc as any).discardPath?.();
+          doc.addImage(dataUrl, "JPEG", x, y, size, size);
+          doc.restoreGraphicsState();
+        } catch {
+          // corrupt image data or clip unsupported — draw unclipped as a fallback
+          try {
+            doc.addImage(dataUrl, "JPEG", x, y, size, size);
+          } catch {
+            // give up silently, cell stays blank rather than breaking the export
+          }
+        }
+      } else {
+        // No photo on file (or the fetch failed) — show an initial, same as
+        // the app's own avatar placeholder, instead of a blank circle.
+        doc.setFillColor(...COLOR.brand);
+        doc.circle(cx, cy, r, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text(employeeInitials[data.row.index] || "?", cx, cy + 1.2, { align: "center" });
+      }
     },
   });
 
