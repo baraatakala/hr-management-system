@@ -248,50 +248,50 @@ export function BulkImportDialog({
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Employees");
 
-    // Add instructions sheet with comprehensive guide
+    // Add instructions sheet with a clean reference guide. Note: the free/
+    // community build of the `xlsx` package (no paid Pro tier) can't apply
+    // real cell styling (bold, color, borders) on write, so this is kept as
+    // plain, consistently-formatted text rather than emoji-decorated
+    // pseudo-headings, which render inconsistently across Excel versions/
+    // locales and read as unpolished.
     const instructions = [
-      { Section: "📋 HOW TO USE THIS TEMPLATE", Info: "", Details: "" },
-      { Section: "1. Fill employee data in 'Employees' sheet", Info: "", Details: "" },
-      { Section: "2. Upload the file in HR System", Info: "", Details: "" },
-      { Section: "3. Use Quick Add for missing reference data", Info: "", Details: "If nationality/company/department/job not found, click 'Quick Add' button to add instantly" },
-      { Section: "4. Import validated employees", Info: "", Details: "" },
+      { Section: "EMPLOYEE IMPORT TEMPLATE - INSTRUCTIONS", Info: "", Details: "" },
       { Section: "", Info: "", Details: "" },
-      { Section: "📊 FIELD REFERENCE", Info: "Required?", Details: "Description & Examples" },
-      { Section: "employee_no", Info: "YES", Details: "Unique employee ID (e.g., TEST001, EMP001, EMP-2024-001)" },
-      { Section: "name_en", Info: "YES", Details: "Full name in English (e.g., Ahmed Mohammed Ali)" },
-      { Section: "name_ar", Info: "YES", Details: "Full name in Arabic (e.g., أحمد محمد علي)" },
-      { Section: "nationality", Info: "NO", Details: "Nationality name (optional) - System accepts typos! (e.g., 'germany' matches 'Germany', 'uzabakistan' suggests 'Uzbekistan')" },
-      { Section: "company_name", Info: "NO", Details: "Company name (optional) - Use exact name or Quick Add if missing" },
-      { Section: "department_name", Info: "NO", Details: "Department name (optional) - Use exact name or Quick Add if missing" },
-      { Section: "job_name", Info: "NO", Details: "Job title (optional) - Use exact name or Quick Add if missing" },
-      { Section: "passport_no", Info: "NO", Details: "Passport number (e.g., N01234567, A98765432)" },
-      { Section: "passport_expiry", Info: "NO", Details: "Passport expiry - Supports multiple formats: YYYY-MM-DD, DD/MM/YYYY, or Excel date" },
-      { Section: "card_no", Info: "NO", Details: "Work permit/Labor card number (e.g., WC123456)" },
-      { Section: "card_expiry", Info: "NO", Details: "Work permit expiry - Supports: YYYY-MM-DD, DD/MM/YYYY, Excel date" },
-      { Section: "emirates_id", Info: "NO", Details: "Emirates ID (format: 784-YYYY-NNNNNNN-N)" },
-      { Section: "emirates_id_expiry", Info: "NO", Details: "Emirates ID expiry - Supports: YYYY-MM-DD, DD/MM/YYYY, Excel date" },
-      { Section: "residence_no", Info: "NO", Details: "Residence permit number (e.g., 101/2023/1234567)" },
-      { Section: "residence_expiry", Info: "NO", Details: "Residence permit expiry - Supports: YYYY-MM-DD, DD/MM/YYYY, Excel date" },
-      { Section: "phone", Info: "NO", Details: "Phone with country code (e.g., +971501234567, +201234567890)" },
-      { Section: "email", Info: "NO", Details: "Email address (e.g., ahmed.mohammed@company.ae)" },
+      { Section: "HOW TO USE", Info: "", Details: "" },
+      { Section: "Step 1", Info: "", Details: "Fill in employee data on the 'Employees' sheet" },
+      { Section: "Step 2", Info: "", Details: "Upload the file in the HR System's Bulk Import" },
+      { Section: "Step 3", Info: "", Details: "If a Nationality, Company, Department or Job isn't recognized, use 'Add New' in that row's dropdown to add it without leaving the import screen" },
+      { Section: "Step 4", Info: "", Details: "Review the preview, then click Import" },
       { Section: "", Info: "", Details: "" },
-      { Section: "✨ SMART FEATURES", Info: "", Details: "" },
-      { Section: "Fuzzy Matching", Info: "✓", Details: "System intelligently matches typos: 'germany' → 'Germany', 'uzabakistan' → suggests 'Uzbekistan'" },
-      { Section: "Quick Add", Info: "✓", Details: "Missing nationality/company/dept/job? Click 'Quick Add' button to add it instantly without leaving import!" },
-      { Section: "Date Formats", Info: "✓", Details: "Accepts YYYY-MM-DD, DD/MM/YYYY, or Excel serial dates - all work!" },
-      { Section: "Auto Re-validation", Info: "✓", Details: "After Quick Add or editing a dropdown, the row automatically re-validates - no need to re-upload!" },
-      { Section: "Suggestions", Info: "✓", Details: "Typos show similar suggestions: 'analyst' → 'Did you mean: Data Analyst, Business Analyst?'" },
+      { Section: "FIELD REFERENCE", Info: "Required", Details: "Description / Example" },
+      { Section: "employee_no", Info: "Yes", Details: "Unique employee ID, e.g. EMP001" },
+      { Section: "name_en", Info: "Yes", Details: "Full name in English, e.g. Ahmed Mohammed Ali" },
+      { Section: "name_ar", Info: "Yes", Details: "Full name in Arabic" },
+      { Section: "nationality", Info: "No", Details: "Minor spelling differences are matched automatically" },
+      { Section: "company_name", Info: "No", Details: "Must match an existing company, or use Add New in the preview" },
+      { Section: "department_name", Info: "No", Details: "Must match an existing department, or use Add New in the preview" },
+      { Section: "job_name", Info: "No", Details: "Must match an existing job title, or use Add New in the preview" },
+      { Section: "passport_no", Info: "No", Details: "Passport number" },
+      { Section: "passport_expiry", Info: "No", Details: "Date. Accepts YYYY-MM-DD, DD/MM/YYYY, or an Excel date cell" },
+      { Section: "card_no", Info: "No", Details: "Work permit / labor card number" },
+      { Section: "card_expiry", Info: "No", Details: "Date. Same formats as above" },
+      { Section: "emirates_id", Info: "No", Details: "Format: 784-YYYY-NNNNNNN-N" },
+      { Section: "emirates_id_expiry", Info: "No", Details: "Date. Same formats as above" },
+      { Section: "residence_no", Info: "No", Details: "Residence permit number" },
+      { Section: "residence_expiry", Info: "No", Details: "Date. Same formats as above" },
+      { Section: "phone", Info: "No", Details: "Include country code, e.g. +971501234567" },
+      { Section: "email", Info: "No", Details: "Email address" },
       { Section: "", Info: "", Details: "" },
-      { Section: "💡 TIPS", Info: "", Details: "" },
-      { Section: "• Case-insensitive", Info: "", Details: "'germany', 'Germany', 'GERMANY' all work the same" },
-      { Section: "• Leave optional fields blank", Info: "", Details: "Company, Department, Job can be empty - add them later via Quick Add" },
-      { Section: "• Fix errors progressively", Info: "", Details: "System shows one Quick Add button per row - fix first error, then next appears" },
-      { Section: "• Use template sample data", Info: "", Details: "First 3 rows show correct format - copy and modify them" },
+      { Section: "NOTES", Info: "", Details: "" },
+      { Section: "Duplicates", Info: "", Details: "Employee numbers must be unique. Duplicates within this file, and against existing records, are flagged before import" },
+      { Section: "Matching", Info: "", Details: "Nationality/company/department/job matching is case-insensitive and tolerates minor typos" },
+      { Section: "Optional fields", Info: "", Details: "Company, Department and Job may be left blank and added later" },
+      { Section: "Sample rows", Info: "", Details: "Rows 2-4 on the Employees sheet are examples in the correct format - replace them with real data before uploading" },
     ];
 
     const wsInstructions = XLSX.utils.json_to_sheet(instructions);
     wsInstructions["!cols"] = [{ wch: 35 }, { wch: 12 }, { wch: 80 }];
-    XLSX.utils.book_append_sheet(wb, wsInstructions, "📖 Instructions");
+    XLSX.utils.book_append_sheet(wb, wsInstructions, "Instructions");
 
     XLSX.writeFile(wb, "Employee_Import_Template.xlsx");
   };
@@ -813,10 +813,16 @@ export function BulkImportDialog({
                     <th className="px-2 py-2 text-left">{t("Row")}</th>
                     <th className="px-2 py-2 text-left">{t("Employee #")}</th>
                     <th className="px-2 py-2 text-left">{t("Name")}</th>
-                    <th className="px-2 py-2 text-left">{t("Nationality")}</th>
-                    <th className="px-2 py-2 text-left">{t("Company")}</th>
-                    <th className="px-2 py-2 text-left">{t("Department")}</th>
-                    <th className="px-2 py-2 text-left">{t("Job")}</th>
+                    <th className="px-2 py-2 text-left min-w-[130px]">{t("Nationality")}</th>
+                    <th className="px-2 py-2 text-left min-w-[130px]">{t("Company")}</th>
+                    <th className="px-2 py-2 text-left min-w-[130px]">{t("Department")}</th>
+                    <th className="px-2 py-2 text-left min-w-[130px]">{t("Job")}</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">{t("Passport")}</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">{t("Card")}</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">{t("Emirates ID")}</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">{t("Residence")}</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">{t("Phone")}</th>
+                    <th className="px-2 py-2 text-left whitespace-nowrap">{t("Email")}</th>
                     <th className="px-2 py-2 text-left">{t("Status")}</th>
                   </tr>
                 </thead>
@@ -837,7 +843,7 @@ export function BulkImportDialog({
                       <td className="px-2 py-2">{String(result.data.name_en || "")}</td>
                       
                       {/* Nationality Dropdown */}
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-2 min-w-[130px]">
                         <select
                           className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
                           value={String(result.data.nationality || "")}
@@ -864,7 +870,7 @@ export function BulkImportDialog({
                       </td>
 
                       {/* Company Dropdown */}
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-2 min-w-[130px]">
                         <select
                           className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
                           value={String(result.data.company_id || "")}
@@ -895,7 +901,7 @@ export function BulkImportDialog({
                       </td>
 
                       {/* Department Dropdown */}
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-2 min-w-[130px]">
                         <select
                           className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
                           value={String(result.data.department_id || "")}
@@ -926,7 +932,7 @@ export function BulkImportDialog({
                       </td>
 
                       {/* Job Dropdown */}
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-2 min-w-[130px]">
                         <select
                           className="w-full text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-800"
                           value={String(result.data.job_id || "")}
@@ -955,6 +961,29 @@ export function BulkImportDialog({
                           <option value="__ADD_NEW__">➕ {t("Add New...")}</option>
                         </select>
                       </td>
+
+                      {/* Document & contact fields — read-only preview so dates that
+                          got auto-parsed from mixed formats can be checked
+                          before import instead of only being visible after
+                          the fact. */}
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        <div>{String(result.data.passport_no || "—")}</div>
+                        <div className="text-muted-foreground">{String(result.data.passport_expiry || "")}</div>
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        <div>{String(result.data.card_no || "—")}</div>
+                        <div className="text-muted-foreground">{String(result.data.card_expiry || "")}</div>
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        <div>{String(result.data.emirates_id || "—")}</div>
+                        <div className="text-muted-foreground">{String(result.data.emirates_id_expiry || "")}</div>
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        <div>{String(result.data.residence_no || "—")}</div>
+                        <div className="text-muted-foreground">{String(result.data.residence_expiry || "")}</div>
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">{String(result.data.phone || "—")}</td>
+                      <td className="px-2 py-2 whitespace-nowrap">{String(result.data.email || "—")}</td>
 
                       <td className="px-2 py-2">
                         {revalidatingRow === idx ? (
