@@ -32,6 +32,11 @@ interface ImportRow {
   status: "pending" | "success" | "error" | "warning";
   message?: string;
   employeeId?: string;
+  // Tracked separately from `message` so that fixing a reference field
+  // (company/department/job/nationality) via the preview dropdowns can
+  // recompute errors without accidentally discarding a still-unresolved
+  // "employee number already exists" finding.
+  duplicateError?: string;
 }
 
 interface Company {
@@ -62,20 +67,67 @@ interface Nationality {
   code?: string;
 }
 
-interface BulkImportDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+interface ReferenceLists {
   companies: Company[];
   departments: Department[];
   jobs: Job[];
   nationalities: Nationality[];
 }
 
+interface BulkImportDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+  /** Fired as soon as any row is successfully inserted, even if the batch
+   *  also has failures — lets the parent refresh its employee list in the
+   *  background without forcing the results screen to close. */
+  onImportComplete?: () => void;
+  companies: Company[];
+  departments: Department[];
+  jobs: Job[];
+  nationalities: Nationality[];
+}
+
+// Re-checks the required fields and the four reference-data fields
+// (nationality/company/department/job) against the given lookup lists.
+// Used both right after parsing the file and any time a row is edited
+// (dropdown pick or Quick Add), so a "fixed" row is always re-validated
+// the same way instead of silently keeping a stale error.
+function computeReferenceErrors(
+  data: Record<string, unknown>,
+  refs: ReferenceLists
+): string[] {
+  const errors: string[] = [];
+  if (!data.employee_no?.toString().trim()) errors.push("Employee number required");
+  if (!data.name_en?.toString().trim()) errors.push("Name (EN) required");
+  if (!data.name_ar?.toString().trim()) errors.push("Name (AR) required");
+
+  if (data.nationality) {
+    const match = refs.nationalities.find(
+      (n) => n.name_en?.toLowerCase() === String(data.nationality).toLowerCase()
+    );
+    if (!match) errors.push(`Nationality "${data.nationality}" not found`);
+  }
+  if (data.company_name) {
+    const match = refs.companies.find((c) => c.id === data.company_id);
+    if (!match) errors.push(`Company "${data.company_name}" not found`);
+  }
+  if (data.department_name) {
+    const match = refs.departments.find((d) => d.id === data.department_id);
+    if (!match) errors.push(`Department "${data.department_name}" not found`);
+  }
+  if (data.job_name) {
+    const match = refs.jobs.find((j) => j.id === data.job_id);
+    if (!match) errors.push(`Job "${data.job_name}" not found`);
+  }
+  return errors;
+}
+
 export function BulkImportDialog({
   open,
   onOpenChange,
   onSuccess,
+  onImportComplete,
   companies,
   departments,
   jobs,
@@ -95,18 +147,30 @@ export function BulkImportDialog({
 
   // Download Excel template
   const downloadTemplate = () => {
-    // Use ACTUAL job names from database for realistic template
+    // Use ACTUAL data from this Supabase project so the template's own
+    // sample rows always validate cleanly on first upload, instead of
+    // guessing hardcoded names that may not exist in this installation.
     const actualJobs = jobs.length > 0 ? jobs : [];
-    
+    const pickJob = (hint: string, fallback: string) =>
+      actualJobs.find((j) => j.name_en?.toLowerCase().includes(hint.toLowerCase()))?.name_en ||
+      actualJobs[0]?.name_en ||
+      fallback;
+    const pickCompany = (i: number, fallback: string) =>
+      companies.length > 0 ? companies[i % companies.length].name_en : fallback;
+    const pickDepartment = (i: number, fallback: string) =>
+      departments.length > 0 ? departments[i % departments.length].name_en : fallback;
+    const pickNationality = (i: number, fallback: string) =>
+      nationalities.length > 0 ? nationalities[i % nationalities.length].name_en : fallback;
+
     const templateData = [
       {
         employee_no: "TEST001",
         name_en: "Ahmed Mohammed",
         name_ar: "أحمد محمد",
-        nationality: "United Arab Emirates",
-        company_name: "HR Group Main",
-        department_name: "Human Resources",
-        job_name: actualJobs.find(j => j.name_en?.includes("Manager"))?.name_en || "General Manager",
+        nationality: pickNationality(0, "United Arab Emirates"),
+        company_name: pickCompany(0, "HR Group Main"),
+        department_name: pickDepartment(0, "Human Resources"),
+        job_name: pickJob("Manager", "General Manager"),
         passport_no: "N01234567",
         passport_expiry: "2026-12-31",
         card_no: "WC123456",
@@ -122,10 +186,10 @@ export function BulkImportDialog({
         employee_no: "TEST002",
         name_en: "Sara Ali",
         name_ar: "سارة علي",
-        nationality: "Egypt",
-        company_name: "HR Group Main",
-        department_name: "Finance",
-        job_name: actualJobs.find(j => j.name_en?.includes("Account"))?.name_en || "Accountant",
+        nationality: pickNationality(1, "Egypt"),
+        company_name: pickCompany(1, "HR Group Main"),
+        department_name: pickDepartment(1, "Finance"),
+        job_name: pickJob("Account", "Accountant"),
         passport_no: "A98765432",
         passport_expiry: "2025-08-20",
         card_no: "WC789012",
@@ -141,10 +205,10 @@ export function BulkImportDialog({
         employee_no: "TEST003",
         name_en: "Mohammed Hassan",
         name_ar: "محمد حسن",
-        nationality: "Syria",
-        company_name: "HR Group Branch A",
-        department_name: "IT",
-        job_name: actualJobs.find(j => j.name_en?.includes("Computer") || j.name_en?.includes("Engineer"))?.name_en || "Secretary",
+        nationality: pickNationality(2, "Syria"),
+        company_name: pickCompany(2, "HR Group Branch A"),
+        department_name: pickDepartment(2, "IT"),
+        job_name: pickJob("Engineer", "Secretary"),
         passport_no: "P11223344",
         passport_expiry: "2027-03-15",
         card_no: "",
@@ -215,7 +279,7 @@ export function BulkImportDialog({
       { Section: "Fuzzy Matching", Info: "✓", Details: "System intelligently matches typos: 'germany' → 'Germany', 'uzabakistan' → suggests 'Uzbekistan'" },
       { Section: "Quick Add", Info: "✓", Details: "Missing nationality/company/dept/job? Click 'Quick Add' button to add it instantly without leaving import!" },
       { Section: "Date Formats", Info: "✓", Details: "Accepts YYYY-MM-DD, DD/MM/YYYY, or Excel serial dates - all work!" },
-      { Section: "Auto Re-validation", Info: "✓", Details: "After Quick Add, row automatically re-validates - no need to re-upload file!" },
+      { Section: "Auto Re-validation", Info: "✓", Details: "After Quick Add or editing a dropdown, the row automatically re-validates - no need to re-upload!" },
       { Section: "Suggestions", Info: "✓", Details: "Typos show similar suggestions: 'analyst' → 'Did you mean: Data Analyst, Business Analyst?'" },
       { Section: "", Info: "", Details: "" },
       { Section: "💡 TIPS", Info: "", Details: "" },
@@ -305,6 +369,32 @@ export function BulkImportDialog({
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+      // Batch-check ALL employee numbers against the database in a single
+      // query, instead of one round-trip per row (was: N sequential
+      // requests for an N-row file — slow and wasteful on a free-tier
+      // Supabase project). Also builds up an in-file duplicate check, since
+      // the old logic only ever compared against the database and let two
+      // rows in the same file with the same employee_no both pass preview.
+      const allEmployeeNos = jsonData
+        .map((r) => {
+          const raw = r as Record<string, unknown>;
+          return String(raw.employee_no || raw["Employee No"] || "").trim();
+        })
+        .filter(Boolean);
+
+      let existingSet = new Set<string>();
+      if (allEmployeeNos.length > 0) {
+        const { data: existingRows, error: existingErr } = await supabase
+          .from("employees")
+          .select("employee_no")
+          .in("employee_no", allEmployeeNos);
+        if (existingErr) {
+          console.error("Duplicate pre-check failed, continuing without it:", existingErr);
+        }
+        existingSet = new Set((existingRows || []).map((r: any) => r.employee_no));
+      }
+      const seenInFile = new Set<string>();
+
       const parsedRows: ImportRow[] = [];
 
       for (let i = 0; i < jsonData.length; i++) {
@@ -332,22 +422,19 @@ export function BulkImportDialog({
           email: rawRow.email || rawRow["Email"],
         };
 
-        // Validate required fields
-        const errors: string[] = [];
-        if (!row.employee_no?.toString().trim()) errors.push("Employee number required");
-        if (!row.name_en?.toString().trim()) errors.push("Name (EN) required");
-        if (!row.name_ar?.toString().trim()) errors.push("Name (AR) required");
-        // Nationality, company, department, and job are optional (nullable in database per migration 20250105)
+        const empNo = row.employee_no?.toString().trim();
 
-        // Check for duplicates in database
-        const { data: existing } = await supabase
-          .from("employees")
-          .select("id, employee_no")
-          .eq("employee_no", row.employee_no?.toString().trim())
-          .maybeSingle();
-
-        if (existing) {
-          errors.push(`Employee ${row.employee_no} already exists`);
+        // Duplicate check: against the database, AND against earlier rows
+        // in this same file.
+        let duplicateError: string | undefined;
+        if (empNo) {
+          if (existingSet.has(empNo)) {
+            duplicateError = `Employee ${empNo} already exists`;
+          } else if (seenInFile.has(empNo)) {
+            duplicateError = `Duplicate employee number "${empNo}" appears more than once in this file`;
+          } else {
+            seenInFile.add(empNo);
+          }
         }
 
         // Smart fuzzy matching for company
@@ -366,9 +453,6 @@ export function BulkImportDialog({
               c.code?.toLowerCase().includes(searchTerm)
           );
         }
-        if (!company && row.company_name) {
-          errors.push(`Company "${row.company_name}" not found. Available: ${companies.map(c => c.name_en).join(", ")}`);
-        }
 
         // Smart fuzzy matching for department
         let department = departments.find(
@@ -385,9 +469,6 @@ export function BulkImportDialog({
               searchTerm.includes(d.name_en?.toLowerCase()) ||
               d.code?.toLowerCase().includes(searchTerm)
           );
-        }
-        if (!department && row.department_name) {
-          errors.push(`Department "${row.department_name}" not found. Available: ${departments.map(d => d.name_en).join(", ")}`);
         }
 
         // Smart fuzzy matching for job
@@ -418,21 +499,6 @@ export function BulkImportDialog({
             }
           }
         }
-        if (!job && row.job_name) {
-          // Suggest similar jobs based on last word
-          const searchTerm = row.job_name.toString().toLowerCase().trim();
-          const lastWord = searchTerm.split(/\s+/).pop() || "";
-          const similarJobs = jobs.filter((j) => 
-            j.name_en?.toLowerCase().includes(lastWord) ||
-            j.name_en?.toLowerCase().split(/\s+/).some(word => word === lastWord)
-          );
-          
-          if (similarJobs.length > 0) {
-            errors.push(`Job "${row.job_name}" not found. Did you mean: ${similarJobs.map(j => j.name_en).slice(0, 5).join(", ")}?`);
-          } else {
-            errors.push(`Job "${row.job_name}" not found. Available: ${jobs.map(j => j.name_en).join(", ")}`);
-          }
-        }
 
         // Smart fuzzy matching for nationality
         let nationality = nationalities.find(
@@ -450,50 +516,87 @@ export function BulkImportDialog({
               n.code?.toLowerCase().includes(searchTerm)
           );
         }
-        if (!nationality && row.nationality) {
-          // Suggest similar nationalities
-          const searchTerm = row.nationality.toString().toLowerCase().trim();
-          const similarNationalities = nationalities.filter((n) => 
-            n.name_en?.toLowerCase().includes(searchTerm.substring(0, 3)) ||
-            searchTerm.includes(n.name_en?.toLowerCase().substring(0, 3))
-          );
-          
-          if (similarNationalities.length > 0) {
-            errors.push(`Nationality "${row.nationality}" not found. Did you mean: ${similarNationalities.map(n => n.name_en).slice(0, 5).join(", ")}?`);
-          } else {
-            errors.push(`Nationality "${row.nationality}" not found`);
+
+        const parsedData: Record<string, unknown> = {
+          employee_no: row.employee_no?.toString().trim(),
+          name_en: row.name_en?.toString().trim(),
+          name_ar: row.name_ar?.toString().trim(),
+          nationality: nationality?.name_en || (row.nationality ? row.nationality.toString().trim() : null),
+          // Store BOTH names and IDs for re-validation
+          company_name: row.company_name?.toString().trim() || null,
+          company_id: company?.id || null,
+          department_name: row.department_name?.toString().trim() || null,
+          department_id: department?.id || null,
+          job_name: row.job_name?.toString().trim() || null,
+          job_id: job?.id || null,
+          passport_no: row.passport_no?.toString().trim() || null,
+          passport_expiry: parseDate(row.passport_expiry),
+          card_no: row.card_no?.toString().trim() || null,
+          card_expiry: parseDate(row.card_expiry),
+          emirates_id: row.emirates_id?.toString().trim() || null,
+          emirates_id_expiry: parseDate(row.emirates_id_expiry),
+          residence_no: row.residence_no?.toString().trim() || null,
+          residence_expiry: parseDate(row.residence_expiry),
+          phone: row.phone?.toString().trim() || null,
+          email: row.email?.toString().trim() || null,
+          added_date: dayjs().format("YYYY-MM-DD"), // Date when employee joined (DATE field)
+          is_active: true, // Active by default (BOOLEAN field)
+        };
+
+        // Build suggestion hints for not-found reference values (shown in
+        // the error message so users know what to try) without duplicating
+        // the "is it actually missing" check — that's computeReferenceErrors.
+        const suggestionSuffix = (
+          type: "company" | "department" | "job" | "nationality",
+          searchValue: string | null
+        ): string => {
+          if (!searchValue) return "";
+          const term = searchValue.toLowerCase().trim();
+          if (type === "job") {
+            const lastWord = term.split(/\s+/).pop() || "";
+            const similar = jobs.filter(
+              (j) =>
+                j.name_en?.toLowerCase().includes(lastWord) ||
+                j.name_en?.toLowerCase().split(/\s+/).some((w) => w === lastWord)
+            );
+            return similar.length > 0
+              ? ` Did you mean: ${similar.map((j) => j.name_en).slice(0, 5).join(", ")}?`
+              : ` Available: ${jobs.map((j) => j.name_en).join(", ")}`;
           }
-        }
+          if (type === "nationality") {
+            const similar = nationalities.filter(
+              (n) =>
+                n.name_en?.toLowerCase().includes(term.substring(0, 3)) ||
+                term.includes(n.name_en?.toLowerCase().substring(0, 3) || "")
+            );
+            return similar.length > 0
+              ? ` Did you mean: ${similar.map((n) => n.name_en).slice(0, 5).join(", ")}?`
+              : "";
+          }
+          if (type === "company") return ` Available: ${companies.map((c) => c.name_en).join(", ")}`;
+          if (type === "department") return ` Available: ${departments.map((d) => d.name_en).join(", ")}`;
+          return "";
+        };
+
+        const baseErrors = computeReferenceErrors(parsedData, {
+          companies,
+          departments,
+          jobs,
+          nationalities,
+        }).map((err) => {
+          const missing = parseMissingDataError(err);
+          if (!missing) return err;
+          return err + suggestionSuffix(missing.type, missing.value);
+        });
+
+        const errors = [...(duplicateError ? [duplicateError] : []), ...baseErrors];
 
         parsedRows.push({
           row: rowNumber,
-          data: {
-            employee_no: row.employee_no?.toString().trim(),
-            name_en: row.name_en?.toString().trim(),
-            name_ar: row.name_ar?.toString().trim(),
-            nationality: nationality?.name_en || (row.nationality ? row.nationality.toString().trim() : null),
-            // Store BOTH names and IDs for re-validation
-            company_name: row.company_name?.toString().trim() || null,
-            company_id: company?.id || null,
-            department_name: row.department_name?.toString().trim() || null,
-            department_id: department?.id || null,
-            job_name: row.job_name?.toString().trim() || null,
-            job_id: job?.id || null,
-            passport_no: row.passport_no?.toString().trim() || null,
-            passport_expiry: parseDate(row.passport_expiry),
-            card_no: row.card_no?.toString().trim() || null,
-            card_expiry: parseDate(row.card_expiry),
-            emirates_id: row.emirates_id?.toString().trim() || null,
-            emirates_id_expiry: parseDate(row.emirates_id_expiry),
-            residence_no: row.residence_no?.toString().trim() || null,
-            residence_expiry: parseDate(row.residence_expiry),
-            phone: row.phone?.toString().trim() || null,
-            email: row.email?.toString().trim() || null,
-            added_date: dayjs().format("YYYY-MM-DD"), // Date when employee joined (DATE field)
-            is_active: true, // Active by default (BOOLEAN field)
-          },
+          data: parsedData,
           status: errors.length > 0 ? "error" : "pending",
-          message: errors.join(", "),  // Use comma for consistent splitting
+          message: errors.length > 0 ? errors.join(", ") : undefined,
+          duplicateError,
         });
       }
 
@@ -505,6 +608,34 @@ export function BulkImportDialog({
     } finally {
       setImporting(false);
     }
+  };
+
+  // Re-validate a row after the user edits one of the reference dropdowns
+  // directly in the preview table (as opposed to going through Quick Add).
+  // Previously this path only updated the field and never cleared the
+  // row's error status, so a visibly "fixed" row was silently skipped
+  // during import.
+  const applyFieldChange = (rowIndex: number, patch: Record<string, unknown>) => {
+    setResults((prev) => {
+      const updated = [...prev];
+      const current = updated[rowIndex];
+      if (!current) return prev;
+      const newData = { ...current.data, ...patch };
+      const refErrors = computeReferenceErrors(newData, {
+        companies,
+        departments,
+        jobs,
+        nationalities,
+      });
+      const errors = [...(current.duplicateError ? [current.duplicateError] : []), ...refErrors];
+      updated[rowIndex] = {
+        ...current,
+        data: newData,
+        status: errors.length > 0 ? "error" : "pending",
+        message: errors.length > 0 ? errors.join(", ") : undefined,
+      };
+      return updated;
+    });
   };
 
   // Import validated rows
@@ -527,9 +658,7 @@ export function BulkImportDialog({
         // Remove _name fields that don't exist in database schema
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { company_name, department_name, job_name, ...dataToInsert } = result.data as Record<string, unknown>;
-        
-        console.log("Inserting employee data:", dataToInsert); // Debug log
-        
+
         const { data, error } = await supabase
           .from("employees")
           .insert(dataToInsert as never)
@@ -537,7 +666,6 @@ export function BulkImportDialog({
           .single();
 
         if (error) {
-          console.error("Insert error:", error); // Debug log
           throw error;
         }
 
@@ -546,7 +674,7 @@ export function BulkImportDialog({
         updatedResults[i].employeeId = data.id;
         successCount++;
       } catch (error) {
-        console.error("Import failed for row:", result.row, error); // Debug log
+        console.error("Import failed for row:", result.row, error);
         const message = error instanceof Error ? error.message : "Import failed";
         updatedResults[i].status = "error";
         updatedResults[i].message = message;
@@ -557,11 +685,22 @@ export function BulkImportDialog({
 
     setImporting(false);
 
-    // Show summary
+    const finalErrorCount = updatedResults.filter((r) => r.status === "error").length;
+
     if (successCount > 0) {
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
+      // Refresh the parent's employee list right away regardless of
+      // whether everything succeeded, so newly-imported employees show up
+      // even while this dialog stays open for the user to review failures.
+      onImportComplete?.();
+
+      // Only auto-close when the whole batch was clean. If some rows
+      // failed, leave the results screen up so the user can actually read
+      // which ones and why, instead of it vanishing after 2 seconds.
+      if (finalErrorCount === 0) {
+        setTimeout(() => {
+          onSuccess();
+        }, 1200);
+      }
     }
   };
 
@@ -710,9 +849,7 @@ export function BulkImportDialog({
                                 rowIndex: idx,
                               });
                             } else {
-                              const updatedResults = [...results];
-                              updatedResults[idx].data.nationality = e.target.value || null;
-                              setResults(updatedResults);
+                              applyFieldChange(idx, { nationality: e.target.value || null });
                             }
                           }}
                         >
@@ -739,11 +876,11 @@ export function BulkImportDialog({
                                 rowIndex: idx,
                               });
                             } else {
-                              const updatedResults = [...results];
-                              const selectedCompany = companies.find(c => c.id === e.target.value);
-                              updatedResults[idx].data.company_id = e.target.value || null;
-                              updatedResults[idx].data.company_name = selectedCompany?.name_en || null;
-                              setResults(updatedResults);
+                              const selectedCompany = companies.find((c) => c.id === e.target.value);
+                              applyFieldChange(idx, {
+                                company_id: e.target.value || null,
+                                company_name: selectedCompany?.name_en || null,
+                              });
                             }
                           }}
                         >
@@ -770,11 +907,11 @@ export function BulkImportDialog({
                                 rowIndex: idx,
                               });
                             } else {
-                              const updatedResults = [...results];
-                              const selectedDept = departments.find(d => d.id === e.target.value);
-                              updatedResults[idx].data.department_id = e.target.value || null;
-                              updatedResults[idx].data.department_name = selectedDept?.name_en || null;
-                              setResults(updatedResults);
+                              const selectedDept = departments.find((d) => d.id === e.target.value);
+                              applyFieldChange(idx, {
+                                department_id: e.target.value || null,
+                                department_name: selectedDept?.name_en || null,
+                              });
                             }
                           }}
                         >
@@ -801,11 +938,11 @@ export function BulkImportDialog({
                                 rowIndex: idx,
                               });
                             } else {
-                              const updatedResults = [...results];
-                              const selectedJob = jobs.find(j => j.id === e.target.value);
-                              updatedResults[idx].data.job_id = e.target.value || null;
-                              updatedResults[idx].data.job_name = selectedJob?.name_en || null;
-                              setResults(updatedResults);
+                              const selectedJob = jobs.find((j) => j.id === e.target.value);
+                              applyFieldChange(idx, {
+                                job_id: e.target.value || null,
+                                job_name: selectedJob?.name_en || null,
+                              });
                             }
                           }}
                         >
@@ -907,6 +1044,13 @@ export function BulkImportDialog({
                 <p className="text-xs text-muted-foreground">{t("Total")}</p>
               </div>
             </div>
+
+            {errorRows > 0 && successRows > 0 && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {t("Some rows failed - this window will stay open so you can review them. Click Done when finished.")}
+              </div>
+            )}
 
             <div className="border rounded-lg max-h-96 overflow-y-auto">
               <table className="w-full text-xs">
@@ -1063,92 +1207,58 @@ export function BulkImportDialog({
               updatedNationalities = data || nationalities;
             }
 
-            // Re-validate with updated data
-            const row = rowToRevalidate.data;
-            const errors: string[] = [];
+            // Re-validate with the freshly-fetched reference data. Resolve
+            // the row's *_id fields against the new lists too (not just
+            // presence-check), so the newly added item is actually usable.
+            const row = { ...rowToRevalidate.data };
 
-            // Validate with updated reference data
             const nationalityMatch = row.nationality
               ? (updatedNationalities || []).find(
                   (n) => n.name_en?.toLowerCase() === String(row.nationality).toLowerCase()
                 )
               : null;
-            
             const companyMatch = row.company_name
               ? (updatedCompanies || []).find(
                   (c) => c.name_en?.toLowerCase() === String(row.company_name).toLowerCase()
                 )
               : null;
-            
             const departmentMatch = row.department_name
               ? (updatedDepartments || []).find(
                   (d) => d.name_en?.toLowerCase() === String(row.department_name).toLowerCase()
                 )
               : null;
-            
             const jobMatch = row.job_name
               ? (updatedJobs || []).find(
                   (j) => j.name_en?.toLowerCase() === String(row.job_name).toLowerCase()
                 )
               : null;
 
-            // Only add error if field has value but no match found
-            if (row.nationality && !nationalityMatch) {
-              errors.push(`Nationality "${row.nationality}" not found`);
-            }
-            if (row.company_name && !companyMatch) {
-              errors.push(`Company "${row.company_name}" not found`);
-            }
-            if (row.department_name && !departmentMatch) {
-              errors.push(`Department "${row.department_name}" not found`);
-            }
-            if (row.job_name && !jobMatch) {
-              errors.push(`Job "${row.job_name}" not found`);
-            }
+            const newData: Record<string, unknown> = {
+              ...row,
+              nationality: nationalityMatch?.name_en || row.nationality,
+              company_id: companyMatch?.id || row.company_id,
+              department_id: departmentMatch?.id || row.department_id,
+              job_id: jobMatch?.id || row.job_id,
+            };
 
-            // Update the row status
+            const refErrors = computeReferenceErrors(newData, {
+              companies: updatedCompanies,
+              departments: updatedDepartments,
+              jobs: updatedJobs,
+              nationalities: updatedNationalities,
+            });
+            const errors = [
+              ...(rowToRevalidate.duplicateError ? [rowToRevalidate.duplicateError] : []),
+              ...refErrors,
+            ];
+
             const updatedResults = [...results];
-            if (errors.length === 0) {
-              // Build clean data object with only database fields
-              const cleanData = {
-                employee_no: row.employee_no,
-                name_en: row.name_en,
-                name_ar: row.name_ar,
-                nationality: nationalityMatch?.name_en || row.nationality,  // ✅ Use matched name
-                // No nationality_id - doesn't exist in schema!
-                company_id: companyMatch?.id,
-                department_id: departmentMatch?.id,
-                job_id: jobMatch?.id,
-                passport_no: row.passport_no,
-                passport_expiry: row.passport_expiry,
-                card_no: row.card_no,
-                card_expiry: row.card_expiry,
-                emirates_id: row.emirates_id,
-                emirates_id_expiry: row.emirates_id_expiry,
-                residence_no: row.residence_no,
-                residence_expiry: row.residence_expiry,
-                phone: row.phone,
-                email: row.email,
-                added_date: row.added_date,
-                is_active: row.is_active,
-                // Keep the _name fields for future re-validation (but won't be inserted)
-                company_name: row.company_name,
-                department_name: row.department_name,
-                job_name: row.job_name,
-              };
-              
-              updatedResults[rowIndex] = {
-                ...rowToRevalidate,
-                status: "pending",
-                message: undefined,
-                data: cleanData,
-              };
-            } else {
-              updatedResults[rowIndex] = {
-                ...rowToRevalidate,
-                message: errors.join(", "),
-              };
-            }
+            updatedResults[rowIndex] = {
+              ...rowToRevalidate,
+              status: errors.length > 0 ? "error" : "pending",
+              message: errors.length > 0 ? errors.join(", ") : undefined,
+              data: newData,
+            };
 
             setResults(updatedResults);
             setRevalidatingRow(null);

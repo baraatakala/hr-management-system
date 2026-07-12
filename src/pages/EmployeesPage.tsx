@@ -2198,6 +2198,9 @@ export function EmployeesPage() {
           queryClient.invalidateQueries({ queryKey: ["employees"] });
           setIsBulkImportOpen(false);
         }}
+        onImportComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ["employees"] });
+        }}
         companies={companies || []}
         departments={departments || []}
         jobs={jobs || []}
