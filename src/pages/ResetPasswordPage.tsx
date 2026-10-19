@@ -56,6 +56,10 @@ export function ResetPasswordPage() {
     event.preventDefault();
     setError("");
 
+    if (password.length < 8) {
+      setError(t("auth.passwordTooShort"));
+      return;
+    }
     if (password !== confirmPassword) {
       setError(t("auth.passwordMismatch"));
       return;
@@ -113,6 +117,7 @@ export function ResetPasswordPage() {
                   id="new-password"
                   type="password"
                   autoComplete="new-password"
+                  minLength={8}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
@@ -124,6 +129,7 @@ export function ResetPasswordPage() {
                   id="confirm-password"
                   type="password"
                   autoComplete="new-password"
+                  minLength={8}
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   required
