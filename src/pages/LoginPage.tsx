@@ -70,10 +70,13 @@ export function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">{t("app.title")}</CardTitle>
-          <CardDescription>{t("auth.signIn")}</CardDescription>
+          <CardDescription>{isForgotPassword ? t("auth.forgotPassword") : t("auth.signIn")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={isForgotPassword ? handleForgotPassword : handleLogin} className="space-y-4">
+          <form
+            onSubmit={isForgotPassword ? handleForgotPassword : handleLogin}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.email")}</Label>
               <Input
@@ -108,7 +111,11 @@ export function LoginPage() {
               </div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? t("common.loading") : isForgotPassword ? t("auth.sendResetLink") : t("auth.signIn")}
+              {loading
+                ? t("common.loading")
+                : isForgotPassword
+                  ? t("auth.sendResetLink")
+                  : t("auth.signIn")}
             </Button>
             <div className="text-center">
               <button
