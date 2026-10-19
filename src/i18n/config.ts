@@ -256,7 +256,7 @@ const resources = {
       "auth.passwordMismatch": "كلمتا المرور غير متطابقتين.",
       "auth.passwordTooShort": "استخدم 8 أحرف على الأقل لكلمة المرور الجديدة.",
       "auth.passwordUpdated": "تم تحديث كلمة المرور. سجّل الدخول بكلمة المرور الجديدة.",
-      "auth.invalidResetLink": "رابط إعادة التعيين غير صالح أو منتهي الصلاحية. اطلب رابطاً جديداً."
+      "auth.invalidResetLink": "رابط إعادة التعيين غير صالح أو منتهي الصلاحية. اطلب رابطاً جديداً.",
 
       // Navigation
       "nav.dashboard": "لوحة التحكم",
