@@ -46,6 +46,7 @@ const resources = {
       "auth.resetPassword": "Set a new password",
       "auth.confirmPassword": "Confirm new password",
       "auth.passwordMismatch": "The passwords do not match.",
+      "auth.passwordTooShort": "Use at least 8 characters for your new password.",
       "auth.passwordUpdated": "Your password has been updated. Sign in with your new password.",
       "auth.invalidResetLink": "This reset link is invalid or expired. Request a new one.",
 
@@ -253,6 +254,7 @@ const resources = {
       "auth.resetPassword": "تعيين كلمة مرور جديدة",
       "auth.confirmPassword": "تأكيد كلمة المرور الجديدة",
       "auth.passwordMismatch": "كلمتا المرور غير متطابقتين.",
+      "auth.passwordTooShort": "استخدم 8 أحرف على الأقل لكلمة المرور الجديدة.",
       "auth.passwordUpdated": "تم تحديث كلمة المرور. سجّل الدخول بكلمة المرور الجديدة.",
       "auth.invalidResetLink": "رابط إعادة التعيين غير صالح أو منتهي الصلاحية. اطلب رابطاً جديداً."
 
